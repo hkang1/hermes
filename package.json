@@ -1,7 +1,7 @@
 {
   "name": "hermes-parallel-coordinates",
   "version": "1.0.0",
-  "description": "",
+  "description": "A lightweight canvas-based parallel coordinates chart library.",
   "main": "./dist/hermes.cjs.js",
   "module": "./dist/hermes.esm.js",
   "typings": "./dist/hermes.d.ts",
@@ -17,7 +17,8 @@
     "es6",
     "parallel coordinates",
     "parcoords",
-    "visualization"
+    "visualization",
+    "canvas"
   ],
   "author": "Caleb Kang <hoyoul@gmail.com>",
   "license": "ISC",
