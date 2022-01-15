@@ -1,3 +1,7 @@
+const fs = require('fs');
+
+fs.copyFileSync('./tsc-out/index.d.ts', './dist/hermes.d.ts');
+
 export default [
   {
     input: './tsc-out/index.js',
