@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "esnext",
-    "rootDir": "./src",
-    "moduleResolution": "node",
-    "outDir": "./tsc-out",
-    "noEmitOnError": true,
+    "allowJs": true,
+    "declaration": true,
     "esModuleInterop": false,
     "forceConsistentCasingInFileNames": true,
-    "strict": true
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "outDir": "./tsc-out",
+    "rootDir": "./src",
+    "strict": true,
+    "target": "es2018"
   },
   "include": [ "./src/**/*.ts" ]
 }
