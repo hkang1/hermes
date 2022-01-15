@@ -1,4 +1,6 @@
-const fs = require('fs');
+import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import fs from 'fs';
 
 fs.copyFileSync('./tsc-out/index.d.ts', './dist/hermes.d.ts');
 
@@ -23,6 +25,7 @@ export default [
         format: 'iife',
         esModule: false,
       },
-    ]
+    ],
+    plugins: [ resolve(), commonjs() ],
   },
 ];
