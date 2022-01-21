@@ -2,13 +2,26 @@
 <html lang="en">
   <head>
     <script src="../dist/hermes.iife.js"></script>
-    <script>
-      const hermes = new Hermes();
-      console.log(hermes.log());
-    </script>
     <link rel="stylesheet" href="default.css" />
   </head>
   <body>
-    <canvas id="canvas"></canvas>
+    <div id="hermes"></div>
+    <script>
+      const dimensions = [
+        {
+          label: 'abc',
+          type: 'linear',
+        },
+        {
+          label: 'defg',
+          type: 'linear',
+        },
+        {
+          label: 'hijkl',
+          type: 'linear',
+        },
+      ];
+      const hermes = new Hermes('#hermes', dimensions, { direction: 'horizontal' });
+    </script>
   </body>
 </html>

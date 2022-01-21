@@ -3,7 +3,7 @@ body {
   padding: 0;
 }
 
-canvas {
+#hermes {
   height: 100vh;
   width: 100vw;
 }

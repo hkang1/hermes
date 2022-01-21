@@ -1,0 +1,11 @@
+export const isBigInt = (data: unknown): data is bigint => typeof data === 'bigint';
+export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
+export const isError = (data: unknown): data is Error => data instanceof Error;
+export const isNumber = (data: unknown): data is number => typeof data === 'number';
+export const isMap = (data: unknown): boolean => data instanceof Map;
+export const isObject = (data: unknown): boolean => {
+  return typeof data === 'object' && !Array.isArray(data) && !isSet(data) && data !== null;
+};
+export const isSet = (data: unknown): boolean => data instanceof Set;
+export const isString = (data: unknown): data is string => typeof data === 'string';
+export const isSymbol = (data: unknown): data is symbol => typeof data === 'symbol';
