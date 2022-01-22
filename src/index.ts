@@ -10,6 +10,7 @@ import {
   drawTextAngled, getFont, getTextSize, normalizePadding,
 } from './utils/canvas';
 import { getElement } from './utils/dom';
+import * as tester from './utils/test';
 
 const CONFIG = { TICK_DISTANCE: 5 };
 
@@ -41,6 +42,7 @@ const DEFAULT_OPTIONS: t.HermesOptions = {
         offset: 10,
         placement: t.LabelPlacement.Before,
       },
+      layout: t.DimensionLayout.AxisEvenlySpaced,
     },
     padding: 25,
   },
@@ -58,6 +60,7 @@ class Hermes {
 
   constructor(
     target: HTMLElement | string,
+    data: t.HermesData,
     dimensions: t.Dimension[],
     options: t.RecursivePartial<t.HermesOptions> = {},
   ) {
@@ -78,6 +81,10 @@ class Hermes {
     if (!ctx) throw new HermesError('Unable to get context from target element.');
     this.ctx = ctx;
 
+    if (Object.keys(data).length === 0)
+      throw new HermesError('Need at least one dimension data record.');
+
+    if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
     this.dimensions = dimensions;
     this.options = deepmerge(DEFAULT_OPTIONS, options) as t.HermesOptions;
 
@@ -88,6 +95,10 @@ class Hermes {
       this.calculate();
     });
     this.resizeObserver.observe(this.element);
+  }
+
+  static getTester(): any {
+    return tester;
   }
 
   destroy(): void {
@@ -117,6 +128,7 @@ class Hermes {
 
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const dimLabelStyle = this.options.style.dimension.label;
+    const dimLayout = this.options.style.dimension.layout;
     const axesLabelStyle = this.options.style.axes.label;
     const placement = dimLabelStyle.placement;
     const dimCount = this.dimensions.length;
@@ -272,19 +284,29 @@ class Hermes {
      */
     if (isHorizontal) {
       _dsly.gap = dimCount > 1 ? (_l.drawRect.w - _dsly.totalBoundSpace) / (dimCount - 1) : 0;
+      _dsly.offset = _l.padding[3];
+      _dsly.space = _l.drawRect.w / dimCount;
     } else {
       _dsly.gap = dimCount > 1 ? (_l.drawRect.h - _dsly.totalBoundSpace) / (dimCount - 1) : 0;
+      _dsly.offset = _l.padding[0];
+      _dsly.space = _l.drawRect.h / dimCount;
     }
 
     /**
      * Update the dimension bounding position.
      */
-    let traversed = isHorizontal ? _l.padding[3] : _l.padding[0];
+    let traversed = _dsly.offset;
     for (let i = 0; i < dimCount; i++) {
       const _dlily = _.dims.list[i].layout;
 
       if (isHorizontal) {
-        _dlily.bound.x = traversed;
+        if (dimLayout === t.DimensionLayout.AxisEvenlySpaced) {
+          _dlily.bound.x = _dsly.offset + i * _dsly.space + _dsly.space / 2 - _dlily.spaceBefore;
+        } else if (dimLayout === t.DimensionLayout.Equidistant) {
+          _dlily.bound.x = _dsly.offset + i * _dsly.space + (_dsly.space - _dlily.bound.w) / 2;
+        } else if (dimLayout === t.DimensionLayout.EvenlySpaced) {
+          _dlily.bound.x = traversed;
+        }
         _dlily.axisStart = { x: _dlily.spaceBefore, y: _dsa.start - _l.padding[0] };
         _dlily.axisStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
         _dlily.labelPoint = {
@@ -295,7 +317,13 @@ class Hermes {
         };
         traversed += _dsly.gap + _dlily.bound.w;
       } else {
-        _dlily.bound.y = traversed;
+        if (dimLayout === t.DimensionLayout.AxisEvenlySpaced) {
+          _dlily.bound.y = _dsly.offset + i * _dsly.space + _dsly.space / 2 - _dlily.spaceBefore;
+        } else if (dimLayout === t.DimensionLayout.Equidistant) {
+          _dlily.bound.y = _dsly.offset + i * _dsly.space + (_dsly.space - _dlily.bound.h) / 2;
+        } else if (dimLayout === t.DimensionLayout.EvenlySpaced) {
+          _dlily.bound.y = traversed;
+        }
         _dlily.axisStart = { x: _dsa.start - _l.padding[3], y: _dlily.spaceBefore };
         _dlily.axisStop = { x: _dsa.stop - _l.padding[3], y: _dlily.spaceBefore };
         _dlily.labelPoint = {
@@ -313,6 +341,10 @@ class Hermes {
   }
 
   private draw(): void {
+    // Draw data lines.
+    // Draw dimensions.
+    // Draw dimension labels.
+    // Draw dimension axes.
   }
 
   private drawDebugOutline(): void {
@@ -321,6 +353,8 @@ class Hermes {
     const { h, w } = this.size;
     const _l = this._.layout;
     const _dl = this._.dims.list;
+    const _dsl = this._.dims.shared.layout;
+    const isHorizontal = this.options.direction === t.Direction.Horizontal;
 
     // Draw the drawing area by outlining paddings.
     const paddingStyle: t.DrawStyle = { strokeStyle: '#dddddd' };
@@ -330,15 +364,24 @@ class Hermes {
     drawLine(this.ctx, w - _l.padding[1], 0, w - _l.padding[1], h, paddingStyle);
 
     // Draw each dimension rough outline with bounding box.
-    _dl.forEach(dim => {
+    _dl.forEach((dim, index) => {
       const bound = dim.layout.bound;
       const axisStart = dim.layout.axisStart;
       const axisStop = dim.layout.axisStop;
       const labelPoint = dim.layout.labelPoint;
+      const dimStyle: t.DrawStyle = { strokeStyle: 'green' };
       const boundStyle: t.DrawStyle = { strokeStyle: '#dddddd' };
       const labelPointStyle: t.DrawStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
       const axisStyle: t.DrawStyle = { lineWidth: 2, strokeStyle: 'purple' };
 
+      drawRect(
+        this.ctx,
+        isHorizontal ? _l.padding[3] + index * _dsl.space : bound.x,
+        isHorizontal ? bound.y : _l.padding[0] + index * _dsl.space,
+        isHorizontal ? _dsl.space : bound.w,
+        isHorizontal ? bound.h : _dsl.space,
+        dimStyle,
+      );
       drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
       drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
       drawLine(

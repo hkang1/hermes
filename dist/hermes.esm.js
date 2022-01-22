@@ -351,30 +351,21 @@ class NiceScale {
     }
 }
 
-/*
- * Chart Option Types
+/**
+ * ENUMERABLES
  */
-var LabelPlacement;
-(function (LabelPlacement) {
-    LabelPlacement["After"] = "after";
-    LabelPlacement["Before"] = "before";
-})(LabelPlacement || (LabelPlacement = {}));
-var AxesLabelLayout;
-(function (AxesLabelLayout) {
-    AxesLabelLayout["After"] = "after";
-    AxesLabelLayout["Before"] = "before";
-})(AxesLabelLayout || (AxesLabelLayout = {}));
 var AxisType;
 (function (AxisType) {
     AxisType["Categorical"] = "categorical";
     AxisType["Linear"] = "linear";
     AxisType["Logarithmic"] = "logarithmic";
 })(AxisType || (AxisType = {}));
-var DimensionLabelLayout;
-(function (DimensionLabelLayout) {
-    DimensionLabelLayout["End"] = "end";
-    DimensionLabelLayout["Start"] = "start";
-})(DimensionLabelLayout || (DimensionLabelLayout = {}));
+var DimensionLayout;
+(function (DimensionLayout) {
+    DimensionLayout["AxisEvenlySpaced"] = "axis-evenly-spaced";
+    DimensionLayout["Equidistant"] = "equidistant";
+    DimensionLayout["EvenlySpaced"] = "evenly-spaced";
+})(DimensionLayout || (DimensionLayout = {}));
 var Direction;
 (function (Direction) {
     Direction["Horizontal"] = "horizontal";
@@ -393,6 +384,11 @@ var FontStyle;
     FontStyle["Normal"] = "normal";
     FontStyle["Oblique"] = "oblique";
 })(FontStyle || (FontStyle = {}));
+var LabelPlacement;
+(function (LabelPlacement) {
+    LabelPlacement["After"] = "after";
+    LabelPlacement["Before"] = "before";
+})(LabelPlacement || (LabelPlacement = {}));
 
 const DEFAULT_FILL_STYLE = 'black';
 const DEFAULT_LINE_WIDTH = 1;
@@ -466,6 +462,117 @@ const getElement = (target) => {
     return document.querySelector(target);
 };
 
+const dimensionSamples = [
+    {
+        axis: { range: [0.2, 0.8], type: AxisType.Linear },
+        key: 'dropout',
+        label: 'Dropout',
+    },
+    {
+        axis: { range: [5, 30], type: AxisType.Linear },
+        key: 'global-batch-size',
+        label: 'Global Batch Size',
+    },
+    {
+        axis: { categories: [4, 8, 16, 32, 64], type: AxisType.Categorical },
+        key: 'layer-dense-size',
+        label: 'Layer Dense Size',
+    },
+    {
+        axis: { logBase: 10, range: [0.0001, 0.1], type: AxisType.Logarithmic },
+        key: 'learning-rate',
+        label: 'Learning Rate',
+    },
+    {
+        axis: { logBase: 10, range: [0.000001, 0.001], type: AxisType.Logarithmic },
+        key: 'learning-rate-decay',
+        label: 'Learning Rate Decay',
+    },
+    {
+        axis: { logBase: 2, range: [1, 16], type: AxisType.Logarithmic },
+        key: 'layer-split-factor',
+        label: 'Layer Split Factor',
+    },
+    {
+        axis: { range: [0.5, 0.9], type: AxisType.Linear },
+        key: 'metrics-base',
+        label: 'Metrics Base',
+    },
+    {
+        axis: { range: [8, 64], type: AxisType.Linear },
+        key: 'n-filters',
+        label: 'N Filters',
+    },
+];
+const metricDimensionSamples = [
+    {
+        axis: { range: [0.55, 0.99], type: AxisType.Linear },
+        key: 'accuracy',
+        label: 'Accuracy',
+    },
+    {
+        axis: { range: [1.7, 2.4], type: AxisType.Linear },
+        key: 'loss',
+        label: 'Loss',
+    },
+];
+const generateData = (dimensions, count) => {
+    return dimensions.reduce((acc, dimension) => {
+        const axis = dimension.axis;
+        acc[dimension.key] = new Array(count).fill(null).map(() => {
+            if (axis.type === AxisType.Categorical) {
+                return axis.categories ? randomItem(axis.categories) : null;
+            }
+            else if (axis.type === AxisType.Linear) {
+                return axis.range ? randomNumber(axis.range[1], axis.range[0]) : null;
+            }
+            else if (axis.type === AxisType.Logarithmic) {
+                return axis.range && axis.logBase
+                    ? randomLogNumber(axis.logBase, axis.range[1], axis.range[0]) : null;
+            }
+            return null;
+        });
+        return acc;
+    }, {});
+};
+const generateDimensions = (dimCount = 10, random = true) => {
+    // Generate the dimensions based on config.
+    const dims = new Array(dimCount - 1).fill(null).map((_, index) => {
+        if (random)
+            return randomItem(dimensionSamples);
+        return dimensionSamples[index % dimensionSamples.length];
+    });
+    // Add a metric dimension to the end.
+    dims.push(randomItem(metricDimensionSamples));
+    return dims;
+};
+const randomInt = (max, min = 0) => {
+    return Math.floor(Math.random() * (max - min)) + min;
+};
+const randomItem = (list) => {
+    return list[randomInt(list.length)];
+};
+const randomLogNumber = (base, max, min) => {
+    const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
+    const denominator = log === Math.log ? Math.log(base) : 1;
+    const maxExp = log(max) / denominator;
+    const minExp = log(min) / denominator;
+    return base ** randomNumber(maxExp, minExp);
+};
+const randomNumber = (max, min) => {
+    return Math.random() * (max - min) + min;
+};
+
+var tester = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  generateData: generateData,
+  generateDimensions: generateDimensions,
+  randomInt: randomInt,
+  randomItem: randomItem,
+  randomLogNumber: randomLogNumber,
+  randomNumber: randomNumber
+});
+
 const CONFIG = { TICK_DISTANCE: 5 };
 const DEFAULT_OPTIONS = {
     direction: Direction.Horizontal,
@@ -495,12 +602,13 @@ const DEFAULT_OPTIONS = {
                 offset: 10,
                 placement: LabelPlacement.Before,
             },
+            layout: DimensionLayout.AxisEvenlySpaced,
         },
         padding: 25,
     },
 };
 class Hermes {
-    constructor(target, dimensions, options = {}) {
+    constructor(target, data, dimensions, options = {}) {
         this.size = { h: 0, w: 0 };
         this._ = undefined;
         const element = getElement(target);
@@ -518,6 +626,10 @@ class Hermes {
         if (!ctx)
             throw new HermesError('Unable to get context from target element.');
         this.ctx = ctx;
+        if (Object.keys(data).length === 0)
+            throw new HermesError('Need at least one dimension data record.');
+        if (dimensions.length === 0)
+            throw new HermesError('Need at least one dimension defined.');
         this.dimensions = dimensions;
         this.options = deepmerge(DEFAULT_OPTIONS, options);
         // Add resize observer to detect target element resizing.
@@ -528,28 +640,16 @@ class Hermes {
         });
         this.resizeObserver.observe(this.element);
     }
+    static getTester() {
+        return tester;
+    }
     destroy() {
         this.resizeObserver.unobserve(this.element);
     }
-    draw() {
-        // Set line width
-        this.ctx.lineWidth = 1;
-        this.ctx.fillStyle = 'black';
-        // calculate dimension labels
-        // calculate axis labels
-        // this.drawDimensions();
-        // this.ctx.fillRect(100, 100, 100, 100);
-        // Wall
-        // this.ctx.strokeRect(0, 0, 100, 100);
-        // // Door
-        // this.ctx.fillRect(130, 190, 40, 60);
-        // // Roof
-        // this.ctx.beginPath();
-        // this.ctx.moveTo(50, 140);
-        // this.ctx.lineTo(150, 60);
-        // this.ctx.lineTo(250, 140);
-        // this.ctx.closePath();
-        // this.ctx.stroke();
+    setSize(w, h) {
+        this.canvas.width = w;
+        this.canvas.height = h;
+        this.size = { h, w };
     }
     calculate() {
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -567,6 +667,7 @@ class Hermes {
         };
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const dimLabelStyle = this.options.style.dimension.label;
+        const dimLayout = this.options.style.dimension.layout;
         const axesLabelStyle = this.options.style.axes.label;
         const placement = dimLabelStyle.placement;
         const dimCount = this.dimensions.length;
@@ -716,18 +817,30 @@ class Hermes {
          */
         if (isHorizontal) {
             _dsly.gap = dimCount > 1 ? (_l.drawRect.w - _dsly.totalBoundSpace) / (dimCount - 1) : 0;
+            _dsly.offset = _l.padding[3];
+            _dsly.space = _l.drawRect.w / dimCount;
         }
         else {
             _dsly.gap = dimCount > 1 ? (_l.drawRect.h - _dsly.totalBoundSpace) / (dimCount - 1) : 0;
+            _dsly.offset = _l.padding[0];
+            _dsly.space = _l.drawRect.h / dimCount;
         }
         /**
          * Update the dimension bounding position.
          */
-        let traversed = isHorizontal ? _l.padding[3] : _l.padding[0];
+        let traversed = _dsly.offset;
         for (let i = 0; i < dimCount; i++) {
             const _dlily = _.dims.list[i].layout;
             if (isHorizontal) {
-                _dlily.bound.x = traversed;
+                if (dimLayout === DimensionLayout.AxisEvenlySpaced) {
+                    _dlily.bound.x = _dsly.offset + i * _dsly.space + _dsly.space / 2 - _dlily.spaceBefore;
+                }
+                else if (dimLayout === DimensionLayout.Equidistant) {
+                    _dlily.bound.x = _dsly.offset + i * _dsly.space + (_dsly.space - _dlily.bound.w) / 2;
+                }
+                else if (dimLayout === DimensionLayout.EvenlySpaced) {
+                    _dlily.bound.x = traversed;
+                }
                 _dlily.axisStart = { x: _dlily.spaceBefore, y: _dsa.start - _l.padding[0] };
                 _dlily.axisStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
                 _dlily.labelPoint = {
@@ -739,7 +852,16 @@ class Hermes {
                 traversed += _dsly.gap + _dlily.bound.w;
             }
             else {
-                _dlily.bound.y = traversed;
+                console.log('vertical', 'spaceOffset', _dlily.spaceOffset, 'spaceBefore', _dlily.spaceBefore, 'space', _dsly.space);
+                if (dimLayout === DimensionLayout.AxisEvenlySpaced) {
+                    _dlily.bound.y = _dsly.offset + i * _dsly.space + _dsly.space / 2 - _dlily.spaceBefore;
+                }
+                else if (dimLayout === DimensionLayout.Equidistant) {
+                    _dlily.bound.y = _dsly.offset + i * _dsly.space + (_dsly.space - _dlily.bound.h) / 2;
+                }
+                else if (dimLayout === DimensionLayout.EvenlySpaced) {
+                    _dlily.bound.y = traversed;
+                }
                 _dlily.axisStart = { x: _dsa.start - _l.padding[3], y: _dlily.spaceBefore };
                 _dlily.axisStop = { x: _dsa.stop - _l.padding[3], y: _dlily.spaceBefore };
                 _dlily.labelPoint = {
@@ -752,13 +874,13 @@ class Hermes {
             }
         }
         this._ = _;
-        console.log(this._);
         this.drawDebugOutline();
     }
-    setSize(w, h) {
-        this.canvas.width = w;
-        this.canvas.height = h;
-        this.size = { h, w };
+    draw() {
+        // Draw data lines.
+        // Draw dimensions.
+        // Draw dimension labels.
+        // Draw dimension axes.
     }
     drawDebugOutline() {
         if (!this._)
@@ -766,6 +888,8 @@ class Hermes {
         const { h, w } = this.size;
         const _l = this._.layout;
         const _dl = this._.dims.list;
+        const _dsl = this._.dims.shared.layout;
+        const isHorizontal = this.options.direction === Direction.Horizontal;
         // Draw the drawing area by outlining paddings.
         const paddingStyle = { strokeStyle: '#dddddd' };
         drawLine(this.ctx, 0, _l.padding[0], w, _l.padding[0], paddingStyle);
@@ -773,14 +897,16 @@ class Hermes {
         drawLine(this.ctx, _l.padding[3], 0, _l.padding[3], h, paddingStyle);
         drawLine(this.ctx, w - _l.padding[1], 0, w - _l.padding[1], h, paddingStyle);
         // Draw each dimension rough outline with bounding box.
-        _dl.forEach(dim => {
+        _dl.forEach((dim, index) => {
             const bound = dim.layout.bound;
             const axisStart = dim.layout.axisStart;
             const axisStop = dim.layout.axisStop;
             const labelPoint = dim.layout.labelPoint;
+            const dimStyle = { strokeStyle: 'green' };
             const boundStyle = { strokeStyle: '#dddddd' };
             const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
             const axisStyle = { lineWidth: 2, strokeStyle: 'purple' };
+            drawRect(this.ctx, isHorizontal ? _l.padding[3] + index * _dsl.space : bound.x, isHorizontal ? bound.y : _l.padding[0] + index * _dsl.space, isHorizontal ? _dsl.space : bound.w, isHorizontal ? bound.h : _dsl.space, dimStyle);
             drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
             drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
             drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, axisStyle);

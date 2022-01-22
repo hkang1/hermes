@@ -36,6 +36,7 @@ export enum AxisType {
 }
 
 export enum DimensionLayout {
+  AxisEvenlySpaced = 'axis-evenly-spaced',
   Equidistant = 'equidistant',
   EvenlySpaced = 'evenly-spaced',
 }
@@ -177,6 +178,7 @@ export interface Internal {
       };
       layout: {
         gap: number;
+        offset: number;
         space: number;
         totalBoundSpace: number;
       };

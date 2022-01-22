@@ -8,11 +8,12 @@ declare class Hermes {
     private options;
     private size;
     private _?;
-    constructor(target: HTMLElement | string, dimensions: t.Dimension[], options?: t.RecursivePartial<t.HermesOptions>);
+    constructor(target: HTMLElement | string, data: t.HermesData, dimensions: t.Dimension[], options?: t.RecursivePartial<t.HermesOptions>);
+    static getTester(): any;
     destroy(): void;
-    draw(): void;
-    calculate(): void;
     setSize(w: number, h: number): void;
+    private calculate;
+    private draw;
     private drawDebugOutline;
 }
 export default Hermes;

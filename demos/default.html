@@ -12,7 +12,12 @@
       const data = tester.generateData(dimensions, 100);
       console.log('dims', dimensions);
       console.log('data', data);
-      const hermes = new Hermes('#hermes', {}, dimensions, { direction: 'horizontal' });
+      const hermes = new Hermes('#hermes', data, dimensions, {
+        direction: 'vertical',
+        style: {
+          dimension: { layout: 'evenly-spaced' },
+        },
+      });
     </script>
   </body>
 </html>
