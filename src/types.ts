@@ -24,6 +24,13 @@ export type Size = { h: number, w: number };
 
 export type DataValue = boolean | number | string | null | undefined;
 export type DimensionKey = string;
+export type StyleLine =Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
+export type StyleShape = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
+export type StyleText = Partial<
+  CanvasFillStrokeStyles &
+  CanvasPathDrawingStyles &
+  CanvasTextDrawingStyles
+>;
 
 /**
  * ENUMERABLES
@@ -80,12 +87,6 @@ export interface Dimension {
   axis: Axis;
   key: string;
   label: string;
-}
-
-export interface DrawStyle {
-  fillStyle?: string | CanvasGradient | CanvasPattern;
-  lineWidth?: number;
-  strokeStyle?: string | CanvasGradient | CanvasPattern;
 }
 
 export interface Font {

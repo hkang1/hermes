@@ -390,46 +390,97 @@ var LabelPlacement;
     LabelPlacement["Before"] = "before";
 })(LabelPlacement || (LabelPlacement = {}));
 
-const DEFAULT_FILL_STYLE = 'black';
-const DEFAULT_LINE_WIDTH = 1;
-const DEFAULT_STROKE_STYLE = 'black';
-const drawCircle = (ctx, x, y, radius, style) => {
-    ctx.fillStyle = (style === null || style === void 0 ? void 0 : style.fillStyle) || '';
-    ctx.lineWidth = (style === null || style === void 0 ? void 0 : style.lineWidth) || DEFAULT_LINE_WIDTH;
-    ctx.strokeStyle = (style === null || style === void 0 ? void 0 : style.strokeStyle) || DEFAULT_STROKE_STYLE;
-    ctx.moveTo(x + radius, y);
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
-    ctx.stroke();
+const DIRECTION = 'inherit';
+const FILL_STYLE = 'black';
+const FONT = 'normal 12px san-serif';
+const LINE_CAP = 'butt';
+const LINE_DASH_OFFSET = 0.0;
+const LINE_JOIN = 'round';
+const LINE_WIDTH = 1.0;
+const MITER_LIMIT = 10.0;
+const STROKE_STYLE = 'black';
+const TEXT_BASELINE = 'middle';
+
+const drawCircle = (ctx, x, y, radius, style = {}) => {
+    ctx.save();
+    if (ctx.fillStyle) {
+        ctx.fillStyle = (style === null || style === void 0 ? void 0 : style.fillStyle) || '';
+        ctx.moveTo(x + radius, y);
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+    if (ctx.strokeStyle) {
+        ctx.lineCap = style.lineCap || LINE_CAP;
+        ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
+        ctx.lineJoin = style.lineJoin || LINE_JOIN;
+        ctx.lineWidth = style.lineWidth || LINE_WIDTH;
+        ctx.miterLimit = style.miterLimit || MITER_LIMIT;
+        ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
+        ctx.moveTo(x + radius, y);
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+    ctx.restore();
 };
-const drawLine = (ctx, x0, y0, x1, y1, style) => {
-    ctx.lineWidth = (style === null || style === void 0 ? void 0 : style.lineWidth) || DEFAULT_LINE_WIDTH;
-    ctx.strokeStyle = (style === null || style === void 0 ? void 0 : style.strokeStyle) || DEFAULT_STROKE_STYLE;
+const drawLine = (ctx, x0, y0, x1, y1, style = {}) => {
+    ctx.save();
+    ctx.lineCap = style.lineCap || LINE_CAP;
+    ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
+    ctx.lineJoin = style.lineJoin || LINE_JOIN;
+    ctx.lineWidth = style.lineWidth || LINE_WIDTH;
+    ctx.miterLimit = style.miterLimit || MITER_LIMIT;
+    ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
     ctx.beginPath();
     ctx.moveTo(x0, y0);
     ctx.lineTo(x1, y1);
     ctx.stroke();
+    ctx.restore();
 };
-const drawRect = (ctx, x, y, w, h, style) => {
-    ctx.fillStyle = (style === null || style === void 0 ? void 0 : style.fillStyle) || '';
-    ctx.lineWidth = (style === null || style === void 0 ? void 0 : style.lineWidth) || DEFAULT_LINE_WIDTH;
-    ctx.strokeStyle = (style === null || style === void 0 ? void 0 : style.strokeStyle) || DEFAULT_STROKE_STYLE;
-    ctx.strokeRect(x, y, w, h);
+const drawRect = (ctx, x, y, w, h, style = {}) => {
+    ctx.save();
+    if (style.fillStyle) {
+        ctx.fillStyle = style.fillStyle || FILL_STYLE;
+        ctx.fillRect(x, y, w, h);
+    }
+    if (style.strokeStyle) {
+        ctx.lineCap = style.lineCap || LINE_CAP;
+        ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
+        ctx.lineJoin = style.lineJoin || LINE_JOIN;
+        ctx.lineWidth = style.lineWidth || LINE_WIDTH;
+        ctx.miterLimit = style.miterLimit || MITER_LIMIT;
+        ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
+        ctx.strokeRect(x, y, w, h);
+    }
+    ctx.restore();
 };
-const drawTextAngled = (ctx, text, font, x, y, rad, style) => {
-    const normalizedRad = (rad + 2 * Math.PI) % (2 * Math.PI);
+const drawText = (ctx, text, x, y, rad, style = {}) => {
+    const normalizedRad = normalizeRad(rad);
     const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
     ctx.save();
-    ctx.font = font;
-    ctx.textAlign = inwards ? 'right' : 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = (style === null || style === void 0 ? void 0 : style.fillStyle) || DEFAULT_FILL_STYLE;
+    ctx.direction = style.direction || DIRECTION;
+    ctx.font = style.font || FONT;
+    ctx.textAlign = style.textAlign || (inwards ? 'right' : 'left');
+    ctx.textBaseline = style.textBaseline || TEXT_BASELINE;
+    console.log(ctx.textBaseline);
     ctx.translate(x, y);
     ctx.rotate(-rad - (inwards ? Math.PI : 0));
     ctx.translate(-x, -y);
-    ctx.fillText(text, x, y);
+    if (style.fillStyle) {
+        ctx.fillStyle = style.fillStyle || FILL_STYLE;
+        ctx.fillText(text, x, y);
+    }
+    if (style.strokeStyle) {
+        ctx.lineCap = style.lineCap || LINE_CAP;
+        ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
+        ctx.lineJoin = style.lineJoin || LINE_JOIN;
+        ctx.lineWidth = style.lineWidth || LINE_WIDTH;
+        ctx.miterLimit = style.miterLimit || MITER_LIMIT;
+        ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
+        ctx.strokeText(text, x, y);
+    }
     ctx.restore();
-    return { h: 0, w: 0, x: 0, y: 0 };
 };
 const getFont = (font) => {
     const style = font.style || FontStyle.Normal;
@@ -438,9 +489,6 @@ const getFont = (font) => {
     const family = font.family || 'sans-serif';
     return [style, weight, size, family].join(' ');
 };
-/*
- * The setting of context font is expected to be done outside of this function.
- */
 const getTextSize = (ctx, text, font) => {
     ctx.font = getFont(font);
     const metrics = ctx.measureText(text);
@@ -454,6 +502,9 @@ const normalizePadding = (padding) => {
     if (padding.length === 2)
         return [padding[0], padding[1], padding[0], padding[1]];
     return padding;
+};
+const normalizeRad = (rad) => {
+    return (rad + 2 * Math.PI) % (2 * Math.PI);
 };
 
 const getElement = (target) => {
@@ -916,21 +967,35 @@ class Hermes {
         // Draw data lines.
         // Draw dimensions.
         // Draw dimension labels.
-        const font = getFont(dimStyle.label.font);
+        const dimTextStyle = {
+            fillStyle: dimStyle.label.color,
+            font: getFont(dimStyle.label.font),
+        };
         const rad = dimStyle.label.angle || 0;
         this.dimensions.forEach((dimension, i) => {
             const bound = _dl[i].layout.bound;
             const labelPoint = _dl[i].layout.labelPoint;
             const x = bound.x + labelPoint.x;
             const y = bound.y + labelPoint.y;
-            drawTextAngled(this.ctx, dimension.label, font, x, y, rad);
+            drawText(this.ctx, dimension.label, x, y, rad, dimTextStyle);
         });
         // Draw dimension axes.
-        const drawAxesStyle = { lineWidth: 1, strokeStyle: axesStyle.axis.color };
+        const drawAxesStyle = {
+            lineWidth: axesStyle.axis.width,
+            strokeStyle: axesStyle.axis.color,
+        };
         const drawTickStyle = {
             lineWidth: axesStyle.tick.width,
             strokeStyle: axesStyle.tick.color,
         };
+        const drawTickTextStyle = {
+            fillStyle: axesStyle.label.color,
+            font: getFont(axesStyle.label.font),
+        };
+        if (axesStyle.label.angle == null) {
+            drawTickTextStyle.textAlign = isHorizontal ? undefined : 'center';
+            drawTickTextStyle.textBaseline = isHorizontal ? undefined : (isAxesBefore ? 'bottom' : 'top');
+        }
         _dl.forEach(dim => {
             const bound = dim.layout.bound;
             const axisStart = dim.layout.axisStart;
@@ -952,8 +1017,10 @@ class Hermes {
                 drawLine(this.ctx, x0, y0, x1, y1, drawTickStyle);
                 const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
                 const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;
-                const rad = isHorizontal && isAxesBefore ? Math.PI : 0;
-                drawTextAngled(this.ctx, readableTick(scale.ticks[i]), getFont(axesStyle.label.font), cx, cy, rad, { fillStyle: axesStyle.label.color });
+                const rad = axesStyle.label.angle != null
+                    ? axesStyle.label.angle
+                    : (isHorizontal && isAxesBefore ? Math.PI : 0);
+                drawText(this.ctx, readableTick(scale.ticks[i]), cx, cy, rad, drawTickTextStyle);
             }
         });
     }

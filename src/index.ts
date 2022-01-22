@@ -4,10 +4,7 @@ import HermesError from './classes/HermesError';
 import NiceScale from './classes/NiceScale';
 import * as t from './types';
 import {
-  drawCircle,
-  drawLine,
-  drawRect,
-  drawTextAngled, getFont, getTextSize, normalizePadding,
+  drawCircle, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
 } from './utils/canvas';
 import { getElement } from './utils/dom';
 import { readableTick } from './utils/string';
@@ -359,22 +356,36 @@ class Hermes {
     // Draw dimensions.
 
     // Draw dimension labels.
-    const font = getFont(dimStyle.label.font);
+    const dimTextStyle: t.StyleText = {
+      fillStyle: dimStyle.label.color,
+      font: getFont(dimStyle.label.font),
+    };
     const rad = dimStyle.label.angle || 0;
     this.dimensions.forEach((dimension, i) => {
       const bound = _dl[i].layout.bound;
       const labelPoint = _dl[i].layout.labelPoint;
       const x = bound.x + labelPoint.x;
       const y = bound.y + labelPoint.y;
-      drawTextAngled(this.ctx, dimension.label, font, x, y, rad);
+      drawText(this.ctx, dimension.label, x, y, rad, dimTextStyle);
     });
 
     // Draw dimension axes.
-    const drawAxesStyle: t.DrawStyle = { lineWidth: 1, strokeStyle: axesStyle.axis.color };
-    const drawTickStyle: t.DrawStyle = {
+    const drawAxesStyle: t.StyleLine = {
+      lineWidth: axesStyle.axis.width,
+      strokeStyle: axesStyle.axis.color,
+    };
+    const drawTickStyle: t.StyleLine = {
       lineWidth: axesStyle.tick.width,
       strokeStyle: axesStyle.tick.color,
     };
+    const drawTickTextStyle: t.StyleText = {
+      fillStyle: axesStyle.label.color,
+      font: getFont(axesStyle.label.font),
+    };
+    if (axesStyle.label.angle == null) {
+      drawTickTextStyle.textAlign = isHorizontal ? undefined : 'center';
+      drawTickTextStyle.textBaseline = isHorizontal ? undefined : (isAxesBefore ? 'bottom' : 'top');
+    }
     _dl.forEach(dim => {
       const bound = dim.layout.bound;
       const axisStart = dim.layout.axisStart;
@@ -406,16 +417,10 @@ class Hermes {
 
         const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
         const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;
-        const rad = isHorizontal && isAxesBefore ? Math.PI : 0;
-        drawTextAngled(
-          this.ctx,
-          readableTick(scale.ticks[i]),
-          getFont(axesStyle.label.font),
-          cx,
-          cy,
-          rad,
-          { fillStyle: axesStyle.label.color },
-        );
+        const rad = axesStyle.label.angle != null
+          ? axesStyle.label.angle
+          : (isHorizontal && isAxesBefore ? Math.PI : 0);
+        drawText(this.ctx, readableTick(scale.ticks[i]), cx, cy, rad, drawTickTextStyle);
       }
     });
   }
@@ -430,7 +435,7 @@ class Hermes {
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
 
     // Draw the drawing area by outlining paddings.
-    const paddingStyle: t.DrawStyle = { strokeStyle: '#dddddd' };
+    const paddingStyle = { strokeStyle: '#dddddd' };
     drawLine(this.ctx, 0, _l.padding[0], w, _l.padding[0], paddingStyle);
     drawLine(this.ctx, 0, h - _l.padding[2], w, h - _l.padding[2], paddingStyle);
     drawLine(this.ctx, _l.padding[3], 0, _l.padding[3], h, paddingStyle);
@@ -440,9 +445,9 @@ class Hermes {
     _dl.forEach((dim, i) => {
       const bound = dim.layout.bound;
       const labelPoint = dim.layout.labelPoint;
-      const dimStyle: t.DrawStyle = { strokeStyle: '#999999' };
-      const boundStyle: t.DrawStyle = { strokeStyle: '#dddddd' };
-      const labelPointStyle: t.DrawStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
+      const dimStyle = { strokeStyle: '#999999' };
+      const boundStyle = { strokeStyle: '#dddddd' };
+      const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
 
       drawRect(
         this.ctx,

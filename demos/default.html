@@ -8,17 +8,23 @@
     <div id="hermes"></div>
     <script>
       const tester = Hermes.getTester();
-      const dimensions = tester.generateDimensions();
+      const dimensions = tester.generateDimensions(6);
       const data = tester.generateData(dimensions, 100);
       console.log('dims', dimensions);
       console.log('data', data);
       const hermes = new Hermes('#hermes', data, dimensions, {
         direction: 'horizontal',
         style: {
+          axes: {
+            label: {
+              // angle: -Math.PI / 4,
+              placement: 'after',
+            },
+          },
           dimension: {
             label: {
-              angle: -Math.PI / 4,
-              placement: 'after',
+              angle: Math.PI / 4,
+              placement: 'before',
             },
             layout: 'axis-evenly-spaced',
           },
