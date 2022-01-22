@@ -1,0 +1,11 @@
+export const DIRECTION: CanvasDirection = 'inherit';
+export const FILL_STYLE = 'black';
+export const FONT = 'normal 12px san-serif';
+export const LINE_CAP: CanvasLineCap = 'butt';
+export const LINE_DASH_OFFSET = 0.0;
+export const LINE_JOIN: CanvasLineJoin = 'round';
+export const LINE_WIDTH = 1.0;
+export const MITER_LIMIT = 10.0;
+export const STROKE_STYLE = 'black';
+export const TEXT_ALIGN = 'left';
+export const TEXT_BASELINE = 'middle';
