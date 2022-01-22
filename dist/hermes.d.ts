@@ -13,5 +13,6 @@ declare class Hermes {
     draw(): void;
     calculate(): void;
     setSize(w: number, h: number): void;
+    private drawDebugOutline;
 }
 export default Hermes;

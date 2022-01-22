@@ -133,12 +133,12 @@ export interface Internal {
         w: number;
       };
       layout: {
-        axisStart: Point;
-        axisStop: Point;
-        bound: Rect;
-        labelPoint: Point;
-        spaceAfter: number;
-        spaceBefore: number;
+        axisStart: Point;       // Respective to bound (x, y)
+        axisStop: Point;        // Respective to bound (x, y)
+        bound: Rect;            // Bounding rect for the dimension label and axis.
+        labelPoint: Point;      // Respective to bound (x, y)
+        spaceAfter: number;     // Space after the axis line.
+        spaceBefore: number;    // Space before the axis line.
         spaceOffset: number;
       };
     }[];

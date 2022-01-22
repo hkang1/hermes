@@ -60,7 +60,7 @@ export const drawTextAngled = (
   style?: t.DrawStyle,
 ): t.Rect => {
   const normalizedRad = (rad + 2 * Math.PI) % (2 * Math.PI);
-  const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 4;
+  const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
 
   ctx.save();
   ctx.font = font;

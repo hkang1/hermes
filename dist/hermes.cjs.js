@@ -424,10 +424,7 @@ const drawRect = (ctx, x, y, w, h, style) => {
 };
 const drawTextAngled = (ctx, text, font, x, y, rad, style) => {
     const normalizedRad = (rad + 2 * Math.PI) % (2 * Math.PI);
-    const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 4;
-    // const inwards = false;
-    console.log('normalizedRad', normalizedRad);
-    console.log('inwards', inwards);
+    const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
     ctx.save();
     ctx.font = font;
     ctx.textAlign = inwards ? 'right' : 'left';
@@ -494,7 +491,7 @@ const DEFAULT_OPTIONS = {
         },
         dimension: {
             label: {
-                angle: 3 * Math.PI / 4,
+                angle: Math.PI / 4,
                 color: 'black',
                 font: { size: 14 },
                 offset: 10,
@@ -603,10 +600,12 @@ class Hermes {
             _dlil.h = textSize.h;
             _dlil.lengthCos = _dsl.cos != null ? textSize.w * _dsl.cos : textSize.w;
             _dlil.lengthSin = _dsl.sin != null ? textSize.w * _dsl.sin : textSize.h;
-            if (_dlil.lengthCos > _dsl.maxLengthCos)
+            if (Math.abs(_dlil.lengthCos) > Math.abs(_dsl.maxLengthCos)) {
                 _dsl.maxLengthCos = _dlil.lengthCos;
-            if (_dlil.lengthSin > _dsl.maxLengthSin)
+            }
+            if (Math.abs(_dlil.lengthSin) > Math.abs(_dsl.maxLengthSin)) {
                 _dsl.maxLengthSin = _dlil.lengthSin;
+            }
         });
         /**
          * Figure out the max axis pixel range after dimension labels are calculated.
@@ -615,22 +614,26 @@ class Hermes {
         _dsa.stop = 0;
         if (isHorizontal) {
             if (placement === LabelPlacement.Before) {
-                _dsa.start = _l.padding[0] + _dsl.maxLengthSin + dimLabelStyle.offset;
+                const labelOffset = Math.max(0, _dsl.maxLengthSin);
+                _dsa.start = _l.padding[0] + labelOffset + dimLabelStyle.offset;
                 _dsa.stop = this.size.h - _l.padding[2];
             }
             else {
+                const labelOffset = Math.max(0, -_dsl.maxLengthSin);
                 _dsa.start = _l.padding[0];
-                _dsa.stop = this.size.h - _l.padding[2] - _dsl.maxLengthSin - dimLabelStyle.offset;
+                _dsa.stop = this.size.h - _l.padding[2] - labelOffset - dimLabelStyle.offset;
             }
         }
         else {
             if (placement === LabelPlacement.Before) {
-                _dsa.start = _l.padding[3] + _dsl.maxLengthCos + dimLabelStyle.offset;
+                const labelOffset = Math.max(0, -_dsl.maxLengthCos);
+                _dsa.start = _l.padding[3] + labelOffset + dimLabelStyle.offset;
                 _dsa.stop = this.size.w - _l.padding[1];
             }
             else {
+                const labelOffset = Math.max(0, _dsl.maxLengthCos);
                 _dsa.start = _l.padding[3];
-                _dsa.stop = this.size.w - _l.padding[1] - _dsl.maxLengthCos - dimLabelStyle.offset;
+                _dsa.stop = this.size.w - _l.padding[1] - labelOffset - dimLabelStyle.offset;
             }
         }
         /**
@@ -752,33 +755,48 @@ class Hermes {
         }
         this._ = _;
         console.log(this._);
-        drawLine(this.ctx, 0, _l.padding[0], this.size.w, _l.padding[0]);
-        drawLine(this.ctx, 0, this.size.h - _l.padding[2], this.size.w, this.size.h - _l.padding[2]);
-        drawLine(this.ctx, _l.padding[3], 0, _l.padding[3], this.size.h);
-        drawLine(this.ctx, this.size.w - _l.padding[1], 0, this.size.w - _l.padding[1], this.size.h);
-        _.dims.list.forEach((dim) => {
-            const bound = dim.layout.bound;
-            const axisStart = dim.layout.axisStart;
-            const axisStop = dim.layout.axisStop;
-            const labelPoint = dim.layout.labelPoint;
-            drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h);
-            drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3);
-            drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, { strokeStyle: 'purple' });
-        });
-        const font = getFont(this.options.style.dimension.label.font);
-        const rad = this.options.style.dimension.label.angle || 0;
-        this.dimensions.forEach((dimension, index) => {
-            const bound = _.dims.list[index].layout.bound;
-            const labelPoint = _.dims.list[index].layout.labelPoint;
-            const x = bound.x + labelPoint.x;
-            const y = bound.y + labelPoint.y;
-            drawTextAngled(this.ctx, dimension.label, font, x, y, rad);
-        });
+        this.drawDebugOutline();
     }
     setSize(w, h) {
         this.canvas.width = w;
         this.canvas.height = h;
         this.size = { h, w };
+    }
+    drawDebugOutline() {
+        if (!this._)
+            return;
+        const { h, w } = this.size;
+        const _l = this._.layout;
+        const _dl = this._.dims.list;
+        // Draw the drawing area by outlining paddings.
+        const paddingStyle = { strokeStyle: '#dddddd' };
+        drawLine(this.ctx, 0, _l.padding[0], w, _l.padding[0], paddingStyle);
+        drawLine(this.ctx, 0, h - _l.padding[2], w, h - _l.padding[2], paddingStyle);
+        drawLine(this.ctx, _l.padding[3], 0, _l.padding[3], h, paddingStyle);
+        drawLine(this.ctx, w - _l.padding[1], 0, w - _l.padding[1], h, paddingStyle);
+        // Draw each dimension rough outline with bounding box.
+        _dl.forEach(dim => {
+            const bound = dim.layout.bound;
+            const axisStart = dim.layout.axisStart;
+            const axisStop = dim.layout.axisStop;
+            const labelPoint = dim.layout.labelPoint;
+            const boundStyle = { strokeStyle: '#dddddd' };
+            const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
+            const axisStyle = { lineWidth: 2, strokeStyle: 'purple' };
+            drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
+            drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
+            drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, axisStyle);
+        });
+        // Draw the dimension labels.
+        const font = getFont(this.options.style.dimension.label.font);
+        const rad = this.options.style.dimension.label.angle || 0;
+        this.dimensions.forEach((dimension, index) => {
+            const bound = _dl[index].layout.bound;
+            const labelPoint = _dl[index].layout.labelPoint;
+            const x = bound.x + labelPoint.x;
+            const y = bound.y + labelPoint.y;
+            drawTextAngled(this.ctx, dimension.label, font, x, y, rad);
+        });
     }
 }
 
