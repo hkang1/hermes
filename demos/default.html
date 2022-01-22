@@ -13,9 +13,15 @@
       console.log('dims', dimensions);
       console.log('data', data);
       const hermes = new Hermes('#hermes', data, dimensions, {
-        direction: 'vertical',
+        direction: 'horizontal',
         style: {
-          dimension: { layout: 'evenly-spaced' },
+          dimension: {
+            label: {
+              angle: -Math.PI / 4,
+              placement: 'after',
+            },
+            layout: 'axis-evenly-spaced',
+          },
         },
       });
     </script>

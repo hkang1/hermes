@@ -462,6 +462,30 @@ const getElement = (target) => {
     return document.querySelector(target);
 };
 
+const readableNumber = (num, precision = 6) => {
+    let readable = num.toString();
+    if (isNaN(num)) {
+        readable = 'NaN';
+    }
+    else if (!Number.isFinite(num)) {
+        readable = `${num < 0 ? '-' : ''}Infinity`;
+    }
+    else if (!Number.isInteger(num)) {
+        readable = num.toFixed(precision);
+        const absoluteNum = Math.abs(num);
+        if (absoluteNum < 0.01 || absoluteNum > 999) {
+            readable = num.toExponential(precision);
+        }
+    }
+    return readable;
+};
+const readableTick = (num) => {
+    let readable = readableNumber(num);
+    readable = readable.replace(/(\.[0-9]+?)0+(e-?\d+)?$/, '$1$2'); // e.g. 0.750000 => 0.75
+    readable = readable.replace(/\.(e)/, '$1'); // e.g. 2.e5 => 2e5
+    return readable;
+};
+
 const dimensionSamples = [
     {
         axis: { range: [0.2, 0.8], type: AxisType.Linear },
@@ -573,24 +597,24 @@ var tester = /*#__PURE__*/Object.freeze({
   randomNumber: randomNumber
 });
 
-const CONFIG = { TICK_DISTANCE: 5 };
+const CONFIG = { TICK_DISTANCE: 50 };
 const DEFAULT_OPTIONS = {
     direction: Direction.Horizontal,
     style: {
         axes: {
             axis: {
-                color: 'grey',
+                color: 'black',
                 width: 1,
             },
             label: {
-                color: 'blue',
-                font: { size: 12 },
-                offset: 10,
+                color: 'black',
+                font: { size: 11 },
+                offset: 4,
                 placement: LabelPlacement.After,
             },
             tick: {
-                color: 'red',
-                length: 10,
+                color: 'black',
+                length: 4,
                 width: 1,
             },
         },
@@ -692,9 +716,9 @@ class Hermes {
         _dsl.sin = dimLabelStyle.angle != null ? Math.sin(dimLabelStyle.angle) : undefined;
         _dsl.maxLengthCos = 0;
         _dsl.maxLengthSin = 0;
-        this.dimensions.forEach((dimension, index) => {
+        this.dimensions.forEach((dimension, i) => {
             const textSize = getTextSize(this.ctx, dimension.label, dimLabelStyle.font);
-            const _dlil = _.dims.list[index].label;
+            const _dlil = _.dims.list[i].label;
             _dlil.w = textSize.w;
             _dlil.h = textSize.h;
             _dlil.lengthCos = _dsl.cos != null ? textSize.w * _dsl.cos : textSize.w;
@@ -742,14 +766,15 @@ class Hermes {
         _dsa.scale = new NiceScale(_dsa.maxTicks);
         _dsa.labelFactor = axesLabelStyle.placement === LabelPlacement.Before ? -1 : 1;
         _dsly.totalBoundSpace = 0;
-        for (let i = 0; i < dimCount; i++) {
+        this.dimensions.forEach((dimension, i) => {
+            var _a, _b;
             const _dlia = _.dims.list[i].axes;
             const _dlil = _.dims.list[i].label;
             const _dlily = _.dims.list[i].layout;
             /**
              * Save scale info for each axis.
              */
-            _dsa.scale.setMinMaxValues(-100, 100);
+            _dsa.scale.setMinMaxValues((_a = dimension.axis.range) === null || _a === void 0 ? void 0 : _a[0], (_b = dimension.axis.range) === null || _b === void 0 ? void 0 : _b[1]);
             _dlia.scale = {
                 max: _dsa.scale.max,
                 min: _dsa.scale.min,
@@ -761,7 +786,7 @@ class Hermes {
              * Find the longest axis label.
              */
             _dlia.maxLength = _dsa.scale.ticks.reduce((acc, tick) => {
-                const size = getTextSize(this.ctx, tick.toString(), axesLabelStyle.font);
+                const size = getTextSize(this.ctx, readableTick(tick), axesLabelStyle.font);
                 return Math.max(size.w, acc);
             }, 0);
             /**
@@ -811,7 +836,7 @@ class Hermes {
                 };
                 _dsly.totalBoundSpace += _dlily.bound.h;
             }
-        }
+        });
         /**
          * Calculate the gap spacing between the dimensions.
          */
@@ -852,7 +877,6 @@ class Hermes {
                 traversed += _dsly.gap + _dlily.bound.w;
             }
             else {
-                console.log('vertical', 'spaceOffset', _dlily.spaceOffset, 'spaceBefore', _dlily.spaceBefore, 'space', _dsly.space);
                 if (dimLayout === DimensionLayout.AxisEvenlySpaced) {
                     _dlily.bound.y = _dsly.offset + i * _dsly.space + _dsly.space / 2 - _dlily.spaceBefore;
                 }
@@ -875,12 +899,51 @@ class Hermes {
         }
         this._ = _;
         this.drawDebugOutline();
+        this.draw();
     }
     draw() {
+        if (!this._)
+            return;
+        this.size;
+        this._.layout;
+        const _dl = this._.dims.list;
+        const axesStyle = this.options.style.axes;
         // Draw data lines.
         // Draw dimensions.
         // Draw dimension labels.
+        const font = getFont(this.options.style.dimension.label.font);
+        const rad = this.options.style.dimension.label.angle || 0;
+        this.dimensions.forEach((dimension, i) => {
+            const bound = _dl[i].layout.bound;
+            const labelPoint = _dl[i].layout.labelPoint;
+            const x = bound.x + labelPoint.x;
+            const y = bound.y + labelPoint.y;
+            drawTextAngled(this.ctx, dimension.label, font, x, y, rad);
+        });
         // Draw dimension axes.
+        const drawAxesStyle = { lineWidth: 1, strokeStyle: 'blue' };
+        const drawTickStyle = {
+            lineWidth: axesStyle.tick.width,
+            strokeStyle: axesStyle.tick.color,
+        };
+        _dl.forEach(dim => {
+            console.log(dim.axes.scale);
+            const bound = dim.layout.bound;
+            const axisStart = dim.layout.axisStart;
+            const axisStop = dim.layout.axisStop;
+            const scale = dim.axes.scale;
+            const tickOffset = Math.abs(axisStop.y - axisStart.y) / (scale.ticks.length - 1);
+            const tickLengthFactor = axesStyle.label.placement === LabelPlacement.Before ? -1 : 1;
+            drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, drawAxesStyle);
+            for (let i = 0; i < scale.ticks.length; i++) {
+                const x0 = bound.x + axisStart.x;
+                const y0 = bound.y + axisStart.y + i * tickOffset;
+                const x1 = bound.x + axisStart.x + tickLengthFactor * axesStyle.tick.length;
+                const y1 = bound.y + axisStart.y + i * tickOffset;
+                drawLine(this.ctx, x0, y0, x1, y1, drawTickStyle);
+                drawTextAngled(this.ctx, readableTick(scale.ticks[i]), getFont(axesStyle.label.font), x1 + tickLengthFactor * axesStyle.label.offset, y0, 0, { fillStyle: axesStyle.label.color });
+            }
+        });
     }
     drawDebugOutline() {
         if (!this._)
@@ -897,29 +960,15 @@ class Hermes {
         drawLine(this.ctx, _l.padding[3], 0, _l.padding[3], h, paddingStyle);
         drawLine(this.ctx, w - _l.padding[1], 0, w - _l.padding[1], h, paddingStyle);
         // Draw each dimension rough outline with bounding box.
-        _dl.forEach((dim, index) => {
+        _dl.forEach((dim, i) => {
             const bound = dim.layout.bound;
-            const axisStart = dim.layout.axisStart;
-            const axisStop = dim.layout.axisStop;
             const labelPoint = dim.layout.labelPoint;
-            const dimStyle = { strokeStyle: 'green' };
+            const dimStyle = { strokeStyle: '#999999' };
             const boundStyle = { strokeStyle: '#dddddd' };
             const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
-            const axisStyle = { lineWidth: 2, strokeStyle: 'purple' };
-            drawRect(this.ctx, isHorizontal ? _l.padding[3] + index * _dsl.space : bound.x, isHorizontal ? bound.y : _l.padding[0] + index * _dsl.space, isHorizontal ? _dsl.space : bound.w, isHorizontal ? bound.h : _dsl.space, dimStyle);
+            drawRect(this.ctx, isHorizontal ? _l.padding[3] + i * _dsl.space : bound.x, isHorizontal ? bound.y : _l.padding[0] + i * _dsl.space, isHorizontal ? _dsl.space : bound.w, isHorizontal ? bound.h : _dsl.space, dimStyle);
             drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
             drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
-            drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, axisStyle);
-        });
-        // Draw the dimension labels.
-        const font = getFont(this.options.style.dimension.label.font);
-        const rad = this.options.style.dimension.label.angle || 0;
-        this.dimensions.forEach((dimension, index) => {
-            const bound = _dl[index].layout.bound;
-            const labelPoint = _dl[index].layout.labelPoint;
-            const x = bound.x + labelPoint.x;
-            const y = bound.y + labelPoint.y;
-            drawTextAngled(this.ctx, dimension.label, font, x, y, rad);
         });
     }
 }
