@@ -66,11 +66,11 @@ class Hermes {
     return tester;
   }
 
-  destroy(): void {
+  public destroy(): void {
     this.resizeObserver.unobserve(this.element);
   }
 
-  setSize(w: number, h: number): void {
+  public setSize(w: number, h: number): void {
     this.canvas.width = w;
     this.canvas.height = h;
     this.size = { h, w };
