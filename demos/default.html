@@ -7,25 +7,12 @@
   <body>
     <div id="hermes"></div>
     <script>
-      const dimensions = [
-        {
-          label: 'abc',
-          type: 'linear',
-        },
-        {
-          label: 'defg',
-          type: 'linear',
-        },
-        {
-          label: 'hijkl',
-          type: 'linear',
-        },
-        {
-          label: 'mnopqr',
-          type: 'linear',
-        }
-      ];
-      const hermes = new Hermes('#hermes', dimensions, { direction: 'horizontal' });
+      const tester = Hermes.getTester();
+      const dimensions = tester.generateDimensions();
+      const data = tester.generateData(dimensions, 100);
+      console.log('dims', dimensions);
+      console.log('data', data);
+      const hermes = new Hermes('#hermes', {}, dimensions, { direction: 'horizontal' });
     </script>
   </body>
 </html>

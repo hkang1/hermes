@@ -1,32 +1,33 @@
 import NiceScale from './classes/NiceScale';
 
-/*
- * Base Core Types
+/**
+ * TYPES
  */
-export type Primitive = boolean | number | string;
+
 export type Padding = number | [ number, number ] | [ number, number, number, number ];
+export type Primitive = boolean | number | string;
 export type Range<T = number> = [ T, T ];
+export type RecordKey = string | number | symbol;
 export type RecursivePartial<T> = { [P in keyof T]?: RecursivePartial<T[P]> };
 
-/*
+/**
  * Canvas Rendering Types
  */
+
 export type Point = { x: number, y: number };
-export type Size = { h: number, w: number };
 export type Rect = Point & Size;
+export type Size = { h: number, w: number };
 
-/*
- * Chart Option Types
+/**
+ * Data Types
  */
-export enum LabelPlacement {
-  After = 'after',
-  Before = 'before',
-}
 
-export enum AxesLabelLayout {
-  After = 'after',
-  Before = 'before',
-}
+export type DataValue = boolean | number | string | null | undefined;
+export type DimensionKey = string;
+
+/**
+ * ENUMERABLES
+ */
 
 export enum AxisType {
   Categorical = 'categorical',
@@ -34,9 +35,9 @@ export enum AxisType {
   Logarithmic = 'logarithmic',
 }
 
-export enum DimensionLabelLayout {
-  End = 'end',
-  Start = 'start',
+export enum DimensionLayout {
+  Equidistant = 'equidistant',
+  EvenlySpaced = 'evenly-spaced',
 }
 
 export enum Direction {
@@ -57,17 +58,33 @@ export enum FontStyle {
   Oblique = 'oblique',
 }
 
-export interface DrawStyle {
-  fillStyle?: string | CanvasGradient | CanvasPattern;
-  lineWidth?: number;
-  strokeStyle?: string | CanvasGradient | CanvasPattern;
+export enum LabelPlacement {
+  After = 'after',
+  Before = 'before',
 }
+
+/**
+ * INTERFACES
+ */
 
 export interface Axis {
   auto?: boolean;
   categories?: Primitive[];
+  logBase?: number;
   range?: Range;
   type: AxisType;
+}
+
+export interface Dimension {
+  axis: Axis;
+  key: string;
+  label: string;
+}
+
+export interface DrawStyle {
+  fillStyle?: string | CanvasGradient | CanvasPattern;
+  lineWidth?: number;
+  strokeStyle?: string | CanvasGradient | CanvasPattern;
 }
 
 export interface Font {
@@ -75,12 +92,6 @@ export interface Font {
   size?: number;
   style?: FontStyle;
   weight?: FontWeight | number;
-}
-
-export interface Dimension {
-  axis: Axis;
-  key: string;
-  label: string;
 }
 
 export interface LabelOptions {
@@ -91,8 +102,15 @@ export interface LabelOptions {
   placement: LabelPlacement;
 }
 
+/**
+ * PRIMARY INTERFACES AND TYPES
+ */
+
+export type HermesData = Record<DimensionKey, DataValue[]>;
+
 export interface HermesOptions {
   direction: Direction;
+  //hooks: {},
   style: {
     axes: {
       axis: {
@@ -108,6 +126,7 @@ export interface HermesOptions {
     };
     dimension: {
       label: LabelOptions;
+      layout: DimensionLayout;
     };
     padding: Padding;
   };
@@ -158,6 +177,7 @@ export interface Internal {
       };
       layout: {
         gap: number;
+        space: number;
         totalBoundSpace: number;
       };
     };
