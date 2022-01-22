@@ -402,6 +402,39 @@ const LINE_WIDTH = 1.0;
 const MITER_LIMIT = 10.0;
 const STROKE_STYLE = 'black';
 const TEXT_BASELINE = 'middle';
+const HERMES_OPTIONS = {
+    direction: Direction.Horizontal,
+    style: {
+        axes: {
+            axis: {
+                color: 'black',
+                width: 1,
+            },
+            label: {
+                color: 'black',
+                font: { size: 11 },
+                offset: 4,
+                placement: LabelPlacement.Before,
+            },
+            tick: {
+                color: 'black',
+                length: 4,
+                width: 1,
+            },
+        },
+        dimension: {
+            label: {
+                angle: Math.PI / 4,
+                color: 'black',
+                font: { size: 14 },
+                offset: 10,
+                placement: LabelPlacement.Before,
+            },
+            layout: DimensionLayout.AxisEvenlySpaced,
+        },
+        padding: 25,
+    },
+};
 
 const drawCircle = (ctx, x, y, radius, style = {}) => {
     ctx.save();
@@ -465,7 +498,6 @@ const drawText = (ctx, text, x, y, rad, style = {}) => {
     ctx.font = style.font || FONT;
     ctx.textAlign = style.textAlign || (inwards ? 'right' : 'left');
     ctx.textBaseline = style.textBaseline || TEXT_BASELINE;
-    console.log(ctx.textBaseline);
     ctx.translate(x, y);
     ctx.rotate(-rad - (inwards ? Math.PI : 0));
     ctx.translate(-x, -y);
@@ -651,39 +683,6 @@ var tester = /*#__PURE__*/Object.freeze({
 });
 
 const CONFIG = { TICK_DISTANCE: 50 };
-const DEFAULT_OPTIONS = {
-    direction: Direction.Horizontal,
-    style: {
-        axes: {
-            axis: {
-                color: 'black',
-                width: 1,
-            },
-            label: {
-                color: 'black',
-                font: { size: 11 },
-                offset: 4,
-                placement: LabelPlacement.Before,
-            },
-            tick: {
-                color: 'black',
-                length: 4,
-                width: 1,
-            },
-        },
-        dimension: {
-            label: {
-                angle: Math.PI / 4,
-                color: 'black',
-                font: { size: 14 },
-                offset: 10,
-                placement: LabelPlacement.Before,
-            },
-            layout: DimensionLayout.AxisEvenlySpaced,
-        },
-        padding: 25,
-    },
-};
 class Hermes {
     constructor(target, data, dimensions, options = {}) {
         this.size = { h: 0, w: 0 };
@@ -708,7 +707,7 @@ class Hermes {
         if (dimensions.length === 0)
             throw new HermesError('Need at least one dimension defined.');
         this.dimensions = dimensions;
-        this.options = deepmerge(DEFAULT_OPTIONS, options);
+        this.options = deepmerge(HERMES_OPTIONS, options);
         // Add resize observer to detect target element resizing.
         this.resizeObserver = new ResizeObserver(entries => {
             const rect = entries[0].contentRect;

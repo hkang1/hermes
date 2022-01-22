@@ -2,6 +2,7 @@ import { deepmerge } from 'deepmerge-ts';
 
 import HermesError from './classes/HermesError';
 import NiceScale from './classes/NiceScale';
+import * as DEFAULT from './defaults';
 import * as t from './types';
 import {
   drawCircle, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
@@ -11,40 +12,6 @@ import { readableTick } from './utils/string';
 import * as tester from './utils/test';
 
 const CONFIG = { TICK_DISTANCE: 50 };
-
-const DEFAULT_OPTIONS: t.HermesOptions = {
-  direction: t.Direction.Horizontal,
-  style: {
-    axes: {
-      axis: {
-        color: 'black',
-        width: 1,
-      },
-      label: {
-        color: 'black',
-        font: { size: 11 },
-        offset: 4,
-        placement: t.LabelPlacement.Before,
-      },
-      tick: {
-        color: 'black',
-        length: 4,
-        width: 1,
-      },
-    },
-    dimension: {
-      label: {
-        angle: Math.PI / 4,
-        color: 'black',
-        font: { size: 14 },
-        offset: 10,
-        placement: t.LabelPlacement.Before,
-      },
-      layout: t.DimensionLayout.AxisEvenlySpaced,
-    },
-    padding: 25,
-  },
-};
 
 class Hermes {
   private element: HTMLElement;
@@ -84,7 +51,7 @@ class Hermes {
 
     if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
     this.dimensions = dimensions;
-    this.options = deepmerge(DEFAULT_OPTIONS, options) as t.HermesOptions;
+    this.options = deepmerge(DEFAULT.HERMES_OPTIONS, options) as t.HermesOptions;
 
     // Add resize observer to detect target element resizing.
     this.resizeObserver = new ResizeObserver(entries => {
