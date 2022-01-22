@@ -610,7 +610,7 @@ const DEFAULT_OPTIONS = {
                 color: 'black',
                 font: { size: 11 },
                 offset: 4,
-                placement: LabelPlacement.After,
+                placement: LabelPlacement.Before,
             },
             tick: {
                 color: 'black',
@@ -689,11 +689,13 @@ class Hermes {
                 padding: normalizePadding(this.options.style.padding),
             },
         };
+        const { h, w } = this.size;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const dimLabelStyle = this.options.style.dimension.label;
         const dimLayout = this.options.style.dimension.layout;
         const axesLabelStyle = this.options.style.axes.label;
-        const placement = dimLabelStyle.placement;
+        const isLabelBefore = dimLabelStyle.placement === LabelPlacement.Before;
+        const isAxesBefore = axesLabelStyle.placement === LabelPlacement.Before;
         const dimCount = this.dimensions.length;
         const _l = _.layout;
         const _dsa = _.dims.shared.axes;
@@ -703,8 +705,8 @@ class Hermes {
          * Calculate actual render area (canvas minus padding).
          */
         _l.drawRect = {
-            h: this.size.h - _l.padding[0] - _l.padding[2],
-            w: this.size.w - _l.padding[1] - _l.padding[3],
+            h: h - _l.padding[0] - _l.padding[2],
+            w: w - _l.padding[1] - _l.padding[3],
             x: _l.padding[3],
             y: _l.padding[0],
         };
@@ -736,27 +738,27 @@ class Hermes {
         _dsa.start = 0;
         _dsa.stop = 0;
         if (isHorizontal) {
-            if (placement === LabelPlacement.Before) {
+            if (isLabelBefore) {
                 const labelOffset = Math.max(0, _dsl.maxLengthSin);
                 _dsa.start = _l.padding[0] + labelOffset + dimLabelStyle.offset;
-                _dsa.stop = this.size.h - _l.padding[2];
+                _dsa.stop = h - _l.padding[2];
             }
             else {
                 const labelOffset = Math.max(0, -_dsl.maxLengthSin);
                 _dsa.start = _l.padding[0];
-                _dsa.stop = this.size.h - _l.padding[2] - labelOffset - dimLabelStyle.offset;
+                _dsa.stop = h - _l.padding[2] - labelOffset - dimLabelStyle.offset;
             }
         }
         else {
-            if (placement === LabelPlacement.Before) {
+            if (isLabelBefore) {
                 const labelOffset = Math.max(0, -_dsl.maxLengthCos);
                 _dsa.start = _l.padding[3] + labelOffset + dimLabelStyle.offset;
-                _dsa.stop = this.size.w - _l.padding[1];
+                _dsa.stop = w - _l.padding[1];
             }
             else {
                 const labelOffset = Math.max(0, _dsl.maxLengthCos);
                 _dsa.start = _l.padding[3];
-                _dsa.stop = this.size.w - _l.padding[1] - labelOffset - dimLabelStyle.offset;
+                _dsa.stop = w - _l.padding[1] - labelOffset - dimLabelStyle.offset;
             }
         }
         /**
@@ -764,7 +766,7 @@ class Hermes {
          */
         _dsa.maxTicks = (_dsa.stop - _dsa.start) / CONFIG.TICK_DISTANCE;
         _dsa.scale = new NiceScale(_dsa.maxTicks);
-        _dsa.labelFactor = axesLabelStyle.placement === LabelPlacement.Before ? -1 : 1;
+        _dsa.labelFactor = isAxesBefore ? -1 : 1;
         _dsly.totalBoundSpace = 0;
         this.dimensions.forEach((dimension, i) => {
             var _a, _b;
@@ -808,7 +810,7 @@ class Hermes {
             /**
              * See if axes labels are long enough to shift the axis center.
              */
-            if (axesLabelStyle.placement === LabelPlacement.Before) {
+            if (isAxesBefore) {
                 _dlily.spaceBefore = Math.max(_dlily.spaceBefore, _dlia.maxLength);
             }
             else {
@@ -820,7 +822,7 @@ class Hermes {
              */
             if (isHorizontal) {
                 _dlily.bound = {
-                    h: this.size.h - _l.padding[0] - _l.padding[2],
+                    h: h - _l.padding[0] - _l.padding[2],
                     w: _dlily.spaceBefore + _dlily.spaceAfter,
                     x: 0,
                     y: _l.padding[0],
@@ -830,7 +832,7 @@ class Hermes {
             else {
                 _dlily.bound = {
                     h: _dlily.spaceBefore + _dlily.spaceAfter,
-                    w: this.size.w - _l.padding[1] - _l.padding[3],
+                    w: w - _l.padding[1] - _l.padding[3],
                     x: _l.padding[3],
                     y: 0,
                 };
@@ -870,7 +872,7 @@ class Hermes {
                 _dlily.axisStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
                 _dlily.labelPoint = {
                     x: _dlily.spaceBefore,
-                    y: placement === LabelPlacement.Before
+                    y: isLabelBefore
                         ? _dsa.start - dimLabelStyle.offset - _l.padding[0]
                         : _dsa.stop + dimLabelStyle.offset - _l.padding[0],
                 };
@@ -889,7 +891,7 @@ class Hermes {
                 _dlily.axisStart = { x: _dsa.start - _l.padding[3], y: _dlily.spaceBefore };
                 _dlily.axisStop = { x: _dsa.stop - _l.padding[3], y: _dlily.spaceBefore };
                 _dlily.labelPoint = {
-                    x: placement === LabelPlacement.Before
+                    x: isLabelBefore
                         ? _dsa.start - dimLabelStyle.offset - _l.padding[1]
                         : _dsa.stop + dimLabelStyle.offset - _l.padding[1],
                     y: _dlily.spaceBefore,
@@ -907,12 +909,15 @@ class Hermes {
         this.size;
         this._.layout;
         const _dl = this._.dims.list;
+        const isHorizontal = this.options.direction === Direction.Horizontal;
+        const dimStyle = this.options.style.dimension;
         const axesStyle = this.options.style.axes;
+        const isAxesBefore = axesStyle.label.placement === LabelPlacement.Before;
         // Draw data lines.
         // Draw dimensions.
         // Draw dimension labels.
-        const font = getFont(this.options.style.dimension.label.font);
-        const rad = this.options.style.dimension.label.angle || 0;
+        const font = getFont(dimStyle.label.font);
+        const rad = dimStyle.label.angle || 0;
         this.dimensions.forEach((dimension, i) => {
             const bound = _dl[i].layout.bound;
             const labelPoint = _dl[i].layout.labelPoint;
@@ -921,27 +926,34 @@ class Hermes {
             drawTextAngled(this.ctx, dimension.label, font, x, y, rad);
         });
         // Draw dimension axes.
-        const drawAxesStyle = { lineWidth: 1, strokeStyle: 'blue' };
+        const drawAxesStyle = { lineWidth: 1, strokeStyle: axesStyle.axis.color };
         const drawTickStyle = {
             lineWidth: axesStyle.tick.width,
             strokeStyle: axesStyle.tick.color,
         };
         _dl.forEach(dim => {
-            console.log(dim.axes.scale);
             const bound = dim.layout.bound;
             const axisStart = dim.layout.axisStart;
             const axisStop = dim.layout.axisStop;
             const scale = dim.axes.scale;
-            const tickOffset = Math.abs(axisStop.y - axisStart.y) / (scale.ticks.length - 1);
-            const tickLengthFactor = axesStyle.label.placement === LabelPlacement.Before ? -1 : 1;
+            const axisLength = isHorizontal ? axisStop.y - axisStart.y : axisStop.x - axisStart.x;
+            const tickOffset = Math.abs(axisLength) / (scale.ticks.length - 1);
+            const tickLengthFactor = isAxesBefore ? -1 : 1;
             drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, drawAxesStyle);
             for (let i = 0; i < scale.ticks.length; i++) {
-                const x0 = bound.x + axisStart.x;
-                const y0 = bound.y + axisStart.y + i * tickOffset;
-                const x1 = bound.x + axisStart.x + tickLengthFactor * axesStyle.tick.length;
-                const y1 = bound.y + axisStart.y + i * tickOffset;
+                const xOffset = isHorizontal ? 0 : i * tickOffset;
+                const yOffset = isHorizontal ? i * tickOffset : 0;
+                const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
+                const yTickLength = isHorizontal ? 0 : tickLengthFactor * axesStyle.tick.length;
+                const x0 = bound.x + axisStart.x + xOffset;
+                const y0 = bound.y + axisStart.y + yOffset;
+                const x1 = bound.x + axisStart.x + xOffset + xTickLength;
+                const y1 = bound.y + axisStart.y + yOffset + yTickLength;
                 drawLine(this.ctx, x0, y0, x1, y1, drawTickStyle);
-                drawTextAngled(this.ctx, readableTick(scale.ticks[i]), getFont(axesStyle.label.font), x1 + tickLengthFactor * axesStyle.label.offset, y0, 0, { fillStyle: axesStyle.label.color });
+                const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
+                const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;
+                const rad = isHorizontal && isAxesBefore ? Math.PI : 0;
+                drawTextAngled(this.ctx, readableTick(scale.ticks[i]), getFont(axesStyle.label.font), cx, cy, rad, { fillStyle: axesStyle.label.color });
             }
         });
     }
