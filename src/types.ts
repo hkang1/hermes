@@ -57,6 +57,12 @@ export enum FontStyle {
   Oblique = 'oblique',
 }
 
+export interface DrawStyle {
+  fillStyle?: string | CanvasGradient | CanvasPattern;
+  lineWidth?: number;
+  strokeStyle?: string | CanvasGradient | CanvasPattern;
+}
+
 export interface Axis {
   auto?: boolean;
   categories?: Primitive[];
@@ -145,10 +151,10 @@ export interface Internal {
         stop: number;
       };
       label: {
-        cos: number;
-        cosMax: number;
-        sin: number;
-        sinMax: number;
+        cos?: number;
+        maxLengthCos?: number;
+        maxLengthSin?: number;
+        sin?: number;
       };
       layout: {
         gap: number;

@@ -4,7 +4,10 @@ import HermesError from './classes/HermesError';
 import NiceScale from './classes/NiceScale';
 import * as t from './types';
 import {
-  getFont, getTextSize, normalizePadding,
+  drawCircle,
+  drawLine,
+  drawRect,
+  drawTextAngled, getFont, getTextSize, normalizePadding,
 } from './utils/canvas';
 import { getElement } from './utils/dom';
 
@@ -32,7 +35,7 @@ const DEFAULT_OPTIONS: t.HermesOptions = {
     },
     dimension: {
       label: {
-        angle: Math.PI / 4,
+        angle: 3 * Math.PI / 4,
         color: 'black',
         font: { size: 14 },
         offset: 10,
@@ -51,7 +54,7 @@ class Hermes {
   private dimensions: t.Dimension[];
   private options: t.HermesOptions;
   private size: t.Size = { h: 0, w: 0 };
-  private _: any = {};
+  private _?: t.Internal = undefined;
 
   constructor(
     target: HTMLElement | string,
@@ -119,7 +122,7 @@ class Hermes {
   }
 
   calculate(): void {
-    console.log('calculate');
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const _: any = {
       dims: {
         list: new Array(this.dimensions.length)
@@ -158,19 +161,19 @@ class Hermes {
      * Go through each of the dimension labels and calculate the size
      * of each one and figure out how much space is needed for them.
      */
-    _dsl.cos = dimLabelStyle.angle ? Math.cos(dimLabelStyle.angle) : undefined;
-    _dsl.sin = dimLabelStyle.angle ? Math.sin(dimLabelStyle.angle) : undefined;
-    _dsl.cosMax = 0;
-    _dsl.sinMax = 0;
+    _dsl.cos = dimLabelStyle.angle != null ? Math.cos(dimLabelStyle.angle) : undefined;
+    _dsl.sin = dimLabelStyle.angle != null ? Math.sin(dimLabelStyle.angle) : undefined;
+    _dsl.maxLengthCos = 0;
+    _dsl.maxLengthSin = 0;
     this.dimensions.forEach((dimension, index) => {
-      const textSize = getTextSize(this.ctx, dimension.label);
+      const textSize = getTextSize(this.ctx, dimension.label, dimLabelStyle.font);
       const _dlil = _.dims.list[index].label;
       _dlil.w = textSize.w;
       _dlil.h = textSize.h;
-      _dlil.lengthCos = _dsl.cos ? textSize.w * _dsl.cos : undefined;
-      _dlil.lengthSin = _dsl.sin ? textSize.w * _dsl.sin : undefined;
-      if (_dlil.lengthCos > _dsl.cosMax) _dsl.cosMax = _dlil.lengthCos;
-      if (_dlil.lengthSin > _dsl.sinMax) _dsl.sinMax = _dlil.lengthSin;
+      _dlil.lengthCos = _dsl.cos != null ? textSize.w * _dsl.cos : textSize.w;
+      _dlil.lengthSin = _dsl.sin != null ? textSize.w * _dsl.sin : textSize.h;
+      if (_dlil.lengthCos > _dsl.maxLengthCos) _dsl.maxLengthCos = _dlil.lengthCos;
+      if (_dlil.lengthSin > _dsl.maxLengthSin) _dsl.maxLengthSin = _dlil.lengthSin;
     });
 
     /**
@@ -180,19 +183,19 @@ class Hermes {
     _dsa.stop = 0;
     if (isHorizontal) {
       if (placement === t.LabelPlacement.Before) {
-        _dsa.start = _l.padding[0] + _dsl.sinMax + dimLabelStyle.offset;
+        _dsa.start = _l.padding[0] + _dsl.maxLengthSin + dimLabelStyle.offset;
         _dsa.stop = this.size.h - _l.padding[2];
       } else {
         _dsa.start = _l.padding[0];
-        _dsa.stop = this.size.h - _l.padding[2] - _dsl.sinMax - dimLabelStyle.offset;
+        _dsa.stop = this.size.h - _l.padding[2] - _dsl.maxLengthSin - dimLabelStyle.offset;
       }
     } else {
       if (placement === t.LabelPlacement.Before) {
-        _dsa.start = _l.padding[3] + _dsl.cosMax + dimLabelStyle.offset;
+        _dsa.start = _l.padding[3] + _dsl.maxLengthCos + dimLabelStyle.offset;
         _dsa.stop = this.size.w - _l.padding[1];
       } else {
         _dsa.start = _l.padding[3];
-        _dsa.stop = this.size.w - _l.padding[1] - _dsl.cosMax - dimLabelStyle.offset;
+        _dsa.stop = this.size.w - _l.padding[1] - _dsl.maxLengthCos - dimLabelStyle.offset;
       }
     }
 
@@ -224,8 +227,7 @@ class Hermes {
        * Find the longest axis label.
        */
       _dlia.maxLength = _dsa.scale.ticks.reduce((acc: number, tick: number) => {
-        const size = getTextSize(this.ctx, tick.toString());
-        console.log('tick', tick, size);
+        const size = getTextSize(this.ctx, tick.toString(), axesLabelStyle.font);
         return Math.max(size.w, acc);
       }, 0);
 
@@ -240,8 +242,8 @@ class Hermes {
         _dlily.spaceBefore = _dlil.lengthCos < 0 ? -_dlil.lengthCos : 0;
         _dlily.spaceAfter = _dlil.lengthCos > 0 ? _dlil.lengthCos : 0;
       } else {
-        _dlily.spaceBefore = _dlil.lengthSin < 0 ? -_dlil.lengthSin : 0;
-        _dlily.spaceAfter = _dlil.lengthSin > 0 ? _dlil.lengthSin : 0;
+        _dlily.spaceBefore = _dlil.lengthSin > 0 ? _dlil.lengthSin : 0;
+        _dlily.spaceAfter = _dlil.lengthSin < 0 ? -_dlil.lengthSin : 0;
       }
 
       /**
@@ -294,16 +296,19 @@ class Hermes {
 
       if (isHorizontal) {
         _dlily.bound.x = traversed;
+        _dlily.axisStart = { x: _dlily.spaceBefore, y: _dsa.start - _l.padding[0] };
+        _dlily.axisStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
         _dlily.labelPoint = {
           x: _dlily.spaceBefore,
           y: placement === t.LabelPlacement.Before
             ? _dsa.start - dimLabelStyle.offset - _l.padding[0]
             : _dsa.stop + dimLabelStyle.offset - _l.padding[0],
         };
-        _dlily.axisStart = {};
         traversed += _dsly.gap + _dlily.bound.w;
       } else {
         _dlily.bound.y = traversed;
+        _dlily.axisStart = { x: _dsa.start - _l.padding[3], y: _dlily.spaceBefore };
+        _dlily.axisStop = { x: _dsa.stop - _l.padding[3], y: _dlily.spaceBefore };
         _dlily.labelPoint = {
           x: placement === t.LabelPlacement.Before
             ? _dsa.start - dimLabelStyle.offset - _l.padding[1]
@@ -313,69 +318,46 @@ class Hermes {
         traversed += _dsly.gap + _dlily.bound.h;
       }
     }
-    console.log(_);
+    this._ = _;
+    console.log(this._);
 
-    this.drawLine(0, _dsa.start, this.size.w, _dsa.start);
-    this.drawLine(0, _dsa.stop, this.size.w, _dsa.stop);
-    this.drawLine(_l.padding[3], 0, _l.padding[3], this.size.h);
-    this.drawLine(this.size.w - _l.padding[1], 0, this.size.w - _l.padding[1], this.size.h);
+    drawLine(this.ctx, 0, _l.padding[0], this.size.w, _l.padding[0]);
+    drawLine(this.ctx, 0, this.size.h - _l.padding[2], this.size.w, this.size.h - _l.padding[2]);
+    drawLine(this.ctx, _l.padding[3], 0, _l.padding[3], this.size.h);
+    drawLine(this.ctx, this.size.w - _l.padding[1], 0, this.size.w - _l.padding[1], this.size.h);
 
     _.dims.list.forEach((dim: any) => {
       const bound = dim.layout.bound;
+      const axisStart = dim.layout.axisStart;
+      const axisStop = dim.layout.axisStop;
       const labelPoint = dim.layout.labelPoint;
-      this.drawRect(bound.x, bound.y, bound.w, bound.h);
-      this.drawCircle(bound.x + labelPoint.x, bound.y + labelPoint.y, 5);
+      drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h);
+      drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3);
+      drawLine(
+        this.ctx,
+        bound.x + axisStart.x,
+        bound.y + axisStart.y,
+        bound.x + axisStop.x,
+        bound.y + axisStop.y,
+        { strokeStyle: 'purple' },
+      );
     });
-  }
 
-  drawDimensions(): void {
-    const direction = this.options.direction;
-    const style = this.options.style.dimension.label;
-    const placement = style.placement;
-    const padding = normalizePadding(this.options.style.padding);
-
-    this.ctx.save();
-    this.ctx.font = getFont(style.font);
-    this.ctx.textBaseline = 'middle';
-
-    // console.log('labelInfo', labelInfo);
-    // console.log('maxLabelSin', maxLabelSin);
-    // const dimensionCount = this.dimensions.length;
-    // const dimensionWidth = (this.size.w - padding[1] - padding[3]) / dimensionCount;
-    this.ctx.textAlign = 'right';
-    this.ctx.fillText('this is a long test', 100, 0);
-
-    this.ctx.restore();
+    const font = getFont(this.options.style.dimension.label.font);
+    const rad = this.options.style.dimension.label.angle || 0;
+    this.dimensions.forEach((dimension, index) => {
+      const bound = _.dims.list[index].layout.bound;
+      const labelPoint = _.dims.list[index].layout.labelPoint;
+      const x = bound.x + labelPoint.x;
+      const y = bound.y + labelPoint.y;
+      drawTextAngled(this.ctx, dimension.label, font, x, y, rad);
+    });
   }
 
   setSize(w: number, h: number): void {
     this.canvas.width = w;
     this.canvas.height = h;
     this.size = { h, w };
-  }
-
-  drawCircle(x: number, y: number, radius: number): void {
-    this.ctx.strokeStyle = 'blue';
-    this.ctx.lineWidth = 1;
-    this.ctx.moveTo(x + radius, y);
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
-    this.ctx.stroke();
-  }
-
-  drawLine(x0: number, y0: number, x1: number, y1: number): void {
-    this.ctx.strokeStyle = 'red';
-    this.ctx.lineWidth = 1;
-    this.ctx.beginPath();
-    this.ctx.moveTo(x0, y0);
-    this.ctx.lineTo(x1, y1);
-    this.ctx.stroke();
-  }
-
-  drawRect(x: number, y: number, w: number, h: number): void {
-    this.ctx.strokeStyle = 'green';
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(x, y, w, h);
   }
 }
 
