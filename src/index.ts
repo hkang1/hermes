@@ -7,6 +7,7 @@ import * as t from './types';
 import {
   drawCircle, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
 } from './utils/canvas';
+import { getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
 import { readableTick } from './utils/string';
 import * as tester from './utils/test';
@@ -18,6 +19,7 @@ class Hermes {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private resizeObserver: ResizeObserver;
+  private data: t.HermesData;
   private dimensions: t.Dimension[];
   private options: t.HermesOptions;
   private size: t.Size = { h: 0, w: 0 };
@@ -48,6 +50,7 @@ class Hermes {
 
     if (Object.keys(data).length === 0)
       throw new HermesError('Need at least one dimension data record.');
+    this.data = data;
 
     if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
     this.dimensions = dimensions;
@@ -77,6 +80,26 @@ class Hermes {
   }
 
   private calculate(): void {
+    this.calculateScales();
+    this.calculateLayout();
+  }
+
+  private calculateScales(): void {
+    this.dimensions.forEach(dimension => {
+      const key = dimension.key;
+      const data = this.data[key] || [];
+      if ([ t.AxisType.Linear, t.AxisType.Logarithmic ].includes(dimension.axis.type)) {
+        dimension.axis.range = getDataRange(data);
+        if (dimension.axis.type === t.AxisType.Linear) {
+          dimension.axis.scale = new NiceScale();
+        } else if (dimension.axis.type === t.AxisType.Logarithmic) {
+
+        }
+      }
+    });
+  }
+
+  private calculateLayout(): void {
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const _: any = {
       dims: {

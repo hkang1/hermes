@@ -12,7 +12,6 @@ export const STROKE_STYLE = 'black';
 export const TEXT_ALIGN = 'left';
 export const TEXT_BASELINE = 'middle';
 
-export const LOG_BASE = 10;
 export const MAX_TICKS = 10;
 
 export const HERMES_OPTIONS: t.HermesOptions = {
@@ -37,7 +36,7 @@ export const HERMES_OPTIONS: t.HermesOptions = {
     },
     dimension: {
       label: {
-        angle: Math.PI / 4,
+        // angle: Math.PI / 4,
         color: 'black',
         font: { size: 14 },
         offset: 10,

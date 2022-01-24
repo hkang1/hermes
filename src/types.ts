@@ -1,3 +1,4 @@
+import NiceLogScale from './classes/NiceLogScale';
 import NiceScale from './classes/NiceScale';
 
 /**
@@ -80,6 +81,7 @@ export interface Axis {
   categories?: Primitive[];
   logBase?: number;
   range?: Range;
+  scale?: NiceLogScale | NiceScale;
   type: AxisType;
 }
 

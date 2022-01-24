@@ -1,3 +1,5 @@
+import { Range } from '../types';
+
 export const isBigInt = (data: unknown): data is bigint => typeof data === 'bigint';
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
@@ -9,3 +11,13 @@ export const isObject = (data: unknown): boolean => {
 export const isSet = (data: unknown): boolean => data instanceof Set;
 export const isString = (data: unknown): data is string => typeof data === 'string';
 export const isSymbol = (data: unknown): data is symbol => typeof data === 'symbol';
+
+export const getDataRange = (data: unknown[]): Range => {
+  return data.reduce((acc: Range, x) => {
+    if (isNumber(x)) {
+      if (x > acc[1]) acc[1] = x;
+      if (x < acc[0]) acc[0] = x;
+    }
+    return acc;
+  }, [ Infinity, -Infinity ]);
+};
