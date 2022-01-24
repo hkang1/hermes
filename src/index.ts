@@ -1,13 +1,15 @@
 import { deepmerge } from 'deepmerge-ts';
-
+import CategoricalScale from './classes/CategoricalScale';
 import HermesError from './classes/HermesError';
+import LinearScale from './classes/LinearScale';
+import LogScale from './classes/LogScale';
 import NiceScale from './classes/NiceScale';
 import * as DEFAULT from './defaults';
 import * as t from './types';
 import {
   drawCircle, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
 } from './utils/canvas';
-import { getDataRange } from './utils/data';
+import { getDataRange, isString } from './utils/data';
 import { getElement } from './utils/dom';
 import { readableTick } from './utils/string';
 import * as tester from './utils/test';
@@ -86,17 +88,22 @@ class Hermes {
 
   private calculateScales(): void {
     this.dimensions.forEach(dimension => {
+      const _da = dimension.axis;
       const key = dimension.key;
       const data = this.data[key] || [];
-      if ([ t.AxisType.Linear, t.AxisType.Logarithmic ].includes(dimension.axis.type)) {
-        dimension.axis.range = getDataRange(data);
-        if (dimension.axis.type === t.AxisType.Linear) {
-          dimension.axis.scale = new NiceScale();
-        } else if (dimension.axis.type === t.AxisType.Logarithmic) {
-
+      if ([ t.AxisType.Linear, t.AxisType.Logarithmic ].includes(_da.type)) {
+        _da.range = getDataRange(data);
+        if (_da.type === t.AxisType.Linear) {
+          _da.scale = new LinearScale(_da.range[0], _da.range[1]);
+        } else if (_da.type === t.AxisType.Logarithmic) {
+          _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase);
         }
+      } else if (_da.type === t.AxisType.Categorical) {
+        console.log('categories?', _da.categories);
+        _da.scale = new CategoricalScale(_da.categories);
       }
     });
+    console.log(this.dimensions);
   }
 
   private calculateLayout(): void {
@@ -120,6 +127,7 @@ class Hermes {
     const dimLayout = this.options.style.dimension.layout;
     const axesLabelStyle = this.options.style.axes.label;
     const isLabelBefore = dimLabelStyle.placement === t.LabelPlacement.Before;
+    const isLabelAngled = dimLabelStyle.angle != null;
     const isAxesBefore = axesLabelStyle.placement === t.LabelPlacement.Before;
     const dimCount = this.dimensions.length;
 
@@ -142,8 +150,8 @@ class Hermes {
      * Go through each of the dimension labels and calculate the size
      * of each one and figure out how much space is needed for them.
      */
-    _dsl.cos = dimLabelStyle.angle != null ? Math.cos(dimLabelStyle.angle) : undefined;
-    _dsl.sin = dimLabelStyle.angle != null ? Math.sin(dimLabelStyle.angle) : undefined;
+    _dsl.cos = isLabelAngled ? Math.cos(dimLabelStyle.angle ?? 0) : undefined;
+    _dsl.sin = isLabelAngled ? Math.sin(dimLabelStyle.angle ?? 0) : undefined;
     _dsl.maxLengthCos = 0;
     _dsl.maxLengthSin = 0;
     this.dimensions.forEach((dimension, i) => {
@@ -152,8 +160,8 @@ class Hermes {
 
       _dlil.w = textSize.w;
       _dlil.h = textSize.h;
-      _dlil.lengthCos = _dsl.cos != null ? textSize.w * _dsl.cos : textSize.w;
-      _dlil.lengthSin = _dsl.sin != null ? textSize.w * _dsl.sin : textSize.h;
+      _dlil.lengthCos = isLabelAngled ? textSize.w * _dsl.cos : textSize.w;
+      _dlil.lengthSin = isLabelAngled ? textSize.w * _dsl.sin : textSize.h;
 
       if (Math.abs(_dlil.lengthCos) > Math.abs(_dsl.maxLengthCos)) {
         _dsl.maxLengthCos = _dlil.lengthCos;
@@ -174,13 +182,13 @@ class Hermes {
         _dsa.start = _l.padding[0] + labelOffset + dimLabelStyle.offset;
         _dsa.stop = h - _l.padding[2];
       } else {
-        const labelOffset = Math.max(0, -_dsl.maxLengthSin);
+        const labelOffset = isLabelAngled ? Math.max(0, -_dsl.maxLengthSin) : _dsl.maxLengthSin;
         _dsa.start = _l.padding[0];
         _dsa.stop = h - _l.padding[2] - labelOffset - dimLabelStyle.offset;
       }
     } else {
       if (isLabelBefore) {
-        const labelOffset = Math.max(0, -_dsl.maxLengthCos);
+        const labelOffset = isLabelAngled ? Math.max(0, -_dsl.maxLengthCos) : _dsl.maxLengthCos;
         _dsa.start = _l.padding[3] + labelOffset + dimLabelStyle.offset;
         _dsa.stop = w - _l.padding[1];
       } else {
@@ -194,33 +202,33 @@ class Hermes {
      * Go through each axis and figure out the sizes of each axis labels.
      */
     _dsa.maxTicks = (_dsa.stop - _dsa.start) / CONFIG.TICK_DISTANCE;
-    _dsa.scale = new NiceScale(_dsa.maxTicks);
     _dsa.labelFactor = isAxesBefore ? -1 : 1;
     _dsly.totalBoundSpace = 0;
     this.dimensions.forEach((dimension, i) => {
       const _dlia = _.dims.list[i].axes;
       const _dlil = _.dims.list[i].label;
       const _dlily = _.dims.list[i].layout;
+      const scale: NiceScale | undefined = dimension.axis.scale;
 
       /**
-       * Save scale info for each axis.
+       * Update the scale info based on ticks.
        */
-      _dsa.scale.setMinMaxValues(dimension.axis.range?.[0], dimension.axis.range?.[1]);
-      _dlia.scale = {
-        max: _dsa.scale.max,
-        min: _dsa.scale.min,
-        range: _dsa.scale.range,
-        ticks: _dsa.scale.ticks.slice(),
-        tickSpacing: _dsa.scale.tickSpacing,
-      };
+      _dlia.ticks = [];
+      if (scale) {
+        scale?.setMaxTicks(_dsa.maxTicks);
+        _dlia.ticks = scale.ticks.slice();
+      }
 
       /**
        * Find the longest axis label.
        */
-      _dlia.maxLength = _dsa.scale.ticks.reduce((acc: number, tick: number) => {
-        const size = getTextSize(this.ctx, readableTick(tick), axesLabelStyle.font);
-        return Math.max(size.w, acc);
-      }, 0);
+       _dlia.maxLength = 0;
+      for (let i = 0; i < (scale?.ticks?.length || 0); i++) {
+        const tick = scale?.ticks?.[i];
+        const tickString = isString(tick) ? tick : readableTick(tick as number);
+        const size = getTextSize(this.ctx, tickString, axesLabelStyle.font);
+        _dlia.maxLength = Math.max(size.w, _dlia.maxLength);
+      }
 
       /**
        * Figure out where the axis alignment center should be.
@@ -340,6 +348,7 @@ class Hermes {
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const dimStyle = this.options.style.dimension;
     const axesStyle = this.options.style.axes;
+    const isDimBefore = dimStyle.label.placement === t.LabelPlacement.Before;
     const isAxesBefore = axesStyle.label.placement === t.LabelPlacement.Before;
 
     // Draw data lines.
@@ -350,7 +359,11 @@ class Hermes {
       fillStyle: dimStyle.label.color,
       font: getFont(dimStyle.label.font),
     };
-    const rad = dimStyle.label.angle || 0;
+    if (dimStyle.label.angle == null) {
+      dimTextStyle.textAlign = isHorizontal ? 'center' : undefined;
+      dimTextStyle.textBaseline = isHorizontal ? (isDimBefore ? 'bottom' : 'top') : undefined;
+    }
+    const rad = dimStyle.label.angle || (isHorizontal ? 0 : (isDimBefore ? -Math.PI : 0));
     this.dimensions.forEach((dimension, i) => {
       const bound = _dl[i].layout.bound;
       const labelPoint = _dl[i].layout.labelPoint;
@@ -380,9 +393,9 @@ class Hermes {
       const bound = dim.layout.bound;
       const axisStart = dim.layout.axisStart;
       const axisStop = dim.layout.axisStop;
-      const scale = dim.axes.scale;
+      const ticks = dim.axes.ticks;
       const axisLength = isHorizontal ? axisStop.y - axisStart.y : axisStop.x - axisStart.x;
-      const tickOffset = Math.abs(axisLength) / (scale.ticks.length - 1);
+      const tickOffset = Math.abs(axisLength) / (ticks.length - 1);
       const tickLengthFactor = isAxesBefore ? -1 : 1;
 
       drawLine(
@@ -394,7 +407,7 @@ class Hermes {
         drawAxesStyle,
       );
 
-      for (let i = 0; i < scale.ticks.length; i++) {
+      for (let i = 0; i < ticks.length; i++) {
         const xOffset = isHorizontal ? 0 : i * tickOffset;
         const yOffset = isHorizontal ? i * tickOffset : 0;
         const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
@@ -410,7 +423,9 @@ class Hermes {
         const rad = axesStyle.label.angle != null
           ? axesStyle.label.angle
           : (isHorizontal && isAxesBefore ? Math.PI : 0);
-        drawText(this.ctx, readableTick(scale.ticks[i]), cx, cy, rad, drawTickTextStyle);
+        const tick = ticks[i];
+        const tickString = isString(tick) ? tick : readableTick(tick);
+        drawText(this.ctx, tickString, cx, cy, rad, drawTickTextStyle);
       }
     });
   }
