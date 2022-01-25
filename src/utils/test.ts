@@ -17,6 +17,11 @@ const dimensionSamples: t.Dimension[] = [
     label: 'Layer Dense Size',
   },
   {
+    axis: { categories: [ true, false ], type: t.AxisType.Categorical },
+    key: 'layer-inverse',
+    label: 'Layer Inverse',
+  },
+  {
     axis: { logBase: 10, range: [ 0.0001, 0.1 ], type: t.AxisType.Logarithmic },
     key: 'learning-rate',
     label: 'Learning Rate',

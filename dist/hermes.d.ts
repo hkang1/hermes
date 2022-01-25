@@ -4,6 +4,7 @@ declare class Hermes {
     private canvas;
     private ctx;
     private resizeObserver;
+    private data;
     private dimensions;
     private options;
     private size;
@@ -13,6 +14,8 @@ declare class Hermes {
     destroy(): void;
     setSize(w: number, h: number): void;
     private calculate;
+    private calculateScales;
+    private calculateLayout;
     private draw;
     private drawDebugOutline;
 }

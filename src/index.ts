@@ -9,12 +9,9 @@ import * as t from './types';
 import {
   drawCircle, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
 } from './utils/canvas';
-import { getDataRange, isString } from './utils/data';
+import { getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
-import { readableTick } from './utils/string';
 import * as tester from './utils/test';
-
-const CONFIG = { TICK_DISTANCE: 50 };
 
 class Hermes {
   private element: HTMLElement;
@@ -201,7 +198,7 @@ class Hermes {
     /**
      * Go through each axis and figure out the sizes of each axis labels.
      */
-    _dsa.maxTicks = (_dsa.stop - _dsa.start) / CONFIG.TICK_DISTANCE;
+    const axisLength = _dsa.stop - _dsa.start;
     _dsa.labelFactor = isAxesBefore ? -1 : 1;
     _dsly.totalBoundSpace = 0;
     this.dimensions.forEach((dimension, i) => {
@@ -211,23 +208,21 @@ class Hermes {
       const scale: NiceScale | undefined = dimension.axis.scale;
 
       /**
-       * Update the scale info based on ticks.
+       * Update the scale info based on ticks and find the longest tick label.
        */
-      _dlia.ticks = [];
+      _dlia.tickLabels = [];
+      _dlia.tickPos = [];
+      _dlia.maxLength = 0;
       if (scale) {
-        scale?.setMaxTicks(_dsa.maxTicks);
-        _dlia.ticks = scale.ticks.slice();
-      }
+        scale.setAxisLength(axisLength);
 
-      /**
-       * Find the longest axis label.
-       */
-       _dlia.maxLength = 0;
-      for (let i = 0; i < (scale?.ticks?.length || 0); i++) {
-        const tick = scale?.ticks?.[i];
-        const tickString = isString(tick) ? tick : readableTick(tick as number);
-        const size = getTextSize(this.ctx, tickString, axesLabelStyle.font);
-        _dlia.maxLength = Math.max(size.w, _dlia.maxLength);
+        _dlia.tickLabels = scale.tickLabels.slice();
+        _dlia.tickPos = scale.tickPos.slice();
+
+        scale.tickLabels.forEach(tickLabel => {
+          const size = getTextSize(this.ctx, tickLabel, axesLabelStyle.font);
+          _dlia.maxLength = Math.max(size.w, _dlia.maxLength);
+        });
       }
 
       /**
@@ -352,7 +347,6 @@ class Hermes {
     const isAxesBefore = axesStyle.label.placement === t.LabelPlacement.Before;
 
     // Draw data lines.
-    // Draw dimensions.
 
     // Draw dimension labels.
     const dimTextStyle: t.StyleText = {
@@ -393,9 +387,8 @@ class Hermes {
       const bound = dim.layout.bound;
       const axisStart = dim.layout.axisStart;
       const axisStop = dim.layout.axisStop;
-      const ticks = dim.axes.ticks;
-      const axisLength = isHorizontal ? axisStop.y - axisStart.y : axisStop.x - axisStart.x;
-      const tickOffset = Math.abs(axisLength) / (ticks.length - 1);
+      const tickLabels = dim.axes.tickLabels;
+      const tickPos = dim.axes.tickPos;
       const tickLengthFactor = isAxesBefore ? -1 : 1;
 
       drawLine(
@@ -407,9 +400,9 @@ class Hermes {
         drawAxesStyle,
       );
 
-      for (let i = 0; i < ticks.length; i++) {
-        const xOffset = isHorizontal ? 0 : i * tickOffset;
-        const yOffset = isHorizontal ? i * tickOffset : 0;
+      for (let i = 0; i < tickLabels.length; i++) {
+        const xOffset = isHorizontal ? 0 : tickPos[i];
+        const yOffset = isHorizontal ? tickPos[i] : 0;
         const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
         const yTickLength = isHorizontal ? 0 : tickLengthFactor * axesStyle.tick.length;
         const x0 = bound.x + axisStart.x + xOffset;
@@ -423,9 +416,8 @@ class Hermes {
         const rad = axesStyle.label.angle != null
           ? axesStyle.label.angle
           : (isHorizontal && isAxesBefore ? Math.PI : 0);
-        const tick = ticks[i];
-        const tickString = isString(tick) ? tick : readableTick(tick);
-        drawText(this.ctx, tickString, cx, cy, rad, drawTickTextStyle);
+        const tickLabel = tickLabels[i];
+        drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
       }
     });
   }

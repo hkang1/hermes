@@ -1,0 +1,68 @@
+import { readableTick } from '../utils/string';
+import NiceScale from './NiceScale';
+
+export const DEFAULT_LOG_BASE = 10;
+
+class LogScale extends NiceScale {
+  protected denominator: number;
+  protected log: (x: number) => number;
+  protected logBase: number;
+  protected maxExp: number = NaN;
+  protected minExp: number = NaN;
+
+  constructor(
+    minValue: number,
+    maxValue: number,
+    logBase: number = DEFAULT_LOG_BASE,
+  ) {
+    super(minValue, maxValue);
+    this.denominator = 1;
+    this.log = Math.log;
+    this.logBase = logBase;
+  }
+
+  public setMinMaxValues(
+    minValue: number,
+    maxValue: number,
+    logBase: number = DEFAULT_LOG_BASE,
+  ): void {
+    this.minValue = minValue;
+    this.maxValue = maxValue;
+    this.logBase = logBase;
+    this.calculate();
+  }
+
+  public valueToPos(value: number): number {
+    const exp = this.log(value) / this.denominator;
+    const percent = (exp - this.minExp) / (this.maxExp - this.minExp);
+    return percent * this.axisLength;
+  }
+
+  protected calculate() {
+    this.log = this.logBase === 10 ? Math.log10 : this.logBase === 2 ? Math.log2 : Math.log;
+    this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
+
+    this.minExp = Math.floor(this.log(this.minValue) / this.denominator);
+    this.maxExp = Math.ceil(this.log(this.maxValue) / this.denominator);
+    this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
+    this.tickSpacing = 1;
+
+    // Tick spacing is exp based rather than actual log values.
+    this.ticks = [];
+    this.tickLabels = [];
+    for (let i = this.minExp; i <= this.maxExp; i += this.tickSpacing) {
+      const tickValue = this.logBase ** i;
+      this.ticks.push(tickValue);
+      this.tickLabels.push(readableTick(tickValue));
+    }
+
+    // Calculate tick positions based on axis length and ticks.
+    const offset = this.axisLength / (this.ticks.length - 1);
+    this.tickPos = [];
+    for (let i = 0; i < this.ticks.length; i++) {
+      this.tickPos.push(i * offset);
+    }
+  }
+}
+
+export default LogScale;

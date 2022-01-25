@@ -1,5 +1,6 @@
-import NiceLogScale from './classes/NiceLogScale';
-import NiceScale from './classes/NiceScale';
+import CategoricalScale from './classes/CategoricalScale';
+import LinearScale from './classes/LinearScale';
+import LogScale from './classes/LogScale';
 
 /**
  * TYPES
@@ -81,7 +82,7 @@ export interface Axis {
   categories?: Primitive[];
   logBase?: number;
   range?: Range;
-  scale?: NiceLogScale | NiceScale;
+  scale?: CategoricalScale | LinearScale | LogScale;
   type: AxisType;
 }
 
@@ -141,13 +142,9 @@ export interface Internal {
     list: {
       axes: {
         maxLength: number;
-        scale: {
-          max: number;
-          min: number;
-          range: number;
-          tickSpacing: number;
-          ticks: number[];
-        };
+        tickLabels: string[];
+        tickPos: number[];
+        ticks: number[];
       };
       label: {
         h: number;
@@ -169,7 +166,6 @@ export interface Internal {
       axes: {
         labelFactor: number;
         maxTicks: number;
-        scale: NiceScale;
         start: number;
         stop: number;
       };

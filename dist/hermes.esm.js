@@ -244,16 +244,46 @@ function leaf(values, utils) {
 }
 
 const isError = (data) => data instanceof Error;
+const isNumber = (data) => typeof data === 'number';
 const isString = (data) => typeof data === 'string';
+const getDataRange = (data) => {
+    return data.reduce((acc, x) => {
+        if (isNumber(x)) {
+            if (x > acc[1])
+                acc[1] = x;
+            if (x < acc[0])
+                acc[0] = x;
+        }
+        return acc;
+    }, [Infinity, -Infinity]);
+};
 
-const MESSAGE_PREFIX = '[Hermes]';
-const DEFAULT_MESSAGE = 'Critical error encountered!';
-class HermesError extends Error {
-    constructor(e) {
-        const message = isError(e) ? e.message : (isString(e) ? e : DEFAULT_MESSAGE);
-        super(`${MESSAGE_PREFIX} ${message}`);
+const readableNumber = (num, precision = 6) => {
+    let readable = num.toString();
+    if (isNaN(num)) {
+        readable = 'NaN';
     }
-}
+    else if (!Number.isFinite(num)) {
+        readable = `${num < 0 ? '-' : ''}Infinity`;
+    }
+    else if (!Number.isInteger(num)) {
+        readable = num.toFixed(precision);
+        const absoluteNum = Math.abs(num);
+        if (absoluteNum < 0.01 || absoluteNum > 999) {
+            readable = num.toExponential(precision);
+        }
+    }
+    return readable;
+};
+const readableTick = (num) => {
+    let readable = readableNumber(num);
+    readable = readable.replace(/(\.[0-9]+?)0+(e-?\d+)?$/, '$1$2'); // e.g. 0.750000 => 0.75
+    readable = readable.replace(/\.(e)/, '$1'); // e.g. 2.e5 => 2e5
+    return readable;
+};
+const value2str = (value) => {
+    return isString(value) ? value : value.toString();
+};
 
 /**
  * NiceScale solves the problem of generating human friendly ticks for chart axes.
@@ -261,7 +291,7 @@ class HermesError extends Error {
  *
  * https://stackoverflow.com/questions/8506881/nice-label-algorithm-for-charts-with-minimum-ticks
  */
-const DEFAULT_MAX_TICKS = 10;
+const MIN_TICK_DISTANCE = 50;
 class NiceScale {
     /**
      * Instantiates a new instance of the NiceScale class.
@@ -270,49 +300,28 @@ class NiceScale {
      * @param maxValue the maximum data point on the axis
      * @param maxTicks the maximum number of tick marks for the axis
      */
-    constructor(maxTicks = DEFAULT_MAX_TICKS) {
-        this.maxValue = Number.POSITIVE_INFINITY;
-        this.minValue = Number.NEGATIVE_INFINITY;
-        this.maxTicks = maxTicks;
-        this.max = 100;
-        this.min = 0;
-        this.range = 100;
+    constructor(minValue, maxValue) {
+        this.range = 0;
+        this.tickLabels = [];
+        this.tickPos = [];
         this.ticks = [];
-        this.tickSpacing = 10;
+        this.tickSpacing = 0;
+        this.axisLength = 1;
+        this.maxTicks = 1;
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+        this.max = maxValue;
+        this.min = minValue;
     }
-    /**
-     * Sets the minimum and maximum data points for the axis.
-     *
-     * @param minPoint the minimum data point on the axis
-     * @param maxPoint the maximum data point on the axis
-     */
+    setAxisLength(axisLength) {
+        this.axisLength = axisLength;
+        this.maxTicks = axisLength / MIN_TICK_DISTANCE;
+        this.calculate();
+    }
     setMinMaxValues(minValue, maxValue) {
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.calculate();
-    }
-    /**
-     * Sets maximum number of tick marks we're comfortable with
-     *
-     * @param maxTicks the maximum number of tick marks for the axis
-     */
-    setMaxTicks(maxTicks) {
-        this.maxTicks = maxTicks;
-        this.calculate();
-    }
-    /**
-     * Calculate and update values for tick spacing and nice
-     * minimum and maximum data points on the axis.
-     */
-    calculate() {
-        this.range = this.niceNum(this.maxValue - this.minValue, false);
-        this.tickSpacing = this.niceNum(this.range / (this.maxTicks - 1), true);
-        this.min = Math.floor(this.minValue / this.tickSpacing) * this.tickSpacing;
-        this.max = Math.ceil(this.maxValue / this.tickSpacing) * this.tickSpacing;
-        // Generate ticks based on min, max and tick spacing.
-        this.ticks = [];
-        for (let i = this.min; i <= this.max; i += this.tickSpacing)
-            this.ticks.push(i);
     }
     /**
      * Returns a "nice" number approximately equal to range.
@@ -348,6 +357,118 @@ class NiceScale {
                 niceFraction = 10;
         }
         return niceFraction * 10 ** exponent;
+    }
+}
+
+class CategoricalScale extends NiceScale {
+    constructor(categories = []) {
+        super(0, 0);
+        this.tickLabels = categories.map(category => value2str(category));
+    }
+    valueToPos(value) {
+        const stringValue = value2str(value);
+        const index = this.tickLabels.findIndex(label => label === stringValue);
+        if (index !== -1)
+            return this.tickPos[index];
+        return 0;
+    }
+    calculate() {
+        // Calculate tick positions based on axis length and ticks.
+        let traversed = 0;
+        this.tickSpacing = this.axisLength / this.tickLabels.length;
+        this.tickPos = [];
+        for (let i = 0; i < this.tickLabels.length; i++) {
+            if (i === 0 || i === this.tickLabels.length) {
+                traversed += this.tickSpacing / 2;
+            }
+            else {
+                traversed += this.tickSpacing;
+            }
+            this.tickPos.push(traversed);
+        }
+    }
+}
+
+const MESSAGE_PREFIX = '[Hermes]';
+const DEFAULT_MESSAGE = 'Critical error encountered!';
+class HermesError extends Error {
+    constructor(e) {
+        const message = isError(e) ? e.message : (isString(e) ? e : DEFAULT_MESSAGE);
+        super(`${MESSAGE_PREFIX} ${message}`);
+    }
+}
+
+class LinearScale extends NiceScale {
+    constructor(minValue, maxValue) {
+        super(minValue, maxValue);
+    }
+    valueToPos(value) {
+        const percent = (value - this.minValue) / (this.maxValue - this.minValue);
+        return percent * this.axisLength;
+    }
+    calculate() {
+        this.range = this.niceNum(this.maxValue - this.minValue, false);
+        this.tickSpacing = this.niceNum(this.range / (this.maxTicks - 1), true);
+        this.min = Math.floor(this.minValue / this.tickSpacing) * this.tickSpacing;
+        this.max = Math.ceil(this.maxValue / this.tickSpacing) * this.tickSpacing;
+        // Generate ticks based on min, max and tick spacing.
+        this.ticks = [];
+        this.tickLabels = [];
+        for (let i = this.min; i <= this.max; i += this.tickSpacing) {
+            this.ticks.push(i);
+            this.tickLabels.push(readableTick(i));
+        }
+        // Calculate tick positions based on axis length and ticks.
+        const offset = this.axisLength / (this.ticks.length - 1);
+        this.tickPos = [];
+        for (let i = 0; i < this.ticks.length; i++) {
+            this.tickPos.push(i * offset);
+        }
+    }
+}
+
+const DEFAULT_LOG_BASE = 10;
+class LogScale extends NiceScale {
+    constructor(minValue, maxValue, logBase = DEFAULT_LOG_BASE) {
+        super(minValue, maxValue);
+        this.maxExp = NaN;
+        this.minExp = NaN;
+        this.denominator = 1;
+        this.log = Math.log;
+        this.logBase = logBase;
+    }
+    setMinMaxValues(minValue, maxValue, logBase = DEFAULT_LOG_BASE) {
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+        this.logBase = logBase;
+        this.calculate();
+    }
+    valueToPos(value) {
+        const exp = this.log(value) / this.denominator;
+        const percent = (exp - this.minExp) / (this.maxExp - this.minExp);
+        return percent * this.axisLength;
+    }
+    calculate() {
+        this.log = this.logBase === 10 ? Math.log10 : this.logBase === 2 ? Math.log2 : Math.log;
+        this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
+        this.minExp = Math.floor(this.log(this.minValue) / this.denominator);
+        this.maxExp = Math.ceil(this.log(this.maxValue) / this.denominator);
+        this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
+        this.tickSpacing = 1;
+        // Tick spacing is exp based rather than actual log values.
+        this.ticks = [];
+        this.tickLabels = [];
+        for (let i = this.minExp; i <= this.maxExp; i += this.tickSpacing) {
+            const tickValue = this.logBase ** i;
+            this.ticks.push(tickValue);
+            this.tickLabels.push(readableTick(tickValue));
+        }
+        // Calculate tick positions based on axis length and ticks.
+        const offset = this.axisLength / (this.ticks.length - 1);
+        this.tickPos = [];
+        for (let i = 0; i < this.ticks.length; i++) {
+            this.tickPos.push(i * offset);
+        }
     }
 }
 
@@ -422,7 +543,7 @@ const HERMES_OPTIONS = {
         },
         dimension: {
             label: {
-                angle: Math.PI / 4,
+                // angle: Math.PI / 4,
                 color: 'black',
                 font: { size: 14 },
                 offset: 10,
@@ -545,30 +666,6 @@ const getElement = (target) => {
     return document.querySelector(target);
 };
 
-const readableNumber = (num, precision = 6) => {
-    let readable = num.toString();
-    if (isNaN(num)) {
-        readable = 'NaN';
-    }
-    else if (!Number.isFinite(num)) {
-        readable = `${num < 0 ? '-' : ''}Infinity`;
-    }
-    else if (!Number.isInteger(num)) {
-        readable = num.toFixed(precision);
-        const absoluteNum = Math.abs(num);
-        if (absoluteNum < 0.01 || absoluteNum > 999) {
-            readable = num.toExponential(precision);
-        }
-    }
-    return readable;
-};
-const readableTick = (num) => {
-    let readable = readableNumber(num);
-    readable = readable.replace(/(\.[0-9]+?)0+(e-?\d+)?$/, '$1$2'); // e.g. 0.750000 => 0.75
-    readable = readable.replace(/\.(e)/, '$1'); // e.g. 2.e5 => 2e5
-    return readable;
-};
-
 const dimensionSamples = [
     {
         axis: { range: [0.2, 0.8], type: AxisType.Linear },
@@ -584,6 +681,11 @@ const dimensionSamples = [
         axis: { categories: [4, 8, 16, 32, 64], type: AxisType.Categorical },
         key: 'layer-dense-size',
         label: 'Layer Dense Size',
+    },
+    {
+        axis: { categories: [true, false], type: AxisType.Categorical },
+        key: 'layer-inverse',
+        label: 'Layer Inverse',
     },
     {
         axis: { logBase: 10, range: [0.0001, 0.1], type: AxisType.Logarithmic },
@@ -680,7 +782,6 @@ var tester = /*#__PURE__*/Object.freeze({
   randomNumber: randomNumber
 });
 
-const CONFIG = { TICK_DISTANCE: 50 };
 class Hermes {
     constructor(target, data, dimensions, options = {}) {
         this.size = { h: 0, w: 0 };
@@ -702,6 +803,7 @@ class Hermes {
         this.ctx = ctx;
         if (Object.keys(data).length === 0)
             throw new HermesError('Need at least one dimension data record.');
+        this.data = data;
         if (dimensions.length === 0)
             throw new HermesError('Need at least one dimension defined.');
         this.dimensions = dimensions;
@@ -726,6 +828,32 @@ class Hermes {
         this.size = { h, w };
     }
     calculate() {
+        this.calculateScales();
+        this.calculateLayout();
+    }
+    calculateScales() {
+        this.dimensions.forEach(dimension => {
+            const _da = dimension.axis;
+            const key = dimension.key;
+            const data = this.data[key] || [];
+            if ([AxisType.Linear, AxisType.Logarithmic].includes(_da.type)) {
+                _da.range = getDataRange(data);
+                if (_da.type === AxisType.Linear) {
+                    _da.scale = new LinearScale(_da.range[0], _da.range[1]);
+                }
+                else if (_da.type === AxisType.Logarithmic) {
+                    _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase);
+                }
+            }
+            else if (_da.type === AxisType.Categorical) {
+                console.log('categories?', _da.categories);
+                _da.scale = new CategoricalScale(_da.categories);
+            }
+        });
+        console.log(this.dimensions);
+    }
+    calculateLayout() {
+        var _a, _b;
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         const _ = {
             dims: {
@@ -745,6 +873,7 @@ class Hermes {
         const dimLayout = this.options.style.dimension.layout;
         const axesLabelStyle = this.options.style.axes.label;
         const isLabelBefore = dimLabelStyle.placement === LabelPlacement.Before;
+        const isLabelAngled = dimLabelStyle.angle != null;
         const isAxesBefore = axesLabelStyle.placement === LabelPlacement.Before;
         const dimCount = this.dimensions.length;
         const _l = _.layout;
@@ -764,8 +893,8 @@ class Hermes {
          * Go through each of the dimension labels and calculate the size
          * of each one and figure out how much space is needed for them.
          */
-        _dsl.cos = dimLabelStyle.angle != null ? Math.cos(dimLabelStyle.angle) : undefined;
-        _dsl.sin = dimLabelStyle.angle != null ? Math.sin(dimLabelStyle.angle) : undefined;
+        _dsl.cos = isLabelAngled ? Math.cos((_a = dimLabelStyle.angle) !== null && _a !== void 0 ? _a : 0) : undefined;
+        _dsl.sin = isLabelAngled ? Math.sin((_b = dimLabelStyle.angle) !== null && _b !== void 0 ? _b : 0) : undefined;
         _dsl.maxLengthCos = 0;
         _dsl.maxLengthSin = 0;
         this.dimensions.forEach((dimension, i) => {
@@ -773,8 +902,8 @@ class Hermes {
             const _dlil = _.dims.list[i].label;
             _dlil.w = textSize.w;
             _dlil.h = textSize.h;
-            _dlil.lengthCos = _dsl.cos != null ? textSize.w * _dsl.cos : textSize.w;
-            _dlil.lengthSin = _dsl.sin != null ? textSize.w * _dsl.sin : textSize.h;
+            _dlil.lengthCos = isLabelAngled ? textSize.w * _dsl.cos : textSize.w;
+            _dlil.lengthSin = isLabelAngled ? textSize.w * _dsl.sin : textSize.h;
             if (Math.abs(_dlil.lengthCos) > Math.abs(_dsl.maxLengthCos)) {
                 _dsl.maxLengthCos = _dlil.lengthCos;
             }
@@ -794,14 +923,14 @@ class Hermes {
                 _dsa.stop = h - _l.padding[2];
             }
             else {
-                const labelOffset = Math.max(0, -_dsl.maxLengthSin);
+                const labelOffset = isLabelAngled ? Math.max(0, -_dsl.maxLengthSin) : _dsl.maxLengthSin;
                 _dsa.start = _l.padding[0];
                 _dsa.stop = h - _l.padding[2] - labelOffset - dimLabelStyle.offset;
             }
         }
         else {
             if (isLabelBefore) {
-                const labelOffset = Math.max(0, -_dsl.maxLengthCos);
+                const labelOffset = isLabelAngled ? Math.max(0, -_dsl.maxLengthCos) : _dsl.maxLengthCos;
                 _dsa.start = _l.padding[3] + labelOffset + dimLabelStyle.offset;
                 _dsa.stop = w - _l.padding[1];
             }
@@ -814,33 +943,29 @@ class Hermes {
         /**
          * Go through each axis and figure out the sizes of each axis labels.
          */
-        _dsa.maxTicks = (_dsa.stop - _dsa.start) / CONFIG.TICK_DISTANCE;
-        _dsa.scale = new NiceScale(_dsa.maxTicks);
+        const axisLength = _dsa.stop - _dsa.start;
         _dsa.labelFactor = isAxesBefore ? -1 : 1;
         _dsly.totalBoundSpace = 0;
         this.dimensions.forEach((dimension, i) => {
-            var _a, _b;
             const _dlia = _.dims.list[i].axes;
             const _dlil = _.dims.list[i].label;
             const _dlily = _.dims.list[i].layout;
+            const scale = dimension.axis.scale;
             /**
-             * Save scale info for each axis.
+             * Update the scale info based on ticks and find the longest tick label.
              */
-            _dsa.scale.setMinMaxValues((_a = dimension.axis.range) === null || _a === void 0 ? void 0 : _a[0], (_b = dimension.axis.range) === null || _b === void 0 ? void 0 : _b[1]);
-            _dlia.scale = {
-                max: _dsa.scale.max,
-                min: _dsa.scale.min,
-                range: _dsa.scale.range,
-                ticks: _dsa.scale.ticks.slice(),
-                tickSpacing: _dsa.scale.tickSpacing,
-            };
-            /**
-             * Find the longest axis label.
-             */
-            _dlia.maxLength = _dsa.scale.ticks.reduce((acc, tick) => {
-                const size = getTextSize(this.ctx, readableTick(tick), axesLabelStyle.font);
-                return Math.max(size.w, acc);
-            }, 0);
+            _dlia.tickLabels = [];
+            _dlia.tickPos = [];
+            _dlia.maxLength = 0;
+            if (scale) {
+                scale.setAxisLength(axisLength);
+                _dlia.tickLabels = scale.tickLabels.slice();
+                _dlia.tickPos = scale.tickPos.slice();
+                scale.tickLabels.forEach(tickLabel => {
+                    const size = getTextSize(this.ctx, tickLabel, axesLabelStyle.font);
+                    _dlia.maxLength = Math.max(size.w, _dlia.maxLength);
+                });
+            }
             /**
              * Figure out where the axis alignment center should be.
              * First, base it on the direction and dimension label placement.
@@ -962,15 +1087,19 @@ class Hermes {
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const dimStyle = this.options.style.dimension;
         const axesStyle = this.options.style.axes;
+        const isDimBefore = dimStyle.label.placement === LabelPlacement.Before;
         const isAxesBefore = axesStyle.label.placement === LabelPlacement.Before;
         // Draw data lines.
-        // Draw dimensions.
         // Draw dimension labels.
         const dimTextStyle = {
             fillStyle: dimStyle.label.color,
             font: getFont(dimStyle.label.font),
         };
-        const rad = dimStyle.label.angle || 0;
+        if (dimStyle.label.angle == null) {
+            dimTextStyle.textAlign = isHorizontal ? 'center' : undefined;
+            dimTextStyle.textBaseline = isHorizontal ? (isDimBefore ? 'bottom' : 'top') : undefined;
+        }
+        const rad = dimStyle.label.angle || (isHorizontal ? 0 : (isDimBefore ? -Math.PI : 0));
         this.dimensions.forEach((dimension, i) => {
             const bound = _dl[i].layout.bound;
             const labelPoint = _dl[i].layout.labelPoint;
@@ -999,14 +1128,13 @@ class Hermes {
             const bound = dim.layout.bound;
             const axisStart = dim.layout.axisStart;
             const axisStop = dim.layout.axisStop;
-            const scale = dim.axes.scale;
-            const axisLength = isHorizontal ? axisStop.y - axisStart.y : axisStop.x - axisStart.x;
-            const tickOffset = Math.abs(axisLength) / (scale.ticks.length - 1);
+            const tickLabels = dim.axes.tickLabels;
+            const tickPos = dim.axes.tickPos;
             const tickLengthFactor = isAxesBefore ? -1 : 1;
             drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, drawAxesStyle);
-            for (let i = 0; i < scale.ticks.length; i++) {
-                const xOffset = isHorizontal ? 0 : i * tickOffset;
-                const yOffset = isHorizontal ? i * tickOffset : 0;
+            for (let i = 0; i < tickLabels.length; i++) {
+                const xOffset = isHorizontal ? 0 : tickPos[i];
+                const yOffset = isHorizontal ? tickPos[i] : 0;
                 const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
                 const yTickLength = isHorizontal ? 0 : tickLengthFactor * axesStyle.tick.length;
                 const x0 = bound.x + axisStart.x + xOffset;
@@ -1019,7 +1147,8 @@ class Hermes {
                 const rad = axesStyle.label.angle != null
                     ? axesStyle.label.angle
                     : (isHorizontal && isAxesBefore ? Math.PI : 0);
-                drawText(this.ctx, readableTick(scale.ticks[i]), cx, cy, rad, drawTickTextStyle);
+                const tickLabel = tickLabels[i];
+                drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
             }
         });
     }
