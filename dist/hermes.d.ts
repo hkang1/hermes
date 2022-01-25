@@ -5,6 +5,7 @@ declare class Hermes {
     private ctx;
     private resizeObserver;
     private data;
+    private dataCount;
     private dimensions;
     private options;
     private size;

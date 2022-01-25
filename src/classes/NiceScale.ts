@@ -52,6 +52,11 @@ abstract class NiceScale {
   public abstract valueToPos(value: number): number;
 
   /**
+   * Convert value into a percent of the min / max range.
+   */
+  public abstract valueToPercent(value: number): number;
+
+  /**
    * Calculate and update values for tick spacing and nice
    * minimum and maximum data points on the axis.
    */

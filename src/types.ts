@@ -24,7 +24,6 @@ export type Size = { h: number, w: number };
  * Data Types
  */
 
-export type DataValue = boolean | number | string | null | undefined;
 export type DimensionKey = string;
 export type StyleLine =Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
 export type StyleShape = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
@@ -111,7 +110,7 @@ export interface LabelOptions {
  * PRIMARY INTERFACES AND TYPES
  */
 
-export type HermesData = Record<DimensionKey, DataValue[]>;
+export type HermesData = Record<DimensionKey, Primitive[]>;
 
 export interface HermesOptions {
   direction: Direction;
@@ -128,6 +127,15 @@ export interface HermesOptions {
         length: number;
         width: number;
       };
+    };
+    data: {
+      color?: string;
+      colorScale?: {
+        dimensionKey: DimensionKey;
+        minColor: string;
+        maxColor: string;
+      };
+      width: number;
     };
     dimension: {
       label: LabelOptions;
@@ -169,6 +177,7 @@ export interface Internal {
         start: number;
         stop: number;
       };
+      dataCount: number;
       label: {
         cos?: number;
         maxLengthCos?: number;

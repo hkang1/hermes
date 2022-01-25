@@ -33,6 +33,30 @@ export const drawCircle = (
   ctx.restore();
 };
 
+export const drawData = (
+  ctx: CanvasRenderingContext2D,
+  data: t.Point[],
+  style: t.StyleLine = {},
+): void => {
+  if (data.length < 2) return;
+
+  ctx.save();
+
+  ctx.lineCap = style.lineCap || DEFAULT.LINE_CAP;
+  ctx.lineDashOffset = style.lineDashOffset || DEFAULT.LINE_DASH_OFFSET;
+  ctx.lineJoin = style.lineJoin || DEFAULT.LINE_JOIN;
+  ctx.lineWidth = style.lineWidth || DEFAULT.LINE_WIDTH;
+  ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
+  ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
+
+  ctx.beginPath();
+  ctx.moveTo(data[0].x, data[0].y);
+  for (let i = 1; i < data.length; i++) ctx.lineTo(data[i].x, data[i].y);
+  ctx.stroke();
+
+  ctx.restore();
+};
+
 export const drawLine = (
   ctx: CanvasRenderingContext2D,
   x0: number,

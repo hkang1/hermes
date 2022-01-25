@@ -1,4 +1,5 @@
 import * as t from '../types';
+import * as DEFAULT from '../defaults';
 
 const dimensionSamples: t.Dimension[] = [
   {
@@ -66,14 +67,14 @@ export const generateData = (dimensions: t.Dimension[], count: number): t.Hermes
     const axis = dimension.axis;
     acc[dimension.key] = new Array(count).fill(null).map(() => {
       if (axis.type === t.AxisType.Categorical) {
-        return axis.categories ? randomItem(axis.categories) : null;
+        return axis.categories ? randomItem(axis.categories) : DEFAULT.INVALID_VALUE;
       } else if (axis.type === t.AxisType.Linear) {
-        return axis.range ? randomNumber(axis.range[1], axis.range[0]) : null;
+        return axis.range ? randomNumber(axis.range[1], axis.range[0]) : DEFAULT.INVALID_VALUE;
       } else if (axis.type === t.AxisType.Logarithmic) {
         return axis.range && axis.logBase
-          ? randomLogNumber(axis.logBase, axis.range[1], axis.range[0]) : null;
+          ? randomLogNumber(axis.logBase, axis.range[1], axis.range[0]) : DEFAULT.INVALID_VALUE;
       }
-      return null;
+      return DEFAULT.INVALID_VALUE;
     });
     return acc;
   }, {} as t.HermesData);

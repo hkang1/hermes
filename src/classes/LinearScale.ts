@@ -1,3 +1,5 @@
+import { Primitive } from '../types';
+import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 import NiceScale from './NiceScale';
 
@@ -6,9 +8,13 @@ class LinearScale extends NiceScale {
     super(minValue, maxValue);
   }
 
-  public valueToPos(value: number): number {
-    const percent = (value - this.minValue) / (this.maxValue - this.minValue);
-    return percent * this.axisLength;
+  public valueToPos(value: Primitive): number {
+    return this.valueToPercent(value) * this.axisLength;
+  }
+
+  public valueToPercent(value: Primitive): number {
+    if (!isNumber(value)) return 0;
+    return (value - this.minValue) / (this.maxValue - this.minValue);
   }
 
   protected calculate() {

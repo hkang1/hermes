@@ -16,6 +16,13 @@ class CategoricalScale extends NiceScale {
     return 0;
   }
 
+  public valueToPercent(value: Primitive): number {
+    const stringValue = value2str(value);
+    const index = this.tickLabels.findIndex(label => label === stringValue);
+    if (index !== -1) return index / this.tickLabels.length;
+    return 0;
+  }
+
   protected calculate() {
     // Calculate tick positions based on axis length and ticks.
     let traversed = 0;

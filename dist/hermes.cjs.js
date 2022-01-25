@@ -374,6 +374,13 @@ class CategoricalScale extends NiceScale {
             return this.tickPos[index];
         return 0;
     }
+    valueToPercent(value) {
+        const stringValue = value2str(value);
+        const index = this.tickLabels.findIndex(label => label === stringValue);
+        if (index !== -1)
+            return index / this.tickLabels.length;
+        return 0;
+    }
     calculate() {
         // Calculate tick positions based on axis length and ticks.
         let traversed = 0;
@@ -405,8 +412,12 @@ class LinearScale extends NiceScale {
         super(minValue, maxValue);
     }
     valueToPos(value) {
-        const percent = (value - this.minValue) / (this.maxValue - this.minValue);
-        return percent * this.axisLength;
+        return this.valueToPercent(value) * this.axisLength;
+    }
+    valueToPercent(value) {
+        if (!isNumber(value))
+            return 0;
+        return (value - this.minValue) / (this.maxValue - this.minValue);
     }
     calculate() {
         this.range = this.niceNum(this.maxValue - this.minValue, false);
@@ -446,9 +457,13 @@ class LogScale extends NiceScale {
         this.calculate();
     }
     valueToPos(value) {
+        return this.valueToPercent(value) * this.axisLength;
+    }
+    valueToPercent(value) {
+        if (!isNumber(value))
+            return 0;
         const exp = this.log(value) / this.denominator;
-        const percent = (exp - this.minExp) / (this.maxExp - this.minExp);
-        return percent * this.axisLength;
+        return (exp - this.minExp) / (this.maxExp - this.minExp);
     }
     calculate() {
         this.log = this.logBase === 10 ? Math.log10 : this.logBase === 2 ? Math.log2 : Math.log;
@@ -523,6 +538,7 @@ const LINE_WIDTH = 1.0;
 const MITER_LIMIT = 10.0;
 const STROKE_STYLE = 'black';
 const TEXT_BASELINE = 'middle';
+const INVALID_VALUE = Number.NaN;
 const HERMES_OPTIONS = {
     direction: Direction.Horizontal,
     style: {
@@ -542,6 +558,15 @@ const HERMES_OPTIONS = {
                 length: 4,
                 width: 1,
             },
+        },
+        data: {
+            color: '#5290f4',
+            // colorScale: {
+            //   dimensionKey: 'accuracy',
+            //   maxColor: 'rgba(150, 100, 0, 0.5)',
+            //   minColor: 'rgba(0, 100, 150, 0.5)',
+            // },
+            width: 2,
         },
         dimension: {
             label: {
@@ -578,6 +603,23 @@ const drawCircle = (ctx, x, y, radius, style = {}) => {
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.stroke();
     }
+    ctx.restore();
+};
+const drawData = (ctx, data, style = {}) => {
+    if (data.length < 2)
+        return;
+    ctx.save();
+    ctx.lineCap = style.lineCap || LINE_CAP;
+    ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
+    ctx.lineJoin = style.lineJoin || LINE_JOIN;
+    ctx.lineWidth = style.lineWidth || LINE_WIDTH;
+    ctx.miterLimit = style.miterLimit || MITER_LIMIT;
+    ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
+    ctx.beginPath();
+    ctx.moveTo(data[0].x, data[0].y);
+    for (let i = 1; i < data.length; i++)
+        ctx.lineTo(data[i].x, data[i].y);
+    ctx.stroke();
     ctx.restore();
 };
 const drawLine = (ctx, x0, y0, x1, y1, style = {}) => {
@@ -662,6 +704,49 @@ const normalizeRad = (rad) => {
     return (rad + 2 * Math.PI) % (2 * Math.PI);
 };
 
+const hex2rgb = (hex) => {
+    const rgb = { b: 0, g: 0, r: 0 };
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (result && result.length > 3) {
+        rgb.r = parseInt(result[1], 16);
+        rgb.g = parseInt(result[2], 16);
+        rgb.b = parseInt(result[3], 16);
+    }
+    return rgb;
+};
+const rgba2str = (rgba) => {
+    if (rgba.a != null) {
+        return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
+    }
+    return `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
+};
+const rgbaFromGradient = (rgba0, rgba1, percent) => {
+    const r = Math.round((rgba1.r - rgba0.r) * percent + rgba0.r);
+    const g = Math.round((rgba1.g - rgba0.g) * percent + rgba0.g);
+    const b = Math.round((rgba1.b - rgba0.b) * percent + rgba0.b);
+    if (rgba0.a != null && rgba1.a != null) {
+        const a = (rgba1.a - rgba0.a) * percent + rgba0.a;
+        return { a, b, g, r };
+    }
+    return { b, g, r };
+};
+const str2rgba = (str) => {
+    if (/^#/.test(str))
+        return hex2rgb(str);
+    const regex = /^rgba?\(\s*?(\d+)\s*?,\s*?(\d+)\s*?,\s*?(\d+)\s*?(,\s*?([\d.]+)\s*?)?\)$/i;
+    const result = regex.exec(str);
+    if (result && result.length > 3) {
+        const rgba = { a: 1.0, b: 0, g: 0, r: 0 };
+        rgba.r = parseInt(result[1]);
+        rgba.g = parseInt(result[2]);
+        rgba.b = parseInt(result[3]);
+        if (result.length > 5)
+            rgba.a = parseFloat(result[5]);
+        return rgba;
+    }
+    return { a: 0.0, b: 0, g: 0, r: 0 };
+};
+
 const getElement = (target) => {
     if (!isString(target))
         return target;
@@ -732,16 +817,16 @@ const generateData = (dimensions, count) => {
         const axis = dimension.axis;
         acc[dimension.key] = new Array(count).fill(null).map(() => {
             if (axis.type === AxisType.Categorical) {
-                return axis.categories ? randomItem(axis.categories) : null;
+                return axis.categories ? randomItem(axis.categories) : INVALID_VALUE;
             }
             else if (axis.type === AxisType.Linear) {
-                return axis.range ? randomNumber(axis.range[1], axis.range[0]) : null;
+                return axis.range ? randomNumber(axis.range[1], axis.range[0]) : INVALID_VALUE;
             }
             else if (axis.type === AxisType.Logarithmic) {
                 return axis.range && axis.logBase
-                    ? randomLogNumber(axis.logBase, axis.range[1], axis.range[0]) : null;
+                    ? randomLogNumber(axis.logBase, axis.range[1], axis.range[0]) : INVALID_VALUE;
             }
-            return null;
+            return INVALID_VALUE;
         });
         return acc;
     }, {});
@@ -803,8 +888,19 @@ class Hermes {
         if (!ctx)
             throw new HermesError('Unable to get context from target element.');
         this.ctx = ctx;
+        // Must have at least one dimension data available.
         if (Object.keys(data).length === 0)
             throw new HermesError('Need at least one dimension data record.');
+        // All the dimension data should be equal in size.
+        this.dataCount = 0;
+        Object.values(data).forEach((dimData, i) => {
+            if (i === 0) {
+                this.dataCount = dimData.length;
+            }
+            else if (this.dataCount !== dimData.length) {
+                throw new HermesError('The dimension data are not all identical in size.');
+            }
+        });
         this.data = data;
         if (dimensions.length === 0)
             throw new HermesError('Need at least one dimension defined.');
@@ -848,11 +944,9 @@ class Hermes {
                 }
             }
             else if (_da.type === AxisType.Categorical) {
-                console.log('categories?', _da.categories);
                 _da.scale = new CategoricalScale(_da.categories);
             }
         });
-        console.log(this.dimensions);
     }
     calculateLayout() {
         var _a, _b;
@@ -1081,17 +1175,44 @@ class Hermes {
         this.draw();
     }
     draw() {
+        var _a, _b, _c;
         if (!this._)
             return;
         this.size;
         this._.layout;
         const _dl = this._.dims.list;
         const isHorizontal = this.options.direction === Direction.Horizontal;
-        const dimStyle = this.options.style.dimension;
         const axesStyle = this.options.style.axes;
+        const dataStyle = this.options.style.data;
+        const dimStyle = this.options.style.dimension;
         const isDimBefore = dimStyle.label.placement === LabelPlacement.Before;
         const isAxesBefore = axesStyle.label.placement === LabelPlacement.Before;
         // Draw data lines.
+        const dataLineStyle = {
+            strokeStyle: dataStyle.color || STROKE_STYLE,
+            lineWidth: dataStyle.width,
+        };
+        const dimColorKey = (_a = dataStyle.colorScale) === null || _a === void 0 ? void 0 : _a.dimensionKey;
+        const maxColor = str2rgba(((_b = dataStyle.colorScale) === null || _b === void 0 ? void 0 : _b.maxColor) || STROKE_STYLE);
+        const minColor = str2rgba(((_c = dataStyle.colorScale) === null || _c === void 0 ? void 0 : _c.minColor) || STROKE_STYLE);
+        for (let i = 0; i < this.dataCount; i++) {
+            const series = this.dimensions.map((dimension, j) => {
+                var _a, _b;
+                const key = dimension.key;
+                const layout = _dl[j].layout;
+                const value = this.data[key][i];
+                const pos = ((_a = dimension.axis.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) || 0;
+                const x = layout.bound.x + layout.axisStart.x;
+                const y = layout.bound.y + layout.axisStart.y + pos;
+                if (dimColorKey === key) {
+                    const percent = ((_b = dimension.axis.scale) === null || _b === void 0 ? void 0 : _b.valueToPercent(value)) || 0;
+                    const scaleColor = rgbaFromGradient(minColor, maxColor, percent);
+                    dataLineStyle.strokeStyle = rgba2str(scaleColor);
+                }
+                return { x, y };
+            });
+            drawData(this.ctx, series, dataLineStyle);
+        }
         // Draw dimension labels.
         const dimTextStyle = {
             fillStyle: dimStyle.label.color,

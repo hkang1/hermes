@@ -12,7 +12,7 @@ export const STROKE_STYLE = 'black';
 export const TEXT_ALIGN = 'left';
 export const TEXT_BASELINE = 'middle';
 
-export const MAX_TICKS = 10;
+export const INVALID_VALUE = Number.NaN;
 
 export const HERMES_OPTIONS: t.HermesOptions = {
   direction: t.Direction.Horizontal,
@@ -33,6 +33,15 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         length: 4,
         width: 1,
       },
+    },
+    data: {
+      color: '#5290f4',
+      // colorScale: {
+      //   dimensionKey: 'accuracy',
+      //   maxColor: 'rgba(150, 100, 0, 0.5)',
+      //   minColor: 'rgba(0, 100, 150, 0.5)',
+      // },
+      width: 2,
     },
     dimension: {
       label: {

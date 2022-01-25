@@ -1,3 +1,5 @@
+import { Primitive } from '../types';
+import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 import NiceScale from './NiceScale';
 
@@ -32,10 +34,14 @@ class LogScale extends NiceScale {
     this.calculate();
   }
 
-  public valueToPos(value: number): number {
+  public valueToPos(value: Primitive): number {
+    return this.valueToPercent(value) * this.axisLength;
+  }
+
+  public valueToPercent(value: Primitive): number {
+    if (!isNumber(value)) return 0;
     const exp = this.log(value) / this.denominator;
-    const percent = (exp - this.minExp) / (this.maxExp - this.minExp);
-    return percent * this.axisLength;
+    return (exp - this.minExp) / (this.maxExp - this.minExp);
   }
 
   protected calculate() {

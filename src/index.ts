@@ -7,8 +7,9 @@ import NiceScale from './classes/NiceScale';
 import * as DEFAULT from './defaults';
 import * as t from './types';
 import {
-  drawCircle, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
+  drawCircle, drawData, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
 } from './utils/canvas';
+import { rgba2str, rgbaFromGradient, str2rgba } from './utils/color';
 import { getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
 import * as tester from './utils/test';
@@ -19,6 +20,7 @@ class Hermes {
   private ctx: CanvasRenderingContext2D;
   private resizeObserver: ResizeObserver;
   private data: t.HermesData;
+  private dataCount: number;
   private dimensions: t.Dimension[];
   private options: t.HermesOptions;
   private size: t.Size = { h: 0, w: 0 };
@@ -47,8 +49,19 @@ class Hermes {
     if (!ctx) throw new HermesError('Unable to get context from target element.');
     this.ctx = ctx;
 
+    // Must have at least one dimension data available.
     if (Object.keys(data).length === 0)
       throw new HermesError('Need at least one dimension data record.');
+    
+    // All the dimension data should be equal in size.
+    this.dataCount = 0;
+    Object.values(data).forEach((dimData, i) => {
+      if (i === 0) {
+        this.dataCount = dimData.length;
+      } else if (this.dataCount !== dimData.length) {
+        throw new HermesError('The dimension data are not all identical in size.');
+      }
+    });
     this.data = data;
 
     if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
@@ -96,11 +109,9 @@ class Hermes {
           _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase);
         }
       } else if (_da.type === t.AxisType.Categorical) {
-        console.log('categories?', _da.categories);
         _da.scale = new CategoricalScale(_da.categories);
       }
     });
-    console.log(this.dimensions);
   }
 
   private calculateLayout(): void {
@@ -328,6 +339,7 @@ class Hermes {
         traversed += _dsly.gap + _dlily.bound.h;
       }
     }
+
     this._ = _;
 
     this.drawDebugOutline();
@@ -341,12 +353,40 @@ class Hermes {
     const _l = this._.layout;
     const _dl = this._.dims.list;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
-    const dimStyle = this.options.style.dimension;
     const axesStyle = this.options.style.axes;
+    const dataStyle = this.options.style.data;
+    const dimStyle = this.options.style.dimension;
     const isDimBefore = dimStyle.label.placement === t.LabelPlacement.Before;
     const isAxesBefore = axesStyle.label.placement === t.LabelPlacement.Before;
 
     // Draw data lines.
+    const dataLineStyle: t.StyleLine = {
+      strokeStyle: dataStyle.color || DEFAULT.STROKE_STYLE,
+      lineWidth: dataStyle.width,
+    };
+    const dimColorKey = dataStyle.colorScale?.dimensionKey;
+    const maxColor = str2rgba(dataStyle.colorScale?.maxColor || DEFAULT.STROKE_STYLE);
+    const minColor = str2rgba(dataStyle.colorScale?.minColor || DEFAULT.STROKE_STYLE);
+    for (let i = 0; i < this.dataCount; i++) {
+      const series = this.dimensions.map((dimension, j) => {
+        const key = dimension.key;
+        const layout = _dl[j].layout;
+        const value = this.data[key][i];
+        const pos = dimension.axis.scale?.valueToPos(value) || 0;
+        const x = layout.bound.x + layout.axisStart.x;
+        const y = layout.bound.y + layout.axisStart.y + pos;
+
+        if (dimColorKey === key) {
+          const percent = dimension.axis.scale?.valueToPercent(value) || 0;
+          const scaleColor = rgbaFromGradient(minColor, maxColor, percent);
+          dataLineStyle.strokeStyle = rgba2str(scaleColor);
+        }
+
+        return { x, y };
+      });
+
+      drawData(this.ctx, series, dataLineStyle);
+    }
 
     // Draw dimension labels.
     const dimTextStyle: t.StyleText = {
