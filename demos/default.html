@@ -13,17 +13,34 @@
       console.log('dims', dimensions);
       console.log('data', data);
       const hermes = new Hermes('#hermes', data, dimensions, {
-        direction: 'horizontal',
+        direction: 'vertical',
         style: {
           axes: {
+            axis: {
+              color: 'rgba(0, 0, 0, 0.3)',
+            },
             label: {
-              // angle: -Math.PI / 4,
+              angle: -Math.PI / 4,
+              color: 'rgba(0, 0, 0, 1.0)',
               placement: 'after',
+            },
+            tick: {
+              color: 'rgba(0, 0, 0, 0.3)',
+            }
+          },
+          data: {
+            colorScale: {
+              dimensionKey: dimensions[dimensions.length - 1].key,
+              maxColor: 'rgba(200, 0, 0, 0.5)',
+              minColor: 'rgba(0, 50, 150, 0.5)',
+            },
+            path: {
+              type: 'bezier',
             },
           },
           dimension: {
             label: {
-              angle: Math.PI / 4,
+              // angle: 3 * Math.PI / 4,
               placement: 'before',
             },
             layout: 'axis-evenly-spaced',

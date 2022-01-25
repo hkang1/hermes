@@ -1,5 +1,6 @@
 import * as t from './types';
 
+export const BEZIER_FACTOR = 0.3;
 export const DIRECTION: CanvasDirection = 'inherit';
 export const FILL_STYLE = 'black';
 export const FONT = 'normal 12px san-serif';
@@ -35,13 +36,17 @@ export const HERMES_OPTIONS: t.HermesOptions = {
       },
     },
     data: {
-      color: '#5290f4',
+      color: 'rgba(82, 144, 244, 0.5)',
       // colorScale: {
       //   dimensionKey: 'accuracy',
       //   maxColor: 'rgba(150, 100, 0, 0.5)',
       //   minColor: 'rgba(0, 100, 150, 0.5)',
       // },
-      width: 2,
+      path: {
+        options: {},
+        type: t.PathType.Straight,
+      },
+      width: 1,
     },
     dimension: {
       label: {
@@ -53,6 +58,6 @@ export const HERMES_OPTIONS: t.HermesOptions = {
       },
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },
-    padding: 25,
+    padding: 50,
   },
 };

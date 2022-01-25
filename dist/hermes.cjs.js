@@ -527,7 +527,13 @@ var LabelPlacement;
     LabelPlacement["After"] = "after";
     LabelPlacement["Before"] = "before";
 })(LabelPlacement || (LabelPlacement = {}));
+var PathType;
+(function (PathType) {
+    PathType["Bezier"] = "bezier";
+    PathType["Straight"] = "straight";
+})(PathType || (PathType = {}));
 
+const BEZIER_FACTOR = 0.3;
 const DIRECTION = 'inherit';
 const FILL_STYLE = 'black';
 const FONT = 'normal 12px san-serif';
@@ -560,13 +566,17 @@ const HERMES_OPTIONS = {
             },
         },
         data: {
-            color: '#5290f4',
+            color: 'rgba(82, 144, 244, 0.5)',
             // colorScale: {
             //   dimensionKey: 'accuracy',
             //   maxColor: 'rgba(150, 100, 0, 0.5)',
             //   minColor: 'rgba(0, 100, 150, 0.5)',
             // },
-            width: 2,
+            path: {
+                options: {},
+                type: PathType.Straight,
+            },
+            width: 1,
         },
         dimension: {
             label: {
@@ -578,7 +588,7 @@ const HERMES_OPTIONS = {
             },
             layout: DimensionLayout.AxisEvenlySpaced,
         },
-        padding: 25,
+        padding: 50,
     },
 };
 
@@ -605,7 +615,8 @@ const drawCircle = (ctx, x, y, radius, style = {}) => {
     }
     ctx.restore();
 };
-const drawData = (ctx, data, style = {}) => {
+const drawData = (ctx, data, isHorizontal, path, style = {}) => {
+    var _a;
     if (data.length < 2)
         return;
     ctx.save();
@@ -617,8 +628,26 @@ const drawData = (ctx, data, style = {}) => {
     ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
     ctx.beginPath();
     ctx.moveTo(data[0].x, data[0].y);
-    for (let i = 1; i < data.length; i++)
-        ctx.lineTo(data[i].x, data[i].y);
+    const bezierFactor = (_a = path.options.bezierFactor) !== null && _a !== void 0 ? _a : BEZIER_FACTOR;
+    for (let i = 1; i < data.length; i++) {
+        const [x1, y1] = [data[i].x, data[i].y];
+        if (path.type === PathType.Straight) {
+            ctx.lineTo(x1, y1);
+            console.log(x1, y1);
+        }
+        else if (path.type === PathType.Bezier) {
+            const [x0, y0] = [data[i - 1].x, data[i - 1].y];
+            const [cp0x, cp0y] = [
+                x0 + (isHorizontal ? (x1 - x0) * bezierFactor : 0),
+                y0 + (isHorizontal ? 0 : (y1 - y0) * bezierFactor),
+            ];
+            const [cp1x, cp1y] = [
+                x1 - (isHorizontal ? (x1 - x0) * bezierFactor : 0),
+                y1 - (isHorizontal ? 0 : (y1 - y0) * bezierFactor),
+            ];
+            ctx.bezierCurveTo(cp0x, cp0y, cp1x, cp1y, x1, y1);
+        }
+    }
     ctx.stroke();
     ctx.restore();
 };
@@ -1171,7 +1200,7 @@ class Hermes {
             }
         }
         this._ = _;
-        this.drawDebugOutline();
+        // this.drawDebugOutline();
         this.draw();
     }
     draw() {
@@ -1202,8 +1231,8 @@ class Hermes {
                 const layout = _dl[j].layout;
                 const value = this.data[key][i];
                 const pos = ((_a = dimension.axis.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) || 0;
-                const x = layout.bound.x + layout.axisStart.x;
-                const y = layout.bound.y + layout.axisStart.y + pos;
+                const x = layout.bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
+                const y = layout.bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
                 if (dimColorKey === key) {
                     const percent = ((_b = dimension.axis.scale) === null || _b === void 0 ? void 0 : _b.valueToPercent(value)) || 0;
                     const scaleColor = rgbaFromGradient(minColor, maxColor, percent);
@@ -1211,7 +1240,7 @@ class Hermes {
                 }
                 return { x, y };
             });
-            drawData(this.ctx, series, dataLineStyle);
+            drawData(this.ctx, series, isHorizontal, dataStyle.path, dataLineStyle);
         }
         // Draw dimension labels.
         const dimTextStyle = {

@@ -342,7 +342,7 @@ class Hermes {
 
     this._ = _;
 
-    this.drawDebugOutline();
+    // this.drawDebugOutline();
     this.draw();
   }
 
@@ -373,8 +373,8 @@ class Hermes {
         const layout = _dl[j].layout;
         const value = this.data[key][i];
         const pos = dimension.axis.scale?.valueToPos(value) || 0;
-        const x = layout.bound.x + layout.axisStart.x;
-        const y = layout.bound.y + layout.axisStart.y + pos;
+        const x = layout.bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
+        const y = layout.bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
 
         if (dimColorKey === key) {
           const percent = dimension.axis.scale?.valueToPercent(value) || 0;
@@ -385,7 +385,7 @@ class Hermes {
         return { x, y };
       });
 
-      drawData(this.ctx, series, dataLineStyle);
+      drawData(this.ctx, series, isHorizontal, dataStyle.path, dataLineStyle);
     }
 
     // Draw dimension labels.

@@ -36,6 +36,8 @@ export const drawCircle = (
 export const drawData = (
   ctx: CanvasRenderingContext2D,
   data: t.Point[],
+  isHorizontal: boolean,
+  path: t.PathOptions,
   style: t.StyleLine = {},
 ): void => {
   if (data.length < 2) return;
@@ -51,7 +53,26 @@ export const drawData = (
 
   ctx.beginPath();
   ctx.moveTo(data[0].x, data[0].y);
-  for (let i = 1; i < data.length; i++) ctx.lineTo(data[i].x, data[i].y);
+
+  const bezierFactor = path.options.bezierFactor ?? DEFAULT.BEZIER_FACTOR;
+  for (let i = 1; i < data.length; i++) {
+      const [ x1, y1 ] = [ data[i].x, data[i].y ];
+      if (path.type === t.PathType.Straight) {
+      ctx.lineTo(x1, y1);
+      console.log(x1, y1);
+    } else if (path.type === t.PathType.Bezier) {
+      const [ x0, y0 ] = [ data[i-1].x, data[i-1].y ];
+      const [ cp0x, cp0y ] = [
+        x0 + (isHorizontal ? (x1 - x0) * bezierFactor : 0),
+        y0 + (isHorizontal ? 0 : (y1 - y0) * bezierFactor),
+      ];
+      const [ cp1x, cp1y ] = [
+        x1 - (isHorizontal ? (x1 - x0) * bezierFactor : 0),
+        y1 - (isHorizontal ? 0 : (y1 - y0) * bezierFactor),
+      ];
+      ctx.bezierCurveTo(cp0x, cp0y, cp1x, cp1y, x1, y1);
+    }
+  }
   ctx.stroke();
 
   ctx.restore();

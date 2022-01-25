@@ -72,6 +72,11 @@ export enum LabelPlacement {
   Before = 'before',
 }
 
+export enum PathType {
+  Bezier = 'bezier',
+  Straight = 'straight',
+}
+
 /**
  * INTERFACES
  */
@@ -106,6 +111,13 @@ export interface LabelOptions {
   placement: LabelPlacement;
 }
 
+export interface PathOptions {
+  options: {
+    bezierFactor?: number;
+  };
+  type: PathType;
+}
+
 /**
  * PRIMARY INTERFACES AND TYPES
  */
@@ -136,6 +148,7 @@ export interface HermesOptions {
         maxColor: string;
       };
       width: number;
+      path: PathOptions;
     };
     dimension: {
       label: LabelOptions;
