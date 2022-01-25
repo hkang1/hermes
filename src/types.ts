@@ -90,6 +90,14 @@ export interface Axis {
   type: AxisType;
 }
 
+export interface DataOptions extends StyleLine {
+  colorScale?: {
+    colors: string[];
+    dimensionKey: DimensionKey;
+  };
+  path: PathOptions;
+}
+
 export interface Dimension {
   axis: Axis;
   key: string;
@@ -103,10 +111,8 @@ export interface Font {
   weight?: FontWeight | number;
 }
 
-export interface LabelOptions {
+export interface LabelOptions extends StyleText {
   angle?: number;
-  color: string;
-  font: Font;
   offset: number;
   placement: LabelPlacement;
 }
@@ -116,6 +122,10 @@ export interface PathOptions {
     bezierFactor?: number;
   };
   type: PathType;
+}
+
+export interface TickOptions extends StyleLine {
+  length: number;
 }
 
 /**
@@ -129,26 +139,11 @@ export interface HermesOptions {
   //hooks: {},
   style: {
     axes: {
-      axis: {
-        color: string;
-        width: number;
-      },
+      axis: StyleLine,
       label: LabelOptions;
-      tick: {
-        color: string;
-        length: number;
-        width: number;
-      };
+      tick: TickOptions;
     };
-    data: {
-      color?: string;
-      colorScale?: {
-        colors: string[];
-        dimensionKey: DimensionKey;
-      };
-      width: number;
-      path: PathOptions;
-    };
+    data: DataOptions;
     dimension: {
       label: LabelOptions;
       layout: DimensionLayout;

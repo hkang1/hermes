@@ -550,34 +550,34 @@ const HERMES_OPTIONS = {
     style: {
         axes: {
             axis: {
-                color: 'black',
-                width: 1,
+                fillStyle: 'black',
+                lineWidth: 1,
             },
             label: {
-                color: 'black',
-                font: { size: 11 },
+                fillStyle: 'rgba(0, 0, 0, 1.0)',
+                font: 'normal 11px sans-serif',
                 offset: 4,
                 placement: LabelPlacement.Before,
             },
             tick: {
-                color: 'black',
+                fillStyle: 'black',
                 length: 4,
-                width: 1,
+                lineWidth: 1,
             },
         },
         data: {
-            color: 'rgba(82, 144, 244, 0.5)',
+            lineWidth: 1,
             path: {
                 options: {},
                 type: PathType.Straight,
             },
-            width: 1,
+            strokeStyle: 'rgba(82, 144, 244, 0.3)',
         },
         dimension: {
             label: {
                 // angle: Math.PI / 4,
-                color: 'black',
-                font: { size: 14 },
+                fillStyle: 'rgba(0, 0, 0, 1.0)',
+                font: 'normal 12px sans-serif',
                 offset: 10,
                 placement: LabelPlacement.Before,
             },
@@ -679,6 +679,8 @@ const drawRect = (ctx, x, y, w, h, style = {}) => {
 const drawText = (ctx, text, x, y, rad, style = {}) => {
     const normalizedRad = normalizeRad(rad);
     const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
+    style.strokeStyle = 'white';
+    style.lineWidth = 3;
     ctx.save();
     ctx.direction = style.direction || DIRECTION;
     ctx.font = style.font || FONT;
@@ -687,10 +689,6 @@ const drawText = (ctx, text, x, y, rad, style = {}) => {
     ctx.translate(x, y);
     ctx.rotate(-rad - (inwards ? Math.PI : 0));
     ctx.translate(-x, -y);
-    if (style.fillStyle) {
-        ctx.fillStyle = style.fillStyle || FILL_STYLE;
-        ctx.fillText(text, x, y);
-    }
     if (style.strokeStyle) {
         ctx.lineCap = style.lineCap || LINE_CAP;
         ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
@@ -700,17 +698,14 @@ const drawText = (ctx, text, x, y, rad, style = {}) => {
         ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
         ctx.strokeText(text, x, y);
     }
+    if (style.fillStyle) {
+        ctx.fillStyle = style.fillStyle || FILL_STYLE;
+        ctx.fillText(text, x, y);
+    }
     ctx.restore();
 };
-const getFont = (font) => {
-    const style = font.style || FontStyle.Normal;
-    const weight = font.weight || FontWeight.Normal;
-    const size = `${font.size || 14}px`;
-    const family = font.family || 'sans-serif';
-    return [style, weight, size, family].join(' ');
-};
-const getTextSize = (ctx, text, font) => {
-    ctx.font = getFont(font);
+const getTextSize = (ctx, text, font = FONT) => {
+    ctx.font = font;
     const metrics = ctx.measureText(text);
     const w = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
     const h = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
@@ -1226,10 +1221,7 @@ class Hermes {
         const isDimBefore = dimStyle.label.placement === LabelPlacement.Before;
         const isAxesBefore = axesStyle.label.placement === LabelPlacement.Before;
         // Draw data lines.
-        const dataLineStyle = {
-            strokeStyle: dataStyle.color || STROKE_STYLE,
-            lineWidth: dataStyle.width,
-        };
+        const dataLineStyle = dataStyle;
         const dimColorKey = (_a = dataStyle.colorScale) === null || _a === void 0 ? void 0 : _a.dimensionKey;
         for (let i = 0; i < this.dataCount; i++) {
             const series = this.dimensions.map((dimension, j) => {
@@ -1250,10 +1242,7 @@ class Hermes {
             drawData(this.ctx, series, isHorizontal, dataStyle.path, dataLineStyle);
         }
         // Draw dimension labels.
-        const dimTextStyle = {
-            fillStyle: dimStyle.label.color,
-            font: getFont(dimStyle.label.font),
-        };
+        const dimTextStyle = dimStyle.label;
         if (dimStyle.label.angle == null) {
             dimTextStyle.textAlign = isHorizontal ? 'center' : undefined;
             dimTextStyle.textBaseline = isHorizontal ? (isDimBefore ? 'bottom' : 'top') : undefined;
@@ -1267,18 +1256,7 @@ class Hermes {
             drawText(this.ctx, dimension.label, x, y, rad, dimTextStyle);
         });
         // Draw dimension axes.
-        const drawAxesStyle = {
-            lineWidth: axesStyle.axis.width,
-            strokeStyle: axesStyle.axis.color,
-        };
-        const drawTickStyle = {
-            lineWidth: axesStyle.tick.width,
-            strokeStyle: axesStyle.tick.color,
-        };
-        const drawTickTextStyle = {
-            fillStyle: axesStyle.label.color,
-            font: getFont(axesStyle.label.font),
-        };
+        const drawTickTextStyle = axesStyle.label;
         if (axesStyle.label.angle == null) {
             drawTickTextStyle.textAlign = isHorizontal ? undefined : 'center';
             drawTickTextStyle.textBaseline = isHorizontal ? undefined : (isAxesBefore ? 'bottom' : 'top');
@@ -1290,7 +1268,7 @@ class Hermes {
             const tickLabels = dim.axes.tickLabels;
             const tickPos = dim.axes.tickPos;
             const tickLengthFactor = isAxesBefore ? -1 : 1;
-            drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, drawAxesStyle);
+            drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, axesStyle.axis);
             for (let i = 0; i < tickLabels.length; i++) {
                 const xOffset = isHorizontal ? 0 : tickPos[i];
                 const yOffset = isHorizontal ? tickPos[i] : 0;
@@ -1300,7 +1278,7 @@ class Hermes {
                 const y0 = bound.y + axisStart.y + yOffset;
                 const x1 = bound.x + axisStart.x + xOffset + xTickLength;
                 const y1 = bound.y + axisStart.y + yOffset + yTickLength;
-                drawLine(this.ctx, x0, y0, x1, y1, drawTickStyle);
+                drawLine(this.ctx, x0, y0, x1, y1, axesStyle.tick);
                 const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
                 const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;
                 const rad = axesStyle.label.angle != null

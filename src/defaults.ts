@@ -20,34 +20,34 @@ export const HERMES_OPTIONS: t.HermesOptions = {
   style: {
     axes: {
       axis: {
-        color: 'black',
-        width: 1,
+        fillStyle: 'black',
+        lineWidth: 1,
       },
       label: {
-        color: 'black',
-        font: { size: 11 },
+        fillStyle: 'rgba(0, 0, 0, 1.0)',
+        font: 'normal 11px sans-serif',
         offset: 4,
         placement: t.LabelPlacement.Before,
       },
       tick: {
-        color: 'black',
+        fillStyle: 'black',
         length: 4,
-        width: 1,
+        lineWidth: 1,
       },
     },
     data: {
-      color: 'rgba(82, 144, 244, 0.5)',
+      lineWidth: 1,
       path: {
         options: {},
         type: t.PathType.Straight,
       },
-      width: 1,
+      strokeStyle: 'rgba(82, 144, 244, 0.3)',
     },
     dimension: {
       label: {
         // angle: Math.PI / 4,
-        color: 'black',
-        font: { size: 14 },
+        fillStyle: 'rgba(0, 0, 0, 1.0)',
+        font: 'normal 12px sans-serif',
         offset: 10,
         placement: t.LabelPlacement.Before,
       },

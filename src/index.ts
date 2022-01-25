@@ -7,7 +7,7 @@ import NiceScale from './classes/NiceScale';
 import * as DEFAULT from './defaults';
 import * as t from './types';
 import {
-  drawCircle, drawData, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
+  drawCircle, drawData, drawLine, drawRect, drawText, getTextSize, normalizePadding,
 } from './utils/canvas';
 import { scale2rgba } from './utils/color';
 import { getDataRange } from './utils/data';
@@ -362,10 +362,7 @@ class Hermes {
     const isAxesBefore = axesStyle.label.placement === t.LabelPlacement.Before;
 
     // Draw data lines.
-    const dataLineStyle: t.StyleLine = {
-      strokeStyle: dataStyle.color || DEFAULT.STROKE_STYLE,
-      lineWidth: dataStyle.width,
-    };
+    const dataLineStyle: t.StyleLine = dataStyle;
     const dimColorKey = dataStyle.colorScale?.dimensionKey;
     for (let i = 0; i < this.dataCount; i++) {
       const series = this.dimensions.map((dimension, j) => {
@@ -389,10 +386,7 @@ class Hermes {
     }
 
     // Draw dimension labels.
-    const dimTextStyle: t.StyleText = {
-      fillStyle: dimStyle.label.color,
-      font: getFont(dimStyle.label.font),
-    };
+    const dimTextStyle: t.StyleText = dimStyle.label;
     if (dimStyle.label.angle == null) {
       dimTextStyle.textAlign = isHorizontal ? 'center' : undefined;
       dimTextStyle.textBaseline = isHorizontal ? (isDimBefore ? 'bottom' : 'top') : undefined;
@@ -407,18 +401,7 @@ class Hermes {
     });
 
     // Draw dimension axes.
-    const drawAxesStyle: t.StyleLine = {
-      lineWidth: axesStyle.axis.width,
-      strokeStyle: axesStyle.axis.color,
-    };
-    const drawTickStyle: t.StyleLine = {
-      lineWidth: axesStyle.tick.width,
-      strokeStyle: axesStyle.tick.color,
-    };
-    const drawTickTextStyle: t.StyleText = {
-      fillStyle: axesStyle.label.color,
-      font: getFont(axesStyle.label.font),
-    };
+    const drawTickTextStyle: t.StyleText = axesStyle.label;
     if (axesStyle.label.angle == null) {
       drawTickTextStyle.textAlign = isHorizontal ? undefined : 'center';
       drawTickTextStyle.textBaseline = isHorizontal ? undefined : (isAxesBefore ? 'bottom' : 'top');
@@ -437,7 +420,7 @@ class Hermes {
         bound.y + axisStart.y,
         bound.x + axisStop.x,
         bound.y + axisStop.y,
-        drawAxesStyle,
+        axesStyle.axis,
       );
 
       for (let i = 0; i < tickLabels.length; i++) {
@@ -449,7 +432,7 @@ class Hermes {
         const y0 = bound.y + axisStart.y + yOffset;
         const x1 = bound.x + axisStart.x + xOffset + xTickLength;
         const y1 = bound.y + axisStart.y + yOffset + yTickLength;
-        drawLine(this.ctx, x0, y0, x1, y1, drawTickStyle);
+        drawLine(this.ctx, x0, y0, x1, y1, axesStyle.tick);
 
         const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
         const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;

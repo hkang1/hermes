@@ -140,6 +140,9 @@ export const drawText = (
   const normalizedRad = normalizeRad(rad);
   const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
 
+  style.strokeStyle = 'white';
+  style.lineWidth = 3;
+
   ctx.save();
 
   ctx.direction = style.direction || DEFAULT.DIRECTION;
@@ -151,10 +154,6 @@ export const drawText = (
   ctx.rotate(-rad - (inwards ? Math.PI : 0));
   ctx.translate(-x, -y);
 
-  if (style.fillStyle) {
-    ctx.fillStyle = style.fillStyle || DEFAULT.FILL_STYLE;
-    ctx.fillText(text, x, y);
-  }
   if (style.strokeStyle) {
     ctx.lineCap = style.lineCap || DEFAULT.LINE_CAP;
     ctx.lineDashOffset = style.lineDashOffset || DEFAULT.LINE_DASH_OFFSET;
@@ -163,6 +162,10 @@ export const drawText = (
     ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
     ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
     ctx.strokeText(text, x, y);
+  }
+  if (style.fillStyle) {
+    ctx.fillStyle = style.fillStyle || DEFAULT.FILL_STYLE;
+    ctx.fillText(text, x, y);
   }
 
   ctx.restore();
@@ -176,8 +179,8 @@ export const getFont = (font: t.Font): string => {
   return [ style, weight, size, family ].join(' ');
 };
 
-export const getTextSize = (ctx: CanvasRenderingContext2D, text: string, font: t.Font): t.Size => {
-  ctx.font = getFont(font);
+export const getTextSize = (ctx: CanvasRenderingContext2D, text: string, font: string = DEFAULT.FONT): t.Size => {
+  ctx.font = font;
   const metrics = ctx.measureText(text);
   const w = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
   const h = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
