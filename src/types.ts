@@ -143,9 +143,8 @@ export interface HermesOptions {
     data: {
       color?: string;
       colorScale?: {
+        colors: string[];
         dimensionKey: DimensionKey;
-        minColor: string;
-        maxColor: string;
       };
       width: number;
       path: PathOptions;

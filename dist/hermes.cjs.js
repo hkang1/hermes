@@ -567,11 +567,6 @@ const HERMES_OPTIONS = {
         },
         data: {
             color: 'rgba(82, 144, 244, 0.5)',
-            // colorScale: {
-            //   dimensionKey: 'accuracy',
-            //   maxColor: 'rgba(150, 100, 0, 0.5)',
-            //   minColor: 'rgba(0, 100, 150, 0.5)',
-            // },
             path: {
                 options: {},
                 type: PathType.Straight,
@@ -633,7 +628,6 @@ const drawData = (ctx, data, isHorizontal, path, style = {}) => {
         const [x1, y1] = [data[i].x, data[i].y];
         if (path.type === PathType.Straight) {
             ctx.lineTo(x1, y1);
-            console.log(x1, y1);
         }
         else if (path.type === PathType.Bezier) {
             const [x0, y0] = [data[i - 1].x, data[i - 1].y];
@@ -758,6 +752,20 @@ const rgbaFromGradient = (rgba0, rgba1, percent) => {
         return { a, b, g, r };
     }
     return { b, g, r };
+};
+const scale2rgba = (colors, percent) => {
+    const count = colors.length;
+    if (count < 1)
+        return '#000000';
+    if (count === 1)
+        return colors[0];
+    const index = percent * (count - 1);
+    const i0 = Math.floor(index);
+    const i1 = Math.ceil(index);
+    const color0 = str2rgba(colors[i0]);
+    const color1 = str2rgba(colors[i1]);
+    const rgba = rgbaFromGradient(color0, color1, index - i0);
+    return rgba2str(rgba);
 };
 const str2rgba = (str) => {
     if (/^#/.test(str))
@@ -1204,9 +1212,10 @@ class Hermes {
         this.draw();
     }
     draw() {
-        var _a, _b, _c;
+        var _a;
         if (!this._)
             return;
+        console.time('render time');
         this.size;
         this._.layout;
         const _dl = this._.dims.list;
@@ -1222,21 +1231,19 @@ class Hermes {
             lineWidth: dataStyle.width,
         };
         const dimColorKey = (_a = dataStyle.colorScale) === null || _a === void 0 ? void 0 : _a.dimensionKey;
-        const maxColor = str2rgba(((_b = dataStyle.colorScale) === null || _b === void 0 ? void 0 : _b.maxColor) || STROKE_STYLE);
-        const minColor = str2rgba(((_c = dataStyle.colorScale) === null || _c === void 0 ? void 0 : _c.minColor) || STROKE_STYLE);
         for (let i = 0; i < this.dataCount; i++) {
             const series = this.dimensions.map((dimension, j) => {
-                var _a, _b;
+                var _a, _b, _c, _d, _e;
                 const key = dimension.key;
                 const layout = _dl[j].layout;
                 const value = this.data[key][i];
-                const pos = ((_a = dimension.axis.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) || 0;
+                const pos = (_b = (_a = dimension.axis.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) !== null && _b !== void 0 ? _b : 0;
                 const x = layout.bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
                 const y = layout.bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
                 if (dimColorKey === key) {
-                    const percent = ((_b = dimension.axis.scale) === null || _b === void 0 ? void 0 : _b.valueToPercent(value)) || 0;
-                    const scaleColor = rgbaFromGradient(minColor, maxColor, percent);
-                    dataLineStyle.strokeStyle = rgba2str(scaleColor);
+                    const percent = (_d = (_c = dimension.axis.scale) === null || _c === void 0 ? void 0 : _c.valueToPercent(value)) !== null && _d !== void 0 ? _d : 0;
+                    const scaleColor = scale2rgba(((_e = dataStyle.colorScale) === null || _e === void 0 ? void 0 : _e.colors) || [], percent);
+                    dataLineStyle.strokeStyle = scaleColor;
                 }
                 return { x, y };
             });
@@ -1303,6 +1310,7 @@ class Hermes {
                 drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
             }
         });
+        console.timeEnd('render time');
     }
     drawDebugOutline() {
         if (!this._)

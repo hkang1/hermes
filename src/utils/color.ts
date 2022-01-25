@@ -94,6 +94,20 @@ export const rgbaFromGradient = (
   return { b, g, r };
 };
 
+export const scale2rgba = (colors: string[], percent: number): string => {
+  const count = colors.length;
+  if (count < 1) return '#000000';
+  if (count === 1) return colors[0];
+  
+  const index = percent * (count - 1);
+  const i0 = Math.floor(index);
+  const i1 = Math.ceil(index);
+  const color0 = str2rgba(colors[i0]);
+  const color1 = str2rgba(colors[i1]);
+  const rgba = rgbaFromGradient(color0, color1, index - i0);
+  return rgba2str(rgba);
+};
+
 export const str2rgba = (str: string): RgbaColor => {
   if (/^#/.test(str)) return hex2rgb(str);
 

@@ -37,11 +37,6 @@ export const HERMES_OPTIONS: t.HermesOptions = {
     },
     data: {
       color: 'rgba(82, 144, 244, 0.5)',
-      // colorScale: {
-      //   dimensionKey: 'accuracy',
-      //   maxColor: 'rgba(150, 100, 0, 0.5)',
-      //   minColor: 'rgba(0, 100, 150, 0.5)',
-      // },
       path: {
         options: {},
         type: t.PathType.Straight,

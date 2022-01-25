@@ -59,7 +59,6 @@ export const drawData = (
       const [ x1, y1 ] = [ data[i].x, data[i].y ];
       if (path.type === t.PathType.Straight) {
       ctx.lineTo(x1, y1);
-      console.log(x1, y1);
     } else if (path.type === t.PathType.Bezier) {
       const [ x0, y0 ] = [ data[i-1].x, data[i-1].y ];
       const [ cp0x, cp0y ] = [

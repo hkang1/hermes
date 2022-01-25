@@ -8,8 +8,8 @@
     <div id="hermes"></div>
     <script>
       const tester = Hermes.getTester();
-      const dimensions = tester.generateDimensions(6);
-      const data = tester.generateData(dimensions, 100);
+      const dimensions = tester.generateDimensions(20);
+      const data = tester.generateData(dimensions, 500);
       console.log('dims', dimensions);
       console.log('data', data);
       const hermes = new Hermes('#hermes', data, dimensions, {
@@ -30,13 +30,21 @@
           },
           data: {
             colorScale: {
+              colors: [
+                'rgba(255, 0, 0, 0.5)',
+                'rgba(255, 127, 0, 0.5)',
+                'rgba(255, 255, 0, 0.5)',
+                'rgba(0, 255, 0, 0.5)',
+                'rgba(0, 0, 255, 0.5)',
+                'rgba(75, 0, 130, 0.5)',
+                'rgba(148, 0, 211, 0.5)',
+              ],
               dimensionKey: dimensions[dimensions.length - 1].key,
-              maxColor: 'rgba(200, 0, 0, 0.5)',
-              minColor: 'rgba(0, 50, 150, 0.5)',
             },
             path: {
-              type: 'bezier',
+              type: 'straight',
             },
+            width: 1,
           },
           dimension: {
             label: {

@@ -9,7 +9,7 @@ import * as t from './types';
 import {
   drawCircle, drawData, drawLine, drawRect, drawText, getFont, getTextSize, normalizePadding,
 } from './utils/canvas';
-import { rgba2str, rgbaFromGradient, str2rgba } from './utils/color';
+import { scale2rgba } from './utils/color';
 import { getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
 import * as tester from './utils/test';
@@ -349,6 +349,8 @@ class Hermes {
   private draw(): void {
     if (!this._) return;
 
+    console.time('render time');
+
     const { h, w } = this.size;
     const _l = this._.layout;
     const _dl = this._.dims.list;
@@ -365,21 +367,19 @@ class Hermes {
       lineWidth: dataStyle.width,
     };
     const dimColorKey = dataStyle.colorScale?.dimensionKey;
-    const maxColor = str2rgba(dataStyle.colorScale?.maxColor || DEFAULT.STROKE_STYLE);
-    const minColor = str2rgba(dataStyle.colorScale?.minColor || DEFAULT.STROKE_STYLE);
     for (let i = 0; i < this.dataCount; i++) {
       const series = this.dimensions.map((dimension, j) => {
         const key = dimension.key;
         const layout = _dl[j].layout;
         const value = this.data[key][i];
-        const pos = dimension.axis.scale?.valueToPos(value) || 0;
+        const pos = dimension.axis.scale?.valueToPos(value) ?? 0;
         const x = layout.bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
         const y = layout.bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
 
         if (dimColorKey === key) {
-          const percent = dimension.axis.scale?.valueToPercent(value) || 0;
-          const scaleColor = rgbaFromGradient(minColor, maxColor, percent);
-          dataLineStyle.strokeStyle = rgba2str(scaleColor);
+          const percent = dimension.axis.scale?.valueToPercent(value) ?? 0;
+          const scaleColor = scale2rgba(dataStyle.colorScale?.colors || [], percent);
+          dataLineStyle.strokeStyle = scaleColor;
         }
 
         return { x, y };
@@ -460,6 +460,8 @@ class Hermes {
         drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
       }
     });
+
+    console.timeEnd('render time');
   }
 
   private drawDebugOutline(): void {
