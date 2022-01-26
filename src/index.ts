@@ -6,9 +6,7 @@ import LogScale from './classes/LogScale';
 import NiceScale from './classes/NiceScale';
 import * as DEFAULT from './defaults';
 import * as t from './types';
-import {
-  drawCircle, drawData, drawLine, drawRect, drawText, getTextSize, normalizePadding,
-} from './utils/canvas';
+import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
 import { getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
@@ -125,7 +123,7 @@ class Hermes {
       },
       layout: {
         drawRect: {},
-        padding: normalizePadding(this.options.style.padding),
+        padding: canvas.normalizePadding(this.options.style.padding),
       },
     };
 
@@ -163,7 +161,7 @@ class Hermes {
     _dsl.maxLengthCos = 0;
     _dsl.maxLengthSin = 0;
     this.dimensions.forEach((dimension, i) => {
-      const textSize = getTextSize(this.ctx, dimension.label, dimLabelStyle.font);
+      const textSize = canvas.getTextSize(this.ctx, dimension.label, dimLabelStyle.font);
       const _dlil = _.dims.list[i].label;
 
       _dlil.w = textSize.w;
@@ -231,7 +229,7 @@ class Hermes {
         _dlia.tickPos = scale.tickPos.slice();
 
         scale.tickLabels.forEach(tickLabel => {
-          const size = getTextSize(this.ctx, tickLabel, axesLabelStyle.font);
+          const size = canvas.getTextSize(this.ctx, tickLabel, axesLabelStyle.font);
           _dlia.maxLength = Math.max(size.w, _dlia.maxLength);
         });
       }
@@ -382,7 +380,7 @@ class Hermes {
         return { x, y };
       });
 
-      drawData(this.ctx, series, isHorizontal, dataStyle.path, dataLineStyle);
+      canvas.drawData(this.ctx, series, isHorizontal, dataStyle.path, dataLineStyle);
     }
 
     // Draw dimension labels.
@@ -397,7 +395,7 @@ class Hermes {
       const labelPoint = _dl[i].layout.labelPoint;
       const x = bound.x + labelPoint.x;
       const y = bound.y + labelPoint.y;
-      drawText(this.ctx, dimension.label, x, y, rad, dimTextStyle);
+      canvas.drawText(this.ctx, dimension.label, x, y, rad, dimTextStyle);
     });
 
     // Draw dimension axes.
@@ -414,7 +412,7 @@ class Hermes {
       const tickPos = dim.axes.tickPos;
       const tickLengthFactor = isAxesBefore ? -1 : 1;
 
-      drawLine(
+      canvas.drawLine(
         this.ctx,
         bound.x + axisStart.x,
         bound.y + axisStart.y,
@@ -432,7 +430,7 @@ class Hermes {
         const y0 = bound.y + axisStart.y + yOffset;
         const x1 = bound.x + axisStart.x + xOffset + xTickLength;
         const y1 = bound.y + axisStart.y + yOffset + yTickLength;
-        drawLine(this.ctx, x0, y0, x1, y1, axesStyle.tick);
+        canvas.drawLine(this.ctx, x0, y0, x1, y1, axesStyle.tick);
 
         const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
         const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;
@@ -440,7 +438,7 @@ class Hermes {
           ? axesStyle.label.angle
           : (isHorizontal && isAxesBefore ? Math.PI : 0);
         const tickLabel = tickLabels[i];
-        drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
+        canvas.drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
       }
     });
 
@@ -458,10 +456,10 @@ class Hermes {
 
     // Draw the drawing area by outlining paddings.
     const paddingStyle = { strokeStyle: '#dddddd' };
-    drawLine(this.ctx, 0, _l.padding[0], w, _l.padding[0], paddingStyle);
-    drawLine(this.ctx, 0, h - _l.padding[2], w, h - _l.padding[2], paddingStyle);
-    drawLine(this.ctx, _l.padding[3], 0, _l.padding[3], h, paddingStyle);
-    drawLine(this.ctx, w - _l.padding[1], 0, w - _l.padding[1], h, paddingStyle);
+    canvas.drawLine(this.ctx, 0, _l.padding[0], w, _l.padding[0], paddingStyle);
+    canvas.drawLine(this.ctx, 0, h - _l.padding[2], w, h - _l.padding[2], paddingStyle);
+    canvas.drawLine(this.ctx, _l.padding[3], 0, _l.padding[3], h, paddingStyle);
+    canvas.drawLine(this.ctx, w - _l.padding[1], 0, w - _l.padding[1], h, paddingStyle);
 
     // Draw each dimension rough outline with bounding box.
     _dl.forEach((dim, i) => {
@@ -471,7 +469,7 @@ class Hermes {
       const boundStyle = { strokeStyle: '#dddddd' };
       const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
 
-      drawRect(
+      canvas.drawRect(
         this.ctx,
         isHorizontal ? _l.padding[3] + i * _dsl.space : bound.x,
         isHorizontal ? bound.y : _l.padding[0] + i * _dsl.space,
@@ -479,8 +477,8 @@ class Hermes {
         isHorizontal ? bound.h : _dsl.space,
         dimStyle,
       );
-      drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
-      drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
+      canvas.drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
+      canvas.drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
     });
   }
 }
