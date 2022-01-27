@@ -16,6 +16,7 @@ export type RecursivePartial<T> = { [P in keyof T]?: RecursivePartial<T[P]> };
  * Canvas Rendering Types
  */
 
+export type Boundary = [ Point, Point, Point, Point ];
 export type Point = { x: number, y: number };
 export type Rect = Point & Size;
 export type Size = { h: number, w: number };
@@ -168,13 +169,14 @@ export interface Internal {
         w: number;
       };
       layout: {
-        axisStart: Point;       // Respective to bound (x, y)
-        axisStop: Point;        // Respective to bound (x, y)
-        bound: Rect;            // Bounding rect for the dimension label and axis.
-        labelPoint: Point;      // Respective to bound (x, y)
-        spaceAfter: number;     // Space after the axis line.
-        spaceBefore: number;    // Space before the axis line.
-        spaceOffset: number;
+        axisBoundary: Boundary;   // Coordinates for axis boundary after transformation.
+        axisStart: Point;         // Respective to bound (x, y)
+        axisStop: Point;          // Respective to bound (x, y)
+        bound: Rect;              // Bounding rect for the dimension label and axis.
+        labelBoundary: Boundary;  // Coordinates for label boundary after transformation.
+        labelPoint: Point;        // Respective to bound (x, y)
+        spaceAfter: number;       // Space after the axis line.
+        spaceBefore: number;      // Space before the axis line.
       };
     }[];
     shared: {
@@ -189,6 +191,7 @@ export interface Internal {
         cos?: number;
         maxLengthCos?: number;
         maxLengthSin?: number;
+        rad?: number;
         sin?: number;
       };
       layout: {

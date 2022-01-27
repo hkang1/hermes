@@ -158,6 +158,7 @@ class Hermes {
      */
     _dsl.cos = isLabelAngled ? Math.cos(dimLabelStyle.angle ?? 0) : undefined;
     _dsl.sin = isLabelAngled ? Math.sin(dimLabelStyle.angle ?? 0) : undefined;
+    _dsl.rad = dimLabelStyle.angle || (isHorizontal ? undefined : (isLabelBefore ? -Math.PI : 0));
     _dsl.maxLengthCos = 0;
     _dsl.maxLengthSin = 0;
     this.dimensions.forEach((dimension, i) => {
@@ -257,7 +258,6 @@ class Hermes {
       } else {
         _dlily.spaceAfter = Math.max(_dlily.spaceAfter, _dlia.maxLength);
       }
-      _dlily.spaceOffset = _dlily.spaceAfter - _dlily.spaceBefore;
 
       /**
        * Caclulate the layout positions.
@@ -299,6 +299,7 @@ class Hermes {
      */
     let traversed = _dsly.offset;
     for (let i = 0; i < dimCount; i++) {
+      const _dlil = _.dims.list[i].label;
       const _dlily = _.dims.list[i].layout;
 
       if (isHorizontal) {
@@ -308,6 +309,7 @@ class Hermes {
           _dlily.bound.x = _dsly.offset + i * _dsly.space + (_dsly.space - _dlily.bound.w) / 2;
         } else if (dimLayout === t.DimensionLayout.EvenlySpaced) {
           _dlily.bound.x = traversed;
+          traversed += _dsly.gap + _dlily.bound.w;
         }
         _dlily.axisStart = { x: _dlily.spaceBefore, y: _dsa.start - _l.padding[0] };
         _dlily.axisStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
@@ -317,7 +319,6 @@ class Hermes {
             ? _dsa.start - dimLabelStyle.offset - _l.padding[0]
             : _dsa.stop + dimLabelStyle.offset - _l.padding[0],
         };
-        traversed += _dsly.gap + _dlily.bound.w;
       } else {
         if (dimLayout === t.DimensionLayout.AxisEvenlySpaced) {
           _dlily.bound.y = _dsly.offset + i * _dsly.space + _dsly.space / 2 - _dlily.spaceBefore;
@@ -325,6 +326,7 @@ class Hermes {
           _dlily.bound.y = _dsly.offset + i * _dsly.space + (_dsly.space - _dlily.bound.h) / 2;
         } else if (dimLayout === t.DimensionLayout.EvenlySpaced) {
           _dlily.bound.y = traversed;
+          traversed += _dsly.gap + _dlily.bound.h;
         }
         _dlily.axisStart = { x: _dsa.start - _l.padding[3], y: _dlily.spaceBefore };
         _dlily.axisStop = { x: _dsa.stop - _l.padding[3], y: _dlily.spaceBefore };
@@ -334,8 +336,22 @@ class Hermes {
             : _dsa.stop + dimLabelStyle.offset - _l.padding[1],
           y: _dlily.spaceBefore,
         };
-        traversed += _dsly.gap + _dlily.bound.h;
       }
+
+      /**
+       * Calculate dimension label text boundary.
+       */
+      const offsetX = isHorizontal ? -_dlil.w / 2 : 0;
+      const offsetY = isHorizontal ? (isLabelBefore ? -_dlil.h : 0) : -_dlil.h / 2;
+      _dlily.labelBoundary = canvas.getTextBoundary(
+        _dlily.bound.x + _dlily.labelPoint.x,
+        _dlily.bound.y + _dlily.labelPoint.y,
+        _dlil.w,
+        _dlil.h,
+        _dsl.rad,
+        isLabelAngled ? 0 : offsetX,
+        isLabelAngled ? -_dlil.h / 2 : offsetY,
+      );
     }
 
     this._ = _;
@@ -352,11 +368,12 @@ class Hermes {
     const { h, w } = this.size;
     const _l = this._.layout;
     const _dl = this._.dims.list;
+    const _dsl = this._.dims.shared.label;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const axesStyle = this.options.style.axes;
     const dataStyle = this.options.style.data;
     const dimStyle = this.options.style.dimension;
-    const isDimBefore = dimStyle.label.placement === t.LabelPlacement.Before;
+    const isLabelBefore = dimStyle.label.placement === t.LabelPlacement.Before;
     const isAxesBefore = axesStyle.label.placement === t.LabelPlacement.Before;
 
     // Draw data lines.
@@ -387,15 +404,14 @@ class Hermes {
     const dimTextStyle: t.StyleText = dimStyle.label;
     if (dimStyle.label.angle == null) {
       dimTextStyle.textAlign = isHorizontal ? 'center' : undefined;
-      dimTextStyle.textBaseline = isHorizontal ? (isDimBefore ? 'bottom' : 'top') : undefined;
+      dimTextStyle.textBaseline = isHorizontal ? (isLabelBefore ? 'bottom' : 'top') : undefined;
     }
-    const rad = dimStyle.label.angle || (isHorizontal ? 0 : (isDimBefore ? -Math.PI : 0));
     this.dimensions.forEach((dimension, i) => {
       const bound = _dl[i].layout.bound;
       const labelPoint = _dl[i].layout.labelPoint;
       const x = bound.x + labelPoint.x;
       const y = bound.y + labelPoint.y;
-      canvas.drawText(this.ctx, dimension.label, x, y, rad, dimTextStyle);
+      canvas.drawText(this.ctx, dimension.label, x, y, _dsl.rad ?? 0, dimTextStyle);
     });
 
     // Draw dimension axes.
@@ -451,7 +467,7 @@ class Hermes {
     const { h, w } = this.size;
     const _l = this._.layout;
     const _dl = this._.dims.list;
-    const _dsl = this._.dims.shared.layout;
+    const _dsly = this._.dims.shared.layout;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
 
     // Draw the drawing area by outlining paddings.
@@ -462,23 +478,26 @@ class Hermes {
     canvas.drawLine(this.ctx, w - _l.padding[1], 0, w - _l.padding[1], h, paddingStyle);
 
     // Draw each dimension rough outline with bounding box.
+    const dimStyle = { strokeStyle: '#999999' };
+    const boundStyle = { strokeStyle: '#dddddd' };
+    const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
+    const labelBoundaryStyle = { fillStyle: '#ffcc00' };
     _dl.forEach((dim, i) => {
       const bound = dim.layout.bound;
       const labelPoint = dim.layout.labelPoint;
-      const dimStyle = { strokeStyle: '#999999' };
-      const boundStyle = { strokeStyle: '#dddddd' };
-      const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
+      const labelBoundary = dim.layout.labelBoundary;
 
       canvas.drawRect(
         this.ctx,
-        isHorizontal ? _l.padding[3] + i * _dsl.space : bound.x,
-        isHorizontal ? bound.y : _l.padding[0] + i * _dsl.space,
-        isHorizontal ? _dsl.space : bound.w,
-        isHorizontal ? bound.h : _dsl.space,
+        isHorizontal ? _l.padding[3] + i * _dsly.space : bound.x,
+        isHorizontal ? bound.y : _l.padding[0] + i * _dsly.space,
+        isHorizontal ? _dsly.space : bound.w,
+        isHorizontal ? bound.h : _dsly.space,
         dimStyle,
       );
       canvas.drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
       canvas.drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
+      canvas.drawBoundary(this.ctx, labelBoundary, labelBoundaryStyle);
     });
   }
 }

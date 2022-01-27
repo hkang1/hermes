@@ -8,6 +8,17 @@ export const deg2rad = (deg: number): number => deg * Math.PI / 180;
 
 export const rad2deg = (rad: number): number => rad * 180 / Math.PI;
 
+export const rotatePoint = (x: number, y: number, rad: number, px = 0, py = 0): Point => {
+  const dx = (x - px);
+  const dy = (y - py);
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return {
+    x: cos * dx - sin * dy + px,
+    y: sin * dx + cos * dy + py,
+  };
+};
+
 export const rotateSize = (size: Size, deg: number): Size => {
   const rad = deg2rad(deg);
   const radInverse = Math.PI / 2 - rad;

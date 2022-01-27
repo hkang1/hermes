@@ -26,8 +26,10 @@ export const HERMES_OPTIONS: t.HermesOptions = {
       label: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         font: 'normal 11px sans-serif',
+        lineWidth: 3,
         offset: 4,
         placement: t.LabelPlacement.Before,
+        strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
       tick: {
         fillStyle: 'black',
@@ -48,8 +50,10 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         // angle: Math.PI / 4,
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         font: 'normal 12px sans-serif',
+        lineWidth: 3,
         offset: 10,
         placement: t.LabelPlacement.Before,
+        strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },

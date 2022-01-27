@@ -1,5 +1,42 @@
 import * as DEFAULT from '../defaults';
 import * as t from '../types';
+import { rotatePoint } from './math';
+
+export const drawBoundary = (
+  ctx: CanvasRenderingContext2D,
+  boundary: t.Boundary,
+  style: t.StyleShape = {},
+): void => {
+  ctx.save();
+
+  if (ctx.fillStyle) {
+    ctx.fillStyle = style?.fillStyle || '';
+    ctx.beginPath();
+    ctx.moveTo(boundary[0].x, boundary[0].y);
+    for (let i = 1; i < boundary.length; i++) {
+      ctx.lineTo(boundary[i].x, boundary[i].y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+  if (ctx.strokeStyle) {
+    ctx.lineCap = style.lineCap || DEFAULT.LINE_CAP;
+    ctx.lineDashOffset = style.lineDashOffset || DEFAULT.LINE_DASH_OFFSET;
+    ctx.lineJoin = style.lineJoin || DEFAULT.LINE_JOIN;
+    ctx.lineWidth = style.lineWidth || DEFAULT.LINE_WIDTH;
+    ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
+    ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
+    ctx.beginPath();
+    ctx.moveTo(boundary[0].x, boundary[0].y);
+    for (let i = 1; i < boundary.length; i++) {
+      ctx.lineTo(boundary[i].x, boundary[i].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  ctx.restore();
+};
 
 export const drawCircle = (
   ctx: CanvasRenderingContext2D,
@@ -140,9 +177,6 @@ export const drawText = (
   const normalizedRad = normalizeRad(rad);
   const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
 
-  style.strokeStyle = 'white';
-  style.lineWidth = 3;
-
   ctx.save();
 
   ctx.direction = style.direction || DEFAULT.DIRECTION;
@@ -177,6 +211,42 @@ export const getFont = (font: t.Font): string => {
   const size = `${font.size || 14}px`;
   const family = font.family || 'sans-serif';
   return [ style, weight, size, family ].join(' ');
+};
+
+export const getTextBoundary = (
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  rad?: number,
+  offsetX: number = 0,
+  offsetY: number = 0,
+  padding: number = 5,
+): t.Boundary => {
+  console.log('getBoundary', x, y, w, h, 'rad', rad, offsetX, offsetY);
+  const x0 = x + offsetX - padding;
+  const y0 = y + offsetY - padding;
+  const x1 = x + w + offsetX + padding;
+  const y1 = y + h + offsetY + padding;
+  const boundary: t.Boundary = [
+    { x: x0, y: y0 },
+    { x: x1, y: y0 },
+    { x: x1, y: y1 },
+    { x: x0, y: y1 },
+  ];
+
+  if (rad != null) {
+    const normalizedRad = normalizeRad(rad);
+    return boundary.map(point => rotatePoint(
+      point.x,
+      point.y,
+      -normalizedRad,
+      x,
+      y,
+    )) as t.Boundary;
+  }
+
+  return boundary;
 };
 
 export const getTextSize = (ctx: CanvasRenderingContext2D, text: string, font: string = DEFAULT.FONT): t.Size => {
