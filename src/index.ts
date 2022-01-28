@@ -73,6 +73,10 @@ class Hermes {
       this.calculate();
     });
     this.resizeObserver.observe(this.element);
+
+    this.element.addEventListener('mousedown', this.handleMouseDown);
+    window.addEventListener('mousemove', this.handleMouseMove);
+    window.addEventListener('mouseup', this.handleMouseUp);
   }
 
   static getTester(): any {
@@ -527,6 +531,18 @@ class Hermes {
       canvas.drawBoundary(this.ctx, labelBoundary, labelBoundaryStyle);
       canvas.drawBoundary(this.ctx, axisBoundary, axisBoundaryStyle);
     });
+  }
+
+  private handleMouseDown(e: MouseEvent): void {
+    console.log('mousedown', e);
+  }
+
+  private handleMouseMove(e: MouseEvent): void {
+    console.log('mousemove', e);
+  }
+
+  private handleMouseUp(e: MouseEvent): void {
+    console.log('mouseup', e);
   }
 }
 

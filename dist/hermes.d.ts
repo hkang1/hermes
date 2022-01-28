@@ -19,5 +19,8 @@ declare class Hermes {
     private calculateLayout;
     private draw;
     private drawDebugOutline;
+    private handleMouseDown;
+    private handleMouseMove;
+    private handleMouseUp;
 }
 export default Hermes;

@@ -1007,6 +1007,9 @@ var Hermes = (function () {
               this.calculate();
           });
           this.resizeObserver.observe(this.element);
+          this.element.addEventListener('mousedown', this.handleMouseDown);
+          window.addEventListener('mousemove', this.handleMouseMove);
+          window.addEventListener('mouseup', this.handleMouseUp);
       }
       static getTester() {
           return tester;
@@ -1414,6 +1417,15 @@ var Hermes = (function () {
               drawBoundary(this.ctx, labelBoundary, labelBoundaryStyle);
               drawBoundary(this.ctx, axisBoundary, axisBoundaryStyle);
           });
+      }
+      handleMouseDown(e) {
+          console.log('mousedown', e);
+      }
+      handleMouseMove(e) {
+          console.log('mousemove', e);
+      }
+      handleMouseUp(e) {
+          console.log('mouseup', e);
       }
   }
 
