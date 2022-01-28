@@ -23,6 +23,7 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         fillStyle: 'black',
         lineWidth: 1,
       },
+      axisBoundaryPadding: 10,
       label: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         font: 'normal 11px sans-serif',
@@ -55,6 +56,7 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         placement: t.LabelPlacement.Before,
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
+      labelBoundaryPadding: 5,
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },
     padding: 50,

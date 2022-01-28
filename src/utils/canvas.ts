@@ -221,9 +221,8 @@ export const getTextBoundary = (
   rad?: number,
   offsetX: number = 0,
   offsetY: number = 0,
-  padding: number = 5,
+  padding: number = 0,
 ): t.Boundary => {
-  console.log('getBoundary', x, y, w, h, 'rad', rad, offsetX, offsetY);
   const x0 = x + offsetX - padding;
   const y0 = y + offsetY - padding;
   const x1 = x + w + offsetX + padding;

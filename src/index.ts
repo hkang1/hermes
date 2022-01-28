@@ -130,8 +130,10 @@ class Hermes {
     const { h, w } = this.size;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const dimLabelStyle = this.options.style.dimension.label;
+    const dimLabelBoundaryPadding = this.options.style.dimension.labelBoundaryPadding;
     const dimLayout = this.options.style.dimension.layout;
     const axesLabelStyle = this.options.style.axes.label;
+    const axisBoundaryPadding = this.options.style.axes.axisBoundaryPadding;
     const isLabelBefore = dimLabelStyle.placement === t.LabelPlacement.Before;
     const isLabelAngled = dimLabelStyle.angle != null;
     const isAxesBefore = axesLabelStyle.placement === t.LabelPlacement.Before;
@@ -339,7 +341,7 @@ class Hermes {
       }
 
       /**
-       * Calculate dimension label text boundary.
+       * Calculate the dimension label text boundary.
        */
       const offsetX = isHorizontal ? -_dlil.w / 2 : 0;
       const offsetY = isHorizontal ? (isLabelBefore ? -_dlil.h : 0) : -_dlil.h / 2;
@@ -351,12 +353,35 @@ class Hermes {
         _dsl.rad,
         isLabelAngled ? 0 : offsetX,
         isLabelAngled ? -_dlil.h / 2 : offsetY,
+        dimLabelBoundaryPadding,
       );
+
+      /**
+       * Calculate the dimension axis boundary.
+       */
+      _dlily.axisBoundary = [
+        {
+          x: _dlily.bound.x + _dlily.axisStart.x - (isHorizontal ? axisBoundaryPadding : 0),
+          y: _dlily.bound.y + _dlily.axisStart.y - (isHorizontal ? 0 : axisBoundaryPadding),
+        },
+        {
+          x: _dlily.bound.x + _dlily.axisStart.x + (isHorizontal ? axisBoundaryPadding : 0),
+          y: _dlily.bound.y + _dlily.axisStart.y + (isHorizontal ? 0 : axisBoundaryPadding),
+        },
+        {
+          x: _dlily.bound.x + _dlily.axisStop.x + (isHorizontal ? axisBoundaryPadding : 0),
+          y: _dlily.bound.y + _dlily.axisStop.y + (isHorizontal ? 0 : axisBoundaryPadding),
+        },
+        {
+          x: _dlily.bound.x + _dlily.axisStop.x - (isHorizontal ? axisBoundaryPadding : 0),
+          y: _dlily.bound.y + _dlily.axisStop.y - (isHorizontal ? 0 : axisBoundaryPadding),
+        },
+      ];
     }
 
     this._ = _;
 
-    // this.drawDebugOutline();
+    this.drawDebugOutline();
     this.draw();
   }
 
@@ -480,10 +505,12 @@ class Hermes {
     // Draw each dimension rough outline with bounding box.
     const dimStyle = { strokeStyle: '#999999' };
     const boundStyle = { strokeStyle: '#dddddd' };
+    const axisBoundaryStyle = { fillStyle: '#eeeeee' };
     const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
     const labelBoundaryStyle = { fillStyle: '#ffcc00' };
     _dl.forEach((dim, i) => {
       const bound = dim.layout.bound;
+      const axisBoundary = dim.layout.axisBoundary;
       const labelPoint = dim.layout.labelPoint;
       const labelBoundary = dim.layout.labelBoundary;
 
@@ -498,6 +525,7 @@ class Hermes {
       canvas.drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
       canvas.drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
       canvas.drawBoundary(this.ctx, labelBoundary, labelBoundaryStyle);
+      canvas.drawBoundary(this.ctx, axisBoundary, axisBoundaryStyle);
     });
   }
 }

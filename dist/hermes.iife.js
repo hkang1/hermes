@@ -554,6 +554,7 @@ var Hermes = (function () {
                   fillStyle: 'black',
                   lineWidth: 1,
               },
+              axisBoundaryPadding: 10,
               label: {
                   fillStyle: 'rgba(0, 0, 0, 1.0)',
                   font: 'normal 11px sans-serif',
@@ -586,6 +587,7 @@ var Hermes = (function () {
                   placement: LabelPlacement.Before,
                   strokeStyle: 'rgba(255, 255, 255, 1.0)',
               },
+              labelBoundaryPadding: 5,
               layout: DimensionLayout.AxisEvenlySpaced,
           },
           padding: 50,
@@ -747,8 +749,7 @@ var Hermes = (function () {
       }
       ctx.restore();
   };
-  const getTextBoundary = (x, y, w, h, rad, offsetX = 0, offsetY = 0, padding = 5) => {
-      console.log('getBoundary', x, y, w, h, 'rad', rad, offsetX, offsetY);
+  const getTextBoundary = (x, y, w, h, rad, offsetX = 0, offsetY = 0, padding = 0) => {
       const x0 = x + offsetX - padding;
       const y0 = y + offsetY - padding;
       const x1 = x + w + offsetX + padding;
@@ -1059,8 +1060,10 @@ var Hermes = (function () {
           const { h, w } = this.size;
           const isHorizontal = this.options.direction === Direction.Horizontal;
           const dimLabelStyle = this.options.style.dimension.label;
+          const dimLabelBoundaryPadding = this.options.style.dimension.labelBoundaryPadding;
           const dimLayout = this.options.style.dimension.layout;
           const axesLabelStyle = this.options.style.axes.label;
+          const axisBoundaryPadding = this.options.style.axes.axisBoundaryPadding;
           const isLabelBefore = dimLabelStyle.placement === LabelPlacement.Before;
           const isLabelAngled = dimLabelStyle.angle != null;
           const isAxesBefore = axesLabelStyle.placement === LabelPlacement.Before;
@@ -1264,14 +1267,35 @@ var Hermes = (function () {
                   };
               }
               /**
-               * Calculate dimension label text boundary.
+               * Calculate the dimension label text boundary.
                */
               const offsetX = isHorizontal ? -_dlil.w / 2 : 0;
               const offsetY = isHorizontal ? (isLabelBefore ? -_dlil.h : 0) : -_dlil.h / 2;
-              _dlily.labelBoundary = getTextBoundary(_dlily.bound.x + _dlily.labelPoint.x, _dlily.bound.y + _dlily.labelPoint.y, _dlil.w, _dlil.h, _dsl.rad, isLabelAngled ? 0 : offsetX, isLabelAngled ? -_dlil.h / 2 : offsetY);
+              _dlily.labelBoundary = getTextBoundary(_dlily.bound.x + _dlily.labelPoint.x, _dlily.bound.y + _dlily.labelPoint.y, _dlil.w, _dlil.h, _dsl.rad, isLabelAngled ? 0 : offsetX, isLabelAngled ? -_dlil.h / 2 : offsetY, dimLabelBoundaryPadding);
+              /**
+               * Calculate the dimension axis boundary.
+               */
+              _dlily.axisBoundary = [
+                  {
+                      x: _dlily.bound.x + _dlily.axisStart.x - (isHorizontal ? axisBoundaryPadding : 0),
+                      y: _dlily.bound.y + _dlily.axisStart.y - (isHorizontal ? 0 : axisBoundaryPadding),
+                  },
+                  {
+                      x: _dlily.bound.x + _dlily.axisStart.x + (isHorizontal ? axisBoundaryPadding : 0),
+                      y: _dlily.bound.y + _dlily.axisStart.y + (isHorizontal ? 0 : axisBoundaryPadding),
+                  },
+                  {
+                      x: _dlily.bound.x + _dlily.axisStop.x + (isHorizontal ? axisBoundaryPadding : 0),
+                      y: _dlily.bound.y + _dlily.axisStop.y + (isHorizontal ? 0 : axisBoundaryPadding),
+                  },
+                  {
+                      x: _dlily.bound.x + _dlily.axisStop.x - (isHorizontal ? axisBoundaryPadding : 0),
+                      y: _dlily.bound.y + _dlily.axisStop.y - (isHorizontal ? 0 : axisBoundaryPadding),
+                  },
+              ];
           }
           this._ = _;
-          // this.drawDebugOutline();
+          this.drawDebugOutline();
           this.draw();
       }
       draw() {
@@ -1376,16 +1400,19 @@ var Hermes = (function () {
           // Draw each dimension rough outline with bounding box.
           const dimStyle = { strokeStyle: '#999999' };
           const boundStyle = { strokeStyle: '#dddddd' };
+          const axisBoundaryStyle = { fillStyle: '#eeeeee' };
           const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
           const labelBoundaryStyle = { fillStyle: '#ffcc00' };
           _dl.forEach((dim, i) => {
               const bound = dim.layout.bound;
+              const axisBoundary = dim.layout.axisBoundary;
               const labelPoint = dim.layout.labelPoint;
               const labelBoundary = dim.layout.labelBoundary;
               drawRect(this.ctx, isHorizontal ? _l.padding[3] + i * _dsly.space : bound.x, isHorizontal ? bound.y : _l.padding[0] + i * _dsly.space, isHorizontal ? _dsly.space : bound.w, isHorizontal ? bound.h : _dsly.space, dimStyle);
               drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
               drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
               drawBoundary(this.ctx, labelBoundary, labelBoundaryStyle);
+              drawBoundary(this.ctx, axisBoundary, axisBoundaryStyle);
           });
       }
   }

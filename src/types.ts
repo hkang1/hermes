@@ -141,12 +141,14 @@ export interface HermesOptions {
   style: {
     axes: {
       axis: StyleLine,
+      axisBoundaryPadding: number;
       label: LabelOptions;
       tick: TickOptions;
     };
     data: DataOptions;
     dimension: {
       label: LabelOptions;
+      labelBoundaryPadding: number;
       layout: DimensionLayout;
     };
     padding: Padding;
