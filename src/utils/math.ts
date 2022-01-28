@@ -26,3 +26,33 @@ export const rotateSize = (size: Size, deg: number): Size => {
   const h = Math.abs(size.w * Math.sin(radInverse)) + Math.abs(size.h * Math.sin(rad));
   return { h, w };
 };
+
+export const dotProduct = (v0: Point, v1: Point): number => {
+  return v0.x * v1.x + v0.y * v1.y;
+};
+
+/**
+ * Barycentric Technique on determining if a point is within a triangle.
+ * https://blackpawn.com/texts/pointinpoly/default.html
+ */
+export const isPointInTriangle = (p: Point, a: Point, b: Point, c: Point): boolean => {
+  // Compute vectors.
+  const v0 = { x: c.x - a.x, y: c.y - a.y };
+  const v1 = { x: b.x - a.x, y: b.y - a.y };
+  const v2 = { x: p.x - a.x, y: p.y - a.y };
+
+  // Compute dot products.
+  const dot00 = dotProduct(v0, v0);
+  const dot01 = dotProduct(v0, v1);
+  const dot02 = dotProduct(v0, v2);
+  const dot11 = dotProduct(v1, v1);
+  const dot12 = dotProduct(v1, v2);
+
+  // Compute barycentric coordinates.
+  const inverseDenominator = 1 / (dot00 * dot11 - dot01 * dot01);
+  const u = (dot11 * dot02 - dot01 * dot12) * inverseDenominator;
+  const v = (dot00 * dot12 - dot01 * dot02) * inverseDenominator;
+
+  // Check if the point is in the triangle.
+  return u >= 0 && v >= 0 && u + v < 1;
+};

@@ -10,6 +10,7 @@ import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
 import { getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
+import { isPointInTriangle } from './utils/math';
 import * as tester from './utils/test';
 
 class Hermes {
@@ -22,6 +23,7 @@ class Hermes {
   private dimensions: t.Dimension[];
   private options: t.HermesOptions;
   private size: t.Size = { h: 0, w: 0 };
+  private drag: t.Drag = { index: -1, p0: { x: NaN, y: NaN }, p1: { x: NaN, y: NaN }, type: t.DragType.None };
   private _?: t.Internal = undefined;
 
   constructor(
@@ -74,9 +76,14 @@ class Hermes {
     });
     this.resizeObserver.observe(this.element);
 
-    this.element.addEventListener('mousedown', this.handleMouseDown);
-    window.addEventListener('mousemove', this.handleMouseMove);
-    window.addEventListener('mouseup', this.handleMouseUp);
+    // Add mouse event handlers.
+    this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.addEventListener('mouseup', this.handleMouseUp.bind(this));
+
+    // Enable draw animation frames.
+    this.calculate();
+    // window.requestAnimationFrame(this.draw.bind(this));
   }
 
   static getTester(): any {
@@ -96,6 +103,7 @@ class Hermes {
   private calculate(): void {
     this.calculateScales();
     this.calculateLayout();
+    this.draw();
   }
 
   private calculateScales(): void {
@@ -147,6 +155,7 @@ class Hermes {
     const _dsa = _.dims.shared.axes;
     const _dsl = _.dims.shared.label;
     const _dsly = _.dims.shared.layout;
+    const _drag = this.drag;
 
     /**
      * Calculate actual render area (canvas minus padding).
@@ -317,6 +326,9 @@ class Hermes {
           _dlily.bound.x = traversed;
           traversed += _dsly.gap + _dlily.bound.w;
         }
+        if (_drag.type === t.DragType.DimensionLabel && _drag.index === i) {
+          _dlily.bound.x += _drag.p1.x - _drag.p0.x;
+        }
         _dlily.axisStart = { x: _dlily.spaceBefore, y: _dsa.start - _l.padding[0] };
         _dlily.axisStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
         _dlily.labelPoint = {
@@ -384,15 +396,12 @@ class Hermes {
     }
 
     this._ = _;
-
-    this.drawDebugOutline();
-    this.draw();
   }
 
   private draw(): void {
     if (!this._) return;
 
-    console.time('render time');
+    // console.time('render time');
 
     const { h, w } = this.size;
     const _l = this._.layout;
@@ -404,6 +413,9 @@ class Hermes {
     const dimStyle = this.options.style.dimension;
     const isLabelBefore = dimStyle.label.placement === t.LabelPlacement.Before;
     const isAxesBefore = axesStyle.label.placement === t.LabelPlacement.Before;
+
+    // Clear previous canvas drawings.
+    this.ctx.clearRect(0, 0, w, h);
 
     // Draw data lines.
     const dataLineStyle: t.StyleLine = dataStyle;
@@ -487,7 +499,8 @@ class Hermes {
       }
     });
 
-    console.timeEnd('render time');
+    // console.timeEnd('render time');
+    // window.requestAnimationFrame(this.draw.bind(this));
   }
 
   private drawDebugOutline(): void {
@@ -517,6 +530,7 @@ class Hermes {
       const axisBoundary = dim.layout.axisBoundary;
       const labelPoint = dim.layout.labelPoint;
       const labelBoundary = dim.layout.labelBoundary;
+      console.log('labelBoundary', labelBoundary);
 
       canvas.drawRect(
         this.ctx,
@@ -534,15 +548,61 @@ class Hermes {
   }
 
   private handleMouseDown(e: MouseEvent): void {
-    console.log('mousedown', e);
+    if (!this._) return;
+
+    const [ x, y ] = [ e.clientX, e.clientY ];
+
+    this._.dims.list.forEach((dim, i) => {
+      // Check to see if a dimension label was targeted.
+      const labelBoundary = dim.layout.labelBoundary;
+      if (
+        isPointInTriangle({ x, y }, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
+        isPointInTriangle({ x, y }, labelBoundary[2], labelBoundary[3], labelBoundary[0])
+      ) {
+        console.log('dim', i, 'mousedown label');
+        this.drag.index = i;
+        this.drag.p0 = { x, y };
+        this.drag.p1 = { x, y };
+        this.drag.type = t.DragType.DimensionLabel;
+      }
+
+      // Check to see if a dimension axis was targeted.
+      const axisBoundary = dim.layout.axisBoundary;
+      if (
+        isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
+        isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])
+      ) {
+        console.log('dim', i, 'mousedown axis');
+        this.drag.index = i;
+        this.drag.p0 = { x, y };
+        this.drag.p1 = { x, y };
+        this.drag.type = t.DragType.DimensionAxis;
+      }
+    });
   }
 
   private handleMouseMove(e: MouseEvent): void {
-    console.log('mousemove', e);
+    if (!this._) return;
+
+    const [ x, y ] = [ e.clientX, e.clientY ];
+
+    this.drag.p1 = { x, y };
+
+    // console.log('mousemove', e);
+    this.calculate();
   }
 
   private handleMouseUp(e: MouseEvent): void {
-    console.log('mouseup', e);
+    if (!this._) return;
+
+    const [ x, y ] = [ e.clientX, e.clientY ];
+
+    // console.log('mouseup', e);
+    this.drag.index = -1;
+    this.drag.p0 = { x: NaN, y: NaN };
+    this.drag.p1 = { x: NaN, y: NaN };
+    this.drag.type = t.DragType.None;
+    this.calculate();
   }
 }
 

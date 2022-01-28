@@ -9,6 +9,7 @@ declare class Hermes {
     private dimensions;
     private options;
     private size;
+    private drag;
     private _?;
     constructor(target: HTMLElement | string, data: t.HermesData, dimensions: t.Dimension[], options?: t.RecursivePartial<t.HermesOptions>);
     static getTester(): any;

@@ -55,6 +55,12 @@ export enum Direction {
   Vertical = 'vertical',
 }
 
+export enum DragType {
+  DimensionAxis = 'dimension-axis',
+  DimensionLabel = 'dimension-label',
+  None = 'none',
+}
+
 export enum FontWeight {
   Bold = 'bold',
   Bolder = 'bolder',
@@ -153,6 +159,13 @@ export interface HermesOptions {
     };
     padding: Padding;
   };
+}
+
+export interface Drag {
+  index: number;
+  p0: Point;
+  p1: Point;
+  type: DragType;
 }
 
 export interface Internal {
