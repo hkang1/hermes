@@ -7,6 +7,7 @@
   "typings": "./dist/hermes.d.ts",
   "scripts": {
     "build": "tsc && rollup -c",
+    "demos": "web-dev-server --open /demos/default.html",
     "lint": "eslint \"src/**/*.{js,ts}\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "watch 'npm run build' src"
@@ -29,6 +30,7 @@
     "@rollup/plugin-node-resolve": "^13.1.3",
     "@typescript-eslint/eslint-plugin": "^5.9.1",
     "@typescript-eslint/parser": "^5.9.1",
+    "@web/dev-server": "^0.1.29",
     "eslint": "^8.7.0",
     "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.25.4",
