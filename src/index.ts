@@ -10,7 +10,7 @@ import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
 import { getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
-import { isPointInTriangle } from './utils/math';
+import { isPointInTriangle, percentRectIntersection, shiftRect } from './utils/math';
 import * as tester from './utils/test';
 
 class Hermes {
@@ -294,6 +294,15 @@ class Hermes {
         };
         _dsly.totalBoundSpace += _dlily.bound.h;
       }
+
+      if (_drag.type === t.DragType.DimensionLabel && _drag.index === i) {
+        _dlily.boundOffset = {
+          x: isHorizontal ? _drag.p1.x - _drag.p0.x : 0,
+          y: isHorizontal ? 0 : _drag.p1.y - _drag.p0.y,
+        };
+      } else {
+        _dlily.boundOffset = { x: 0, y: 0 };
+      }
     });
 
     /**
@@ -325,9 +334,6 @@ class Hermes {
         } else if (dimLayout === t.DimensionLayout.EvenlySpaced) {
           _dlily.bound.x = traversed;
           traversed += _dsly.gap + _dlily.bound.w;
-        }
-        if (_drag.type === t.DragType.DimensionLabel && _drag.index === i) {
-          _dlily.bound.x += _drag.p1.x - _drag.p0.x;
         }
         _dlily.axisStart = { x: _dlily.spaceBefore, y: _dsa.start - _l.padding[0] };
         _dlily.axisStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
@@ -426,8 +432,8 @@ class Hermes {
         const layout = _dl[j].layout;
         const value = this.data[key][i];
         const pos = dimension.axis.scale?.valueToPos(value) ?? 0;
-        const x = layout.bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
-        const y = layout.bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
+        const x = layout.bound.x + layout.boundOffset.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
+        const y = layout.bound.y + layout.boundOffset.y + layout.axisStart.y + (isHorizontal ? pos : 0);
 
         if (dimColorKey === key) {
           const percent = dimension.axis.scale?.valueToPercent(value) ?? 0;
@@ -449,9 +455,10 @@ class Hermes {
     }
     this.dimensions.forEach((dimension, i) => {
       const bound = _dl[i].layout.bound;
+      const boundOffset = _dl[i].layout.boundOffset;
       const labelPoint = _dl[i].layout.labelPoint;
-      const x = bound.x + labelPoint.x;
-      const y = bound.y + labelPoint.y;
+      const x = bound.x + boundOffset.x + labelPoint.x;
+      const y = bound.y + boundOffset.y + labelPoint.y;
       canvas.drawText(this.ctx, dimension.label, x, y, _dsl.rad ?? 0, dimTextStyle);
     });
 
@@ -463,6 +470,7 @@ class Hermes {
     }
     _dl.forEach(dim => {
       const bound = dim.layout.bound;
+      const boundOffset = dim.layout.boundOffset;
       const axisStart = dim.layout.axisStart;
       const axisStop = dim.layout.axisStop;
       const tickLabels = dim.axes.tickLabels;
@@ -471,10 +479,10 @@ class Hermes {
 
       canvas.drawLine(
         this.ctx,
-        bound.x + axisStart.x,
-        bound.y + axisStart.y,
-        bound.x + axisStop.x,
-        bound.y + axisStop.y,
+        bound.x + boundOffset.x + axisStart.x,
+        bound.y + boundOffset.y + axisStart.y,
+        bound.x + boundOffset.x + axisStop.x,
+        bound.y + boundOffset.y + axisStop.y,
         axesStyle.axis,
       );
 
@@ -483,10 +491,10 @@ class Hermes {
         const yOffset = isHorizontal ? tickPos[i] : 0;
         const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
         const yTickLength = isHorizontal ? 0 : tickLengthFactor * axesStyle.tick.length;
-        const x0 = bound.x + axisStart.x + xOffset;
-        const y0 = bound.y + axisStart.y + yOffset;
-        const x1 = bound.x + axisStart.x + xOffset + xTickLength;
-        const y1 = bound.y + axisStart.y + yOffset + yTickLength;
+        const x0 = bound.x + boundOffset.x + axisStart.x + xOffset;
+        const y0 = bound.y + boundOffset.y + axisStart.y + yOffset;
+        const x1 = bound.x + boundOffset.x + axisStart.x + xOffset + xTickLength;
+        const y1 = bound.y + boundOffset.y + axisStart.y + yOffset + yTickLength;
         canvas.drawLine(this.ctx, x0, y0, x1, y1, axesStyle.tick);
 
         const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
@@ -551,6 +559,7 @@ class Hermes {
     if (!this._) return;
 
     const [ x, y ] = [ e.clientX, e.clientY ];
+    const _drag = this.drag;
 
     this._.dims.list.forEach((dim, i) => {
       // Check to see if a dimension label was targeted.
@@ -559,11 +568,10 @@ class Hermes {
         isPointInTriangle({ x, y }, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
         isPointInTriangle({ x, y }, labelBoundary[2], labelBoundary[3], labelBoundary[0])
       ) {
-        console.log('dim', i, 'mousedown label');
-        this.drag.index = i;
-        this.drag.p0 = { x, y };
-        this.drag.p1 = { x, y };
-        this.drag.type = t.DragType.DimensionLabel;
+        _drag.index = i;
+        _drag.p0 = { x, y };
+        _drag.p1 = { x, y };
+        _drag.type = t.DragType.DimensionLabel;
       }
 
       // Check to see if a dimension axis was targeted.
@@ -572,36 +580,75 @@ class Hermes {
         isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
         isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])
       ) {
-        console.log('dim', i, 'mousedown axis');
-        this.drag.index = i;
-        this.drag.p0 = { x, y };
-        this.drag.p1 = { x, y };
-        this.drag.type = t.DragType.DimensionAxis;
+        _drag.index = i;
+        _drag.p0 = { x, y };
+        _drag.p1 = { x, y };
+        _drag.type = t.DragType.DimensionAxis;
       }
     });
   }
 
   private handleMouseMove(e: MouseEvent): void {
-    if (!this._) return;
+    if (!this._ || this.drag.type === t.DragType.None) return;
 
     const [ x, y ] = [ e.clientX, e.clientY ];
+    const _drag = this.drag;
+    const _dl = this._.dims.list;
 
-    this.drag.p1 = { x, y };
+    _drag.p1 = { x, y };
+
+    const targetBound = shiftRect(_dl[_drag.index].layout.bound, _dl[_drag.index].layout.boundOffset);
+    for (let i = 0; i < _dl.length; i++) {
+      // Skip the current dimension being dragged.
+      if (i === _drag.index) continue;
+
+      // If the drag dimension boundary intersects with the current dimension, swap them.
+      const bound = _dl[i].layout.bound;
+      console.log('intersect', percentRectIntersection(targetBound, bound));
+      if (_drag.type === t.DragType.DimensionLabel && percentRectIntersection(targetBound, bound) > 0.4) {
+        // const [ bdx, bdy ] = [ targetBound.x - bound.x, targetBound.y - bound.y ];
+        console.log('drag', _drag);
+        console.log('bound', bound);
+        console.log('targetBound', targetBound);
+        console.log('swapping', _drag.index, 'with', i);
+        const [ pdx, pdy ] = [ _drag.p1.x - _drag.p0.x, _drag.p1.y - _drag.p0.y ];
+        console.log('pd', pdx, pdy);
+        const [ bdx, bdy ] = [ bound.x - targetBound.x, bound.y - targetBound.y ];
+        console.log('bd', bdx, bdy);
+
+        const tempDim = this.dimensions[_drag.index];
+        this.dimensions[_drag.index] = this.dimensions[i];
+        this.dimensions[i] = tempDim;
+
+        // const tempDl = _dl[_drag.index];
+        // _dl[_drag.index] = _dl[i];
+        // _dl[i] = tempDl;
+
+        const newP0 = { x: _drag.p0.x + bdx, y: _drag.p0.y + bdy };
+        const newP1 = { x: _drag.p1.x + bdx + pdx, y: _drag.p1.y + bdy };
+        _drag.index = i;
+        _drag.p0 = newP0;
+        _drag.p1 = newP1;
+        console.log('should swap with', i);
+        break;
+      }
+    }
 
     // console.log('mousemove', e);
     this.calculate();
   }
 
   private handleMouseUp(e: MouseEvent): void {
-    if (!this._) return;
+    if (!this._ || this.drag.type === t.DragType.None) return;
 
     const [ x, y ] = [ e.clientX, e.clientY ];
+    const _drag = this.drag;
 
     // console.log('mouseup', e);
-    this.drag.index = -1;
-    this.drag.p0 = { x: NaN, y: NaN };
-    this.drag.p1 = { x: NaN, y: NaN };
-    this.drag.type = t.DragType.None;
+    _drag.index = -1;
+    _drag.p0 = { x: NaN, y: NaN };
+    _drag.p1 = { x: NaN, y: NaN };
+    _drag.type = t.DragType.None;
     this.calculate();
   }
 }

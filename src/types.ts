@@ -188,6 +188,7 @@ export interface Internal {
         axisStart: Point;         // Respective to bound (x, y)
         axisStop: Point;          // Respective to bound (x, y)
         bound: Rect;              // Bounding rect for the dimension label and axis.
+        boundOffset: Point;       // Offset for the bounding rect from dragging.
         labelBoundary: Boundary;  // Coordinates for label boundary after transformation.
         labelPoint: Point;        // Respective to bound (x, y)
         spaceAfter: number;       // Space after the axis line.

@@ -1,4 +1,4 @@
-import { Point, Size } from '../types';
+import { Point, Rect, Size } from '../types';
 
 export const distance = (pointA: Point, pointB: Point): number => {
   return Math.sqrt((pointB.x - pointA.x) ** 2 + (pointB.y - pointA.y) ** 2);
@@ -55,4 +55,20 @@ export const isPointInTriangle = (p: Point, a: Point, b: Point, c: Point): boole
 
   // Check if the point is in the triangle.
   return u >= 0 && v >= 0 && u + v < 1;
+};
+
+/**
+ * Returns the percentage of intersection given two rectangles.
+ * https://stackoverflow.com/a/9325084/5402432
+ */
+export const percentRectIntersection = (r0: Rect, r1: Rect): number => {
+  const [ r0x0, r0x1, r0y0, r0y1 ] = [ r0.x, r0.x + r0.w, r0.y, r0.y + r0.h ];
+  const [ r1x0, r1x1, r1y0, r1y1 ] = [ r1.x, r1.x + r1.w, r1.y, r1.y + r1.h ];
+  const intersectionArea = Math.max(0, Math.min(r0x1, r1x1) - Math.max(r0x0, r1x0)) * Math.max(0, Math.min(r0y1, r1y1) - Math.max(r0y0, r1y0));
+  const unionArea = (r0.w * r0.h) + (r1.w * r1.h) - intersectionArea;
+  return intersectionArea / unionArea;
+};
+
+export const shiftRect = (rect: Rect, shift: Point): Rect => {
+  return { h: rect.h, w: rect.w, x: rect.x + shift.x, y: rect.y + shift.y  };
 };
