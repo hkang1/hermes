@@ -14,16 +14,21 @@ export const TEXT_ALIGN = 'left';
 export const TEXT_BASELINE = 'middle';
 
 export const INVALID_VALUE = Number.NaN;
+export const INVALID_POINT = { x: Number.NaN, y: Number.NaN };
+export const INVALID_RECT = { h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN };
 
 export const HERMES_OPTIONS: t.HermesOptions = {
   direction: t.Direction.Horizontal,
   style: {
     axes: {
       axis: {
+        boundaryPadding: 10,
         fillStyle: 'black',
         lineWidth: 1,
       },
-      axisBoundaryPadding: 10,
+      filter: {
+        width: 30,
+      },
       label: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         font: 'normal 11px sans-serif',
@@ -39,16 +44,23 @@ export const HERMES_OPTIONS: t.HermesOptions = {
       },
     },
     data: {
-      lineWidth: 1,
+      default: {
+        lineWidth: 1,
+        strokeStyle: 'rgba(82, 144, 244, 0.3)',
+      },
+      filtered: {
+        lineWidth: 1,
+        strokeStyle: 'rgba(0, 0, 0, 0.3)',
+      },
       path: {
         options: {},
         type: t.PathType.Straight,
       },
-      strokeStyle: 'rgba(82, 144, 244, 0.3)',
     },
     dimension: {
       label: {
-        // angle: Math.PI / 4,
+        angle: Math.PI / 4,
+        boundaryPadding: 5,
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         font: 'normal 12px sans-serif',
         lineWidth: 3,
@@ -56,7 +68,6 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         placement: t.LabelPlacement.Before,
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
-      labelBoundaryPadding: 5,
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },
     padding: 50,

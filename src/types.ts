@@ -97,11 +97,17 @@ export interface Axis {
   type: AxisType;
 }
 
-export interface DataOptions extends StyleLine {
+export interface AxisOptions extends StyleLine {
+  boundaryPadding: number;
+}
+
+export interface DataOptions {
   colorScale?: {
     colors: string[];
     dimensionKey: DimensionKey;
   };
+  default: StyleLine;
+  filtered: StyleLine;
   path: PathOptions;
 }
 
@@ -109,6 +115,14 @@ export interface Dimension {
   axis: Axis;
   key: string;
   label: string;
+}
+
+export interface DimensionLabelOptions extends LabelOptions {
+  boundaryPadding: number;
+}
+
+export interface FilterOptions extends StyleShape {
+  width: number;
 }
 
 export interface Font {
@@ -146,15 +160,14 @@ export interface HermesOptions {
   //hooks: {},
   style: {
     axes: {
-      axis: StyleLine,
-      axisBoundaryPadding: number;
+      axis: AxisOptions,
+      filter: FilterOptions;
       label: LabelOptions;
       tick: TickOptions;
     };
     data: DataOptions;
     dimension: {
-      label: LabelOptions;
-      labelBoundaryPadding: number;
+      label: DimensionLabelOptions;
       layout: DimensionLayout;
     };
     padding: Padding;

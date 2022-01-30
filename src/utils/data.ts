@@ -12,6 +12,10 @@ export const isSet = (data: unknown): boolean => data instanceof Set;
 export const isString = (data: unknown): data is string => typeof data === 'string';
 export const isSymbol = (data: unknown): data is symbol => typeof data === 'symbol';
 
+export const clone = <T = unknown>(data: T): T => {
+  return JSON.parse(JSON.stringify(data));
+};
+
 export const getDataRange = (data: unknown[]): Range => {
   return data.reduce((acc: Range, x) => {
     if (isNumber(x)) {
@@ -20,8 +24,4 @@ export const getDataRange = (data: unknown[]): Range => {
     }
     return acc;
   }, [ Infinity, -Infinity ]);
-};
-
-export const clone = <T = unknown>(data: T): T => {
-  return JSON.parse(JSON.stringify(data));
 };

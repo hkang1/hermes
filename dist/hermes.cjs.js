@@ -248,6 +248,9 @@ function leaf(values, utils) {
 const isError = (data) => data instanceof Error;
 const isNumber = (data) => typeof data === 'number';
 const isString = (data) => typeof data === 'string';
+const clone = (data) => {
+    return JSON.parse(JSON.stringify(data));
+};
 const getDataRange = (data) => {
     return data.reduce((acc, x) => {
         if (isNumber(x)) {
@@ -258,9 +261,6 @@ const getDataRange = (data) => {
         }
         return acc;
     }, [Infinity, -Infinity]);
-};
-const clone = (data) => {
-    return JSON.parse(JSON.stringify(data));
 };
 
 const readableNumber = (num, precision = 6) => {
@@ -559,10 +559,13 @@ const HERMES_OPTIONS = {
     style: {
         axes: {
             axis: {
+                boundaryPadding: 10,
                 fillStyle: 'black',
                 lineWidth: 1,
             },
-            axisBoundaryPadding: 10,
+            filter: {
+                width: 30,
+            },
             label: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 font: 'normal 11px sans-serif',
@@ -578,16 +581,23 @@ const HERMES_OPTIONS = {
             },
         },
         data: {
-            lineWidth: 1,
+            default: {
+                lineWidth: 1,
+                strokeStyle: 'rgba(82, 144, 244, 0.3)',
+            },
+            filtered: {
+                lineWidth: 1,
+                strokeStyle: 'rgba(0, 0, 0, 0.3)',
+            },
             path: {
                 options: {},
                 type: PathType.Straight,
             },
-            strokeStyle: 'rgba(82, 144, 244, 0.3)',
         },
         dimension: {
             label: {
-                // angle: Math.PI / 4,
+                angle: Math.PI / 4,
+                boundaryPadding: 5,
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 font: 'normal 12px sans-serif',
                 lineWidth: 3,
@@ -595,7 +605,6 @@ const HERMES_OPTIONS = {
                 placement: LabelPlacement.Before,
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
             },
-            labelBoundaryPadding: 5,
             layout: DimensionLayout.AxisEvenlySpaced,
         },
         padding: 50,
@@ -1135,10 +1144,10 @@ class Hermes {
         const dimCount = this.dimensions.length;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const dimLabelStyle = this.options.style.dimension.label;
-        const dimLabelBoundaryPadding = this.options.style.dimension.labelBoundaryPadding;
+        const dimLabelBoundaryPadding = this.options.style.dimension.label.boundaryPadding;
         const dimLayout = this.options.style.dimension.layout;
         const axesLabelStyle = this.options.style.axes.label;
-        const axisBoundaryPadding = this.options.style.axes.axisBoundaryPadding;
+        const axisBoundaryPadding = this.options.style.axes.axis.boundaryPadding;
         const isLabelBefore = dimLabelStyle.placement === LabelPlacement.Before;
         const isLabelAngled = dimLabelStyle.angle != null;
         const isAxesBefore = axesLabelStyle.placement === LabelPlacement.Before;
@@ -1386,7 +1395,7 @@ class Hermes {
         // Clear previous canvas drawings.
         this.ctx.clearRect(0, 0, w, h);
         // Draw data lines.
-        const dataLineStyle = dataStyle;
+        const dataDefaultStyle = dataStyle.default;
         const dimColorKey = (_a = dataStyle.colorScale) === null || _a === void 0 ? void 0 : _a.dimensionKey;
         for (let k = 0; k < this.dataCount; k++) {
             const series = this.dimensions.map((dimension, i) => {
@@ -1401,11 +1410,11 @@ class Hermes {
                 if (dimColorKey === key) {
                     const percent = (_d = (_c = dimension.axis.scale) === null || _c === void 0 ? void 0 : _c.valueToPercent(value)) !== null && _d !== void 0 ? _d : 0;
                     const scaleColor = scale2rgba(((_e = dataStyle.colorScale) === null || _e === void 0 ? void 0 : _e.colors) || [], percent);
-                    dataLineStyle.strokeStyle = scaleColor;
+                    dataDefaultStyle.strokeStyle = scaleColor;
                 }
                 return { x, y };
             });
-            drawData(this.ctx, series, isHorizontal, dataStyle.path, dataLineStyle);
+            drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
         }
         // Draw dimension labels.
         const dimTextStyle = dimStyle.label;
@@ -1510,6 +1519,7 @@ class Hermes {
             const axisBoundary = dim.layout.axisBoundary;
             if (isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
                 isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
+                console.log('axis filtering');
                 _drag.bound0 = _dl[i].layout.bound;
                 _drag.index = i;
                 _drag.p0 = { x, y };

@@ -148,10 +148,10 @@ class Hermes {
     const dimCount = this.dimensions.length;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const dimLabelStyle = this.options.style.dimension.label;
-    const dimLabelBoundaryPadding = this.options.style.dimension.labelBoundaryPadding;
+    const dimLabelBoundaryPadding = this.options.style.dimension.label.boundaryPadding;
     const dimLayout = this.options.style.dimension.layout;
     const axesLabelStyle = this.options.style.axes.label;
-    const axisBoundaryPadding = this.options.style.axes.axisBoundaryPadding;
+    const axisBoundaryPadding = this.options.style.axes.axis.boundaryPadding;
     const isLabelBefore = dimLabelStyle.placement === t.LabelPlacement.Before;
     const isLabelAngled = dimLabelStyle.angle != null;
     const isAxesBefore = axesLabelStyle.placement === t.LabelPlacement.Before;
@@ -416,7 +416,7 @@ class Hermes {
     this.ctx.clearRect(0, 0, w, h);
 
     // Draw data lines.
-    const dataLineStyle: t.StyleLine = dataStyle;
+    const dataDefaultStyle: t.StyleLine = dataStyle.default;
     const dimColorKey = dataStyle.colorScale?.dimensionKey;
     for (let k = 0; k < this.dataCount; k++) {
       const series = this.dimensions.map((dimension, i) => {
@@ -431,13 +431,13 @@ class Hermes {
         if (dimColorKey === key) {
           const percent = dimension.axis.scale?.valueToPercent(value) ?? 0;
           const scaleColor = scale2rgba(dataStyle.colorScale?.colors || [], percent);
-          dataLineStyle.strokeStyle = scaleColor;
+          dataDefaultStyle.strokeStyle = scaleColor;
         }
 
         return { x, y };
       });
 
-      canvas.drawData(this.ctx, series, isHorizontal, dataStyle.path, dataLineStyle);
+      canvas.drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
     }
 
     // Draw dimension labels.
@@ -577,6 +577,7 @@ class Hermes {
         isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
         isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])
       ) {
+        console.log('axis filtering');
         _drag.bound0 = _dl[i].layout.bound;
         _drag.index = i;
         _drag.p0 = { x, y };
