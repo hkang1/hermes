@@ -21,3 +21,7 @@ export const getDataRange = (data: unknown[]): Range => {
     return acc;
   }, [ Infinity, -Infinity ]);
 };
+
+export const clone = <T = unknown>(data: T): T => {
+  return JSON.parse(JSON.stringify(data));
+};

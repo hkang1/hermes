@@ -62,3 +62,13 @@ export const HERMES_OPTIONS: t.HermesOptions = {
     padding: 50,
   },
 };
+
+export const DRAG = {
+  bound0: undefined,
+  bound1: undefined,
+  index: -1,
+  offset: { x: 0, y: 0 },
+  p0: { x: Number.NaN, y: Number.NaN },
+  p1: { x: Number.NaN, y: Number.NaN },
+  type: t.DragType.None,
+};

@@ -20,6 +20,7 @@ declare class Hermes {
     private calculateLayout;
     private draw;
     private drawDebugOutline;
+    private getDragBound;
     private handleMouseDown;
     private handleMouseMove;
     private handleMouseUp;

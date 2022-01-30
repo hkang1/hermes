@@ -162,7 +162,10 @@ export interface HermesOptions {
 }
 
 export interface Drag {
+  bound0?: Rect;
+  bound1?: Rect;
   index: number;
+  offset: Point;
   p0: Point;
   p1: Point;
   type: DragType;
