@@ -9,7 +9,7 @@ import * as DEFAULT from './defaults';
 import * as t from './types';
 import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
-import { clone, getDataRange } from './utils/data';
+import { clone, getDataRange, isBoolean } from './utils/data';
 import { getElement } from './utils/dom';
 import { getAxisPositionValue, getDragBound, isFilterEmpty, isIntersectingFilters, mergeFilters } from './utils/interaction';
 import { isPointInTriangle, percentRectIntersection, shiftRect } from './utils/math';
@@ -427,6 +427,7 @@ class Hermes {
     const _dl = this._.dims.list;
     const _dsl = this._.dims.shared.label;
     const _drag = this.drag;
+    const _filters = this.filters;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const axesStyle = this.options.style.axes;
     const dataStyle = this.options.style.data;
@@ -441,6 +442,8 @@ class Hermes {
     const dataDefaultStyle: t.StyleLine = dataStyle.default;
     const dimColorKey = dataStyle.colorScale?.dimensionKey;
     for (let k = 0; k < this.dataCount; k++) {
+      let hasFilters = false;
+      let isFilteredOut = false;
       const series = this.dimensions.map((dimension, i) => {
         const key = dimension.key;
         const layout = _dl[i].layout;
@@ -456,8 +459,21 @@ class Hermes {
           dataDefaultStyle.strokeStyle = scaleColor;
         }
 
+        if (_filters[key]) {
+          hasFilters = true;
+          for (let f = 0; f < _filters[key].length; f++) {
+            const filter = _filters[key][f];
+            if (dimension.axis.scale.valueInRange(value, [ filter.value0, filter.value1 ])) {
+              isFilteredOut = true;
+              break;
+            }
+          }
+        }
+
         return { x, y };
       });
+
+      if (hasFilters && !isFilteredOut) dataDefaultStyle.strokeStyle = 'rgba(0, 0, 0, 0.1)';
 
       canvas.drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
     }
@@ -490,7 +506,7 @@ class Hermes {
       const tickLabels = dim.axes.tickLabels;
       const tickPos = dim.axes.tickPos;
       const tickLengthFactor = isAxesBefore ? -1 : 1;
-      const filters = this.filters[key] || [];
+      const filters = _filters[key] || [];
 
       canvas.drawLine(
         this.ctx,

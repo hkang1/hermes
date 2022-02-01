@@ -1,4 +1,4 @@
-import { Primitive } from '../types';
+import { Primitive, Range } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 
@@ -37,6 +37,10 @@ class LogScale extends NiceScale {
   public posToValue(pos: number): number {
     const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
     return this.logBase ** exp;
+  }
+
+  public valueInRange(value: Primitive, range: Range<Primitive>): boolean {
+    return value >= range[0] && value <= range[1];
   }
 
   public valueToPos(value: Primitive): number {

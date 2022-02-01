@@ -386,6 +386,17 @@ class CategoricalScale extends NiceScale {
         }
         return value;
     }
+    valueInRange(value, range) {
+        const minIndex = this.categories.findIndex(category => category === range[0]);
+        const maxIndex = this.categories.findIndex(category => category === range[1]);
+        if (minIndex === -1 || minIndex === -1)
+            return false;
+        for (let i = minIndex; i <= maxIndex; i++) {
+            if (this.categories[i] === value)
+                return true;
+        }
+        return false;
+    }
     valueToPos(value) {
         const stringValue = value2str(value);
         const index = this.tickLabels.findIndex(label => label === stringValue);
@@ -435,6 +446,9 @@ class LinearScale extends NiceScale {
         const max = this.ticks[this.ticks.length - 1];
         return (pos / this.axisLength) * (max - min) + min;
     }
+    valueInRange(value, range) {
+        return value >= range[0] && value <= range[1];
+    }
     valueToPercent(value) {
         if (!isNumber(value))
             return 0;
@@ -481,6 +495,9 @@ class LogScale extends NiceScale {
     posToValue(pos) {
         const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
         return this.logBase ** exp;
+    }
+    valueInRange(value, range) {
+        return value >= range[0] && value <= range[1];
     }
     valueToPos(value) {
         return this.valueToPercent(value) * this.axisLength;
@@ -1485,6 +1502,7 @@ class Hermes {
         const _dl = this._.dims.list;
         const _dsl = this._.dims.shared.label;
         const _drag = this.drag;
+        const _filters = this.filters;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const axesStyle = this.options.style.axes;
         const dataStyle = this.options.style.data;
@@ -1497,6 +1515,8 @@ class Hermes {
         const dataDefaultStyle = dataStyle.default;
         const dimColorKey = (_a = dataStyle.colorScale) === null || _a === void 0 ? void 0 : _a.dimensionKey;
         for (let k = 0; k < this.dataCount; k++) {
+            let hasFilters = false;
+            let isFilteredOut = false;
             const series = this.dimensions.map((dimension, i) => {
                 var _a, _b, _c, _d, _e;
                 const key = dimension.key;
@@ -1511,8 +1531,20 @@ class Hermes {
                     const scaleColor = scale2rgba(((_e = dataStyle.colorScale) === null || _e === void 0 ? void 0 : _e.colors) || [], percent);
                     dataDefaultStyle.strokeStyle = scaleColor;
                 }
+                if (_filters[key]) {
+                    hasFilters = true;
+                    for (let f = 0; f < _filters[key].length; f++) {
+                        const filter = _filters[key][f];
+                        if (dimension.axis.scale.valueInRange(value, [filter.value0, filter.value1])) {
+                            isFilteredOut = true;
+                            break;
+                        }
+                    }
+                }
                 return { x, y };
             });
+            if (hasFilters && !isFilteredOut)
+                dataDefaultStyle.strokeStyle = 'rgba(0, 0, 0, 0.1)';
             drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
         }
         // Draw dimension labels.
@@ -1543,7 +1575,7 @@ class Hermes {
             const tickLabels = dim.axes.tickLabels;
             const tickPos = dim.axes.tickPos;
             const tickLengthFactor = isAxesBefore ? -1 : 1;
-            const filters = this.filters[key] || [];
+            const filters = _filters[key] || [];
             drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, axesStyle.axis);
             for (let i = 0; i < tickLabels.length; i++) {
                 const xOffset = isHorizontal ? 0 : tickPos[i];

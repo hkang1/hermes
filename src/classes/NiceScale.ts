@@ -5,7 +5,7 @@
  * https://stackoverflow.com/questions/8506881/nice-label-algorithm-for-charts-with-minimum-ticks
  */
 
-import { Primitive } from '../types';
+import { Primitive, Range } from '../types';
 
 const MIN_TICK_DISTANCE = 50;
 
@@ -79,6 +79,11 @@ abstract class NiceScale {
    * Convert the axis position to axis value.
    */
   public abstract posToValue(pos: number): Primitive;
+
+  /**
+   * Check to see if value is in the scale range.
+   */
+  public abstract valueInRange(value: Primitive, range: Range<Primitive>): boolean;
 
   /**
    * Convert value into a position on the axis based on the axis length.

@@ -1,4 +1,4 @@
-import { Primitive } from '../types';
+import { Primitive, Range } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 
@@ -13,6 +13,10 @@ class LinearScale extends NiceScale {
     const min = this.ticks[0];
     const max = this.ticks[this.ticks.length - 1];
     return (pos / this.axisLength) * (max - min) + min;
+  }
+
+  public valueInRange(value: Primitive, range: Range<Primitive>): boolean {
+    return value >= range[0] && value <= range[1];
   }
 
   public valueToPercent(value: Primitive): number {
