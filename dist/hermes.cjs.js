@@ -1564,7 +1564,12 @@ class Hermes {
                 drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
             }
             filters.forEach(filter => {
-                drawRect(this.ctx, bound.x + axisStart.x - (axesStyle.filter.width / 2), filter.p0, axesStyle.filter.width, filter.p1 - filter.p0, axesStyle.filter);
+                const halfWidth = axesStyle.filter.width / 2;
+                const x = isHorizontal ? bound.x + axisStart.x - halfWidth : filter.p0;
+                const y = isHorizontal ? filter.p0 : bound.y + axisStart.y - halfWidth;
+                const w = isHorizontal ? axesStyle.filter.width : filter.p1 - filter.p0;
+                const h = isHorizontal ? filter.p1 - filter.p0 : axesStyle.filter.width;
+                drawRect(this.ctx, x, y, w, h, axesStyle.filter);
             });
         });
         // console.timeEnd('render time');
