@@ -1466,7 +1466,7 @@ class Hermes {
                      */
                     if (isIntersectingFilters(filters[i], filters[j])) {
                         filters[j] = mergeFilters(filters[i], filters[j]);
-                        filters[i] = clone(FILTER);
+                        filters[i] = { ...FILTER };
                     }
                 }
             }

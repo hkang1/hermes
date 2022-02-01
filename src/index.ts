@@ -408,7 +408,7 @@ class Hermes {
            */
           if (ix.isIntersectingFilters(filters[i], filters[j])) {
             filters[j] = ix.mergeFilters(filters[i], filters[j]);
-            filters[i] = clone(DEFAULT.FILTER);
+            filters[i] = { ...DEFAULT.FILTER };
           }
         }
       }
