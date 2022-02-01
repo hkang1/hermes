@@ -386,17 +386,6 @@ class CategoricalScale extends NiceScale {
         }
         return value;
     }
-    valueInRange(value, range) {
-        const minIndex = this.categories.findIndex(category => category === range[0]);
-        const maxIndex = this.categories.findIndex(category => category === range[1]);
-        if (minIndex === -1 || minIndex === -1)
-            return false;
-        for (let i = minIndex; i <= maxIndex; i++) {
-            if (this.categories[i] === value)
-                return true;
-        }
-        return false;
-    }
     valueToPos(value) {
         const stringValue = value2str(value);
         const index = this.tickLabels.findIndex(label => label === stringValue);
@@ -446,13 +435,12 @@ class LinearScale extends NiceScale {
         const max = this.ticks[this.ticks.length - 1];
         return (pos / this.axisLength) * (max - min) + min;
     }
-    valueInRange(value, range) {
-        return value >= range[0] && value <= range[1];
-    }
     valueToPercent(value) {
         if (!isNumber(value))
             return 0;
-        return (value - this.minValue) / (this.maxValue - this.minValue);
+        const min = this.ticks[0];
+        const max = this.ticks[this.ticks.length - 1];
+        return (value - min) / (max - min);
     }
     calculate() {
         this.range = this.niceNum(this.maxValue - this.minValue, false);
@@ -495,9 +483,6 @@ class LogScale extends NiceScale {
     posToValue(pos) {
         const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
         return this.logBase ** exp;
-    }
-    valueInRange(value, range) {
-        return value >= range[0] && value <= range[1];
     }
     valueToPos(value) {
         return this.valueToPercent(value) * this.axisLength;
@@ -632,7 +617,7 @@ const HERMES_OPTIONS = {
             },
             filtered: {
                 lineWidth: 1,
-                strokeStyle: 'rgba(0, 0, 0, 0.3)',
+                strokeStyle: 'rgba(0, 0, 0, 0.05)',
             },
             path: {
                 options: {},
@@ -973,12 +958,9 @@ const getElement = (target) => {
     return document.querySelector(target);
 };
 
-const getAxisPositionValue = (cursor, layout, direction, scale) => {
-    const key = direction === Direction.Horizontal ? 'y' : 'x';
-    const min = layout.bound[key] + layout.axisStart[key];
-    const max = layout.bound[key] + layout.axisStop[key];
-    const pos = Math.min(max, Math.max(min, cursor[key])) - min;
-    return scale.posToValue(pos);
+const getAxisPositionValue = (pos, range, scale) => {
+    const posCapped = Math.min(range, Math.max(0, pos)) - 0;
+    return scale.posToValue(posCapped);
 };
 const getDragBound = (index, drag, bound) => {
     const isLabelDrag = drag.type === DragType.DimensionLabel && drag.shared.index === index;
@@ -1471,9 +1453,6 @@ class Hermes {
         }
         this._ = _;
     }
-    // 0 - 1 => 1
-    // 0 - 2
-    // 1 - 2
     mergeFilters() {
         Object.keys(this.filters).forEach(key => {
             const filters = this.filters[key] || [];
@@ -1491,6 +1470,7 @@ class Hermes {
                     }
                 }
             }
+            this.filters[key] = filters.filter(filter => !isFilterEmpty(filter));
         });
     }
     draw() {
@@ -1512,9 +1492,9 @@ class Hermes {
         // Clear previous canvas drawings.
         this.ctx.clearRect(0, 0, w, h);
         // Draw data lines.
-        const dataDefaultStyle = dataStyle.default;
         const dimColorKey = (_a = dataStyle.colorScale) === null || _a === void 0 ? void 0 : _a.dimensionKey;
         for (let k = 0; k < this.dataCount; k++) {
+            let dataDefaultStyle = dataStyle.default;
             let hasFilters = false;
             let isFilteredOut = false;
             const series = this.dimensions.map((dimension, i) => {
@@ -1531,11 +1511,11 @@ class Hermes {
                     const scaleColor = scale2rgba(((_e = dataStyle.colorScale) === null || _e === void 0 ? void 0 : _e.colors) || [], percent);
                     dataDefaultStyle.strokeStyle = scaleColor;
                 }
-                if (_filters[key]) {
+                if (_filters[key] && _filters[key].length !== 0) {
                     hasFilters = true;
                     for (let f = 0; f < _filters[key].length; f++) {
                         const filter = _filters[key][f];
-                        if (dimension.axis.scale.valueInRange(value, [filter.value0, filter.value1])) {
+                        if (pos >= filter.p0 && pos <= filter.p1) {
                             isFilteredOut = true;
                             break;
                         }
@@ -1544,7 +1524,7 @@ class Hermes {
                 return { x, y };
             });
             if (hasFilters && !isFilteredOut)
-                dataDefaultStyle.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                dataDefaultStyle = dataStyle.filtered;
             drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
         }
         // Draw dimension labels.
@@ -1597,8 +1577,8 @@ class Hermes {
             }
             filters.forEach(filter => {
                 const halfWidth = axesStyle.filter.width / 2;
-                const x = isHorizontal ? bound.x + axisStart.x - halfWidth : filter.p0;
-                const y = isHorizontal ? filter.p0 : bound.y + axisStart.y - halfWidth;
+                const x = bound.x + axisStart.x + (isHorizontal ? -halfWidth : filter.p0);
+                const y = bound.y + axisStart.y + (isHorizontal ? filter.p0 : -halfWidth);
                 const w = isHorizontal ? axesStyle.filter.width : filter.p1 - filter.p0;
                 const h = isHorizontal ? filter.p1 - filter.p0 : axesStyle.filter.width;
                 drawRect(this.ctx, x, y, w, h, axesStyle.filter);
@@ -1649,6 +1629,7 @@ class Hermes {
         const _drf = this.drag.filters;
         const _dl = this._.dims.list;
         const isHorizontal = this.options.direction === Direction.Horizontal;
+        const filterKey = isHorizontal ? 'y' : 'x';
         this._.dims.list.forEach((dim, i) => {
             // Check to see if a dimension label was targeted.
             const labelBoundary = dim.layout.labelBoundary;
@@ -1661,6 +1642,9 @@ class Hermes {
                 _drs.p1 = { x, y };
             }
             // Check to see if a dimension axis was targeted.
+            const bound = dim.layout.bound;
+            const axisStart = dim.layout.axisStart;
+            const axisStop = dim.layout.axisStop;
             const axisBoundary = dim.layout.axisBoundary;
             if (isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
                 isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
@@ -1669,8 +1653,8 @@ class Hermes {
                 _drs.p0 = { x, y };
                 _drs.p1 = { x, y };
                 _drf.key = this.dimensions[i].key;
-                const p0 = _drs.p0[isHorizontal ? 'y' : 'x'];
-                const value0 = getAxisPositionValue(_drs.p0, _dl[i].layout, this.options.direction, this.dimensions[i].axis.scale);
+                const p0 = _drs.p0[filterKey] - bound[filterKey] - axisStart[filterKey];
+                const value0 = getAxisPositionValue(p0, axisStop[filterKey] - axisStart[filterKey], this.dimensions[i].axis.scale);
                 _drf.active = { p0, p1: p0, value0, value1: value0 };
                 // Store active filter into filter list.
                 _filter[_drf.key] = _filter[_drf.key] || [];
@@ -1688,6 +1672,7 @@ class Hermes {
         const _drf = this.drag.filters;
         const _dl = this._.dims.list;
         const isHorizontal = this.options.direction === Direction.Horizontal;
+        const filterKey = isHorizontal ? 'y' : 'x';
         _drs.p1 = { x, y };
         _drd.offset = {
             x: isHorizontal ? _drs.p1.x - _drs.p0.x : 0,
@@ -1714,9 +1699,12 @@ class Hermes {
             }
         }
         // Update dimension filter creating dragging data.
-        if (_drag.type === DragType.DimensionFilterCreate) {
-            _drf.active.p1 = _drs.p1[isHorizontal ? 'y' : 'x'];
-            _drf.active.value1 = getAxisPositionValue(_drs.p1, _dl[_drs.index].layout, this.options.direction, this.dimensions[_drs.index].axis.scale);
+        if (_drag.type === DragType.DimensionFilterCreate && _drf.key) {
+            const bound = _dl[_drs.index].layout.bound;
+            const axisStart = _dl[_drs.index].layout.axisStart;
+            const axisStop = _dl[_drs.index].layout.axisStop;
+            _drf.active.p1 = _drs.p1[filterKey] - bound[filterKey] - axisStart[filterKey];
+            _drf.active.value1 = getAxisPositionValue(_drf.active.p1, axisStop[filterKey] - axisStart[filterKey], this.dimensions[_drs.index].axis.scale);
         }
         this.calculate();
     }
@@ -1729,11 +1717,15 @@ class Hermes {
         const _drf = this.drag.filters;
         const _dl = this._.dims.list;
         const isHorizontal = this.options.direction === Direction.Horizontal;
+        const filterKey = isHorizontal ? 'y' : 'x';
         _drs.p1 = { x, y };
         if (_drag.type === DragType.DimensionFilterCreate && _drf.key) {
             // Update filter data before removing reference.
-            _drf.active.p1 = _drs.p1[isHorizontal ? 'y' : 'x'];
-            _drf.active.value1 = getAxisPositionValue(_drs.p1, _dl[_drs.index].layout, this.options.direction, this.dimensions[_drs.index].axis.scale);
+            const bound = _dl[_drs.index].layout.bound;
+            const axisStart = _dl[_drs.index].layout.axisStart;
+            const axisStop = _dl[_drs.index].layout.axisStop;
+            _drf.active.p1 = _drs.p1[filterKey] - bound[filterKey] - axisStart[filterKey];
+            _drf.active.value1 = getAxisPositionValue(_drf.active.p1, axisStop[filterKey] - axisStart[filterKey], this.dimensions[_drs.index].axis.scale);
             // Swap p0 and p1 if p1 is less than p0.
             if (_drf.active.p1 < _drf.active.p0) {
                 const [tempP, tempValue] = [_drf.active.p1, _drf.active.value1];

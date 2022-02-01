@@ -81,11 +81,6 @@ abstract class NiceScale {
   public abstract posToValue(pos: number): Primitive;
 
   /**
-   * Check to see if value is in the scale range.
-   */
-  public abstract valueInRange(value: Primitive, range: Range<Primitive>): boolean;
-
-  /**
    * Convert value into a position on the axis based on the axis length.
    */
   public abstract valueToPos(value: number): number;

@@ -9,9 +9,9 @@ import * as DEFAULT from './defaults';
 import * as t from './types';
 import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
-import { clone, getDataRange, isBoolean } from './utils/data';
+import { clone, getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
-import { getAxisPositionValue, getDragBound, isFilterEmpty, isIntersectingFilters, mergeFilters } from './utils/interaction';
+import * as ix from './utils/interaction';
 import { isPointInTriangle, percentRectIntersection, shiftRect } from './utils/math';
 import * as tester from './utils/test';
 
@@ -396,25 +396,23 @@ class Hermes {
     this._ = _;
   }
 
-  // 0 - 1 => 1
-  // 0 - 2
-  // 1 - 2
   private mergeFilters(): void {
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
       for (let i = 0; i < filters.length - 1; i++) {
         for (let j = i + 1; j < filters.length; j++) {
-          if (isFilterEmpty(filters[i]) || isFilterEmpty(filters[j])) continue;
+          if (ix.isFilterEmpty(filters[i]) || ix.isFilterEmpty(filters[j])) continue;
           /**
            * If overlap, merge into higher indexed filter and remove lower indexed
            * filter to avoid checking the removed filter during the loop.
            */
-          if (isIntersectingFilters(filters[i], filters[j])) {
-            filters[j] = mergeFilters(filters[i], filters[j]);
+          if (ix.isIntersectingFilters(filters[i], filters[j])) {
+            filters[j] = ix.mergeFilters(filters[i], filters[j]);
             filters[i] = clone(DEFAULT.FILTER);
           }
         }
       }
+      this.filters[key] = filters.filter(filter => !ix.isFilterEmpty(filter));
     });
   }
 
@@ -439,15 +437,16 @@ class Hermes {
     this.ctx.clearRect(0, 0, w, h);
 
     // Draw data lines.
-    const dataDefaultStyle: t.StyleLine = dataStyle.default;
     const dimColorKey = dataStyle.colorScale?.dimensionKey;
     for (let k = 0; k < this.dataCount; k++) {
+      let dataDefaultStyle: t.StyleLine = dataStyle.default;
       let hasFilters = false;
       let isFilteredOut = false;
+
       const series = this.dimensions.map((dimension, i) => {
         const key = dimension.key;
         const layout = _dl[i].layout;
-        const bound = getDragBound(i, _drag, layout.bound);
+        const bound = ix.getDragBound(i, _drag, layout.bound);
         const value = this.data[key][k];
         const pos = dimension.axis.scale?.valueToPos(value) ?? 0;
         const x = bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
@@ -459,11 +458,11 @@ class Hermes {
           dataDefaultStyle.strokeStyle = scaleColor;
         }
 
-        if (_filters[key]) {
+        if (_filters[key] && _filters[key].length !== 0) {
           hasFilters = true;
           for (let f = 0; f < _filters[key].length; f++) {
             const filter = _filters[key][f];
-            if (dimension.axis.scale.valueInRange(value, [ filter.value0, filter.value1 ])) {
+            if (pos >= filter.p0 && pos <= filter.p1) {
               isFilteredOut = true;
               break;
             }
@@ -473,7 +472,7 @@ class Hermes {
         return { x, y };
       });
 
-      if (hasFilters && !isFilteredOut) dataDefaultStyle.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+      if (hasFilters && !isFilteredOut) dataDefaultStyle = dataStyle.filtered;
 
       canvas.drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
     }
@@ -485,7 +484,7 @@ class Hermes {
       dimTextStyle.textBaseline = isHorizontal ? (isLabelBefore ? 'bottom' : 'top') : undefined;
     }
     this.dimensions.forEach((dimension, i) => {
-      const bound = getDragBound(i, _drag, _dl[i].layout.bound);
+      const bound = ix.getDragBound(i, _drag, _dl[i].layout.bound);
       const labelPoint = _dl[i].layout.labelPoint;
       const x = bound.x + labelPoint.x;
       const y = bound.y + labelPoint.y;
@@ -500,7 +499,7 @@ class Hermes {
     }
     _dl.forEach((dim, i) => {
       const key = this.dimensions[i].key;
-      const bound = getDragBound(i, _drag, dim.layout.bound);
+      const bound = ix.getDragBound(i, _drag, dim.layout.bound);
       const axisStart = dim.layout.axisStart;
       const axisStop = dim.layout.axisStop;
       const tickLabels = dim.axes.tickLabels;
@@ -539,8 +538,8 @@ class Hermes {
 
       filters.forEach(filter => {
         const halfWidth = axesStyle.filter.width / 2;
-        const x = isHorizontal ? bound.x + axisStart.x - halfWidth : filter.p0;
-        const y = isHorizontal ? filter.p0 : bound.y + axisStart.y - halfWidth;
+        const x = bound.x + axisStart.x + (isHorizontal ? -halfWidth : filter.p0);
+        const y = bound.y + axisStart.y + (isHorizontal ? filter.p0 : -halfWidth);
         const w = isHorizontal ? axesStyle.filter.width : filter.p1 - filter.p0;
         const h = isHorizontal ? filter.p1 - filter.p0 : axesStyle.filter.width;
         canvas.drawRect(this.ctx, x, y, w, h, axesStyle.filter);
@@ -610,6 +609,7 @@ class Hermes {
     const _drf = this.drag.filters;
     const _dl = this._.dims.list;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
+    const filterKey = isHorizontal ? 'y' : 'x';
 
     this._.dims.list.forEach((dim, i) => {
       // Check to see if a dimension label was targeted.
@@ -626,6 +626,9 @@ class Hermes {
       }
 
       // Check to see if a dimension axis was targeted.
+      const bound = dim.layout.bound;
+      const axisStart = dim.layout.axisStart;
+      const axisStop = dim.layout.axisStop;
       const axisBoundary = dim.layout.axisBoundary;
       if (
         isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
@@ -637,11 +640,10 @@ class Hermes {
         _drs.p1 = { x, y };
         _drf.key = this.dimensions[i].key;
 
-        const p0 = _drs.p0[isHorizontal ? 'y' : 'x'];
-        const value0 = getAxisPositionValue(
-          _drs.p0,
-          _dl[i].layout,
-          this.options.direction,
+        const p0 = _drs.p0[filterKey] - bound[filterKey] - axisStart[filterKey];
+        const value0 = ix.getAxisPositionValue(
+          p0,
+          axisStop[filterKey] - axisStart[filterKey],
           this.dimensions[i].axis.scale,
         );
         _drf.active = { p0, p1: p0, value0, value1: value0 };
@@ -663,6 +665,7 @@ class Hermes {
     const _drf = this.drag.filters;
     const _dl = this._.dims.list;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
+    const filterKey = isHorizontal ? 'y' : 'x';
 
     _drs.p1 = { x, y };
     _drd.offset = {
@@ -696,12 +699,14 @@ class Hermes {
     }
 
     // Update dimension filter creating dragging data.
-    if (_drag.type === t.DragType.DimensionFilterCreate) {
-      _drf.active.p1 = _drs.p1[isHorizontal ? 'y' : 'x'];
-      _drf.active.value1 = getAxisPositionValue(
-        _drs.p1,
-        _dl[_drs.index].layout,
-        this.options.direction,
+    if (_drag.type === t.DragType.DimensionFilterCreate && _drf.key) {
+      const bound = _dl[_drs.index].layout.bound;
+      const axisStart = _dl[_drs.index].layout.axisStart;
+      const axisStop = _dl[_drs.index].layout.axisStop;
+      _drf.active.p1 = _drs.p1[filterKey] - bound[filterKey] - axisStart[filterKey];
+      _drf.active.value1 = ix.getAxisPositionValue(
+        _drf.active.p1,
+        axisStop[filterKey] - axisStart[filterKey],
         this.dimensions[_drs.index].axis.scale,
       );
     }
@@ -718,16 +723,19 @@ class Hermes {
     const _drf = this.drag.filters;
     const _dl = this._.dims.list;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
+    const filterKey = isHorizontal ? 'y' : 'x';
 
     _drs.p1 = { x, y };
 
     if (_drag.type === t.DragType.DimensionFilterCreate && _drf.key) {
       // Update filter data before removing reference.
-      _drf.active.p1 = _drs.p1[isHorizontal ? 'y' : 'x'];
-      _drf.active.value1 = getAxisPositionValue(
-        _drs.p1,
-        _dl[_drs.index].layout,
-        this.options.direction,
+      const bound = _dl[_drs.index].layout.bound;
+      const axisStart = _dl[_drs.index].layout.axisStart;
+      const axisStop = _dl[_drs.index].layout.axisStop;
+      _drf.active.p1 = _drs.p1[filterKey] - bound[filterKey] - axisStart[filterKey];
+      _drf.active.value1 = ix.getAxisPositionValue(
+        _drf.active.p1,
+        axisStop[filterKey] - axisStart[filterKey],
         this.dimensions[_drs.index].axis.scale,
       );
 

@@ -15,13 +15,11 @@ class LinearScale extends NiceScale {
     return (pos / this.axisLength) * (max - min) + min;
   }
 
-  public valueInRange(value: Primitive, range: Range<Primitive>): boolean {
-    return value >= range[0] && value <= range[1];
-  }
-
   public valueToPercent(value: Primitive): number {
     if (!isNumber(value)) return 0;
-    return (value - this.minValue) / (this.maxValue - this.minValue);
+    const min = this.ticks[0];
+    const max = this.ticks[this.ticks.length - 1];
+    return (value - min) / (max - min);
   }
 
   protected calculate(): void {

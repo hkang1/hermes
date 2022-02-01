@@ -39,10 +39,6 @@ class LogScale extends NiceScale {
     return this.logBase ** exp;
   }
 
-  public valueInRange(value: Primitive, range: Range<Primitive>): boolean {
-    return value >= range[0] && value <= range[1];
-  }
-
   public valueToPos(value: Primitive): number {
     return this.valueToPercent(value) * this.axisLength;
   }

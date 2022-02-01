@@ -52,7 +52,7 @@ export const HERMES_OPTIONS: t.HermesOptions = {
       },
       filtered: {
         lineWidth: 1,
-        strokeStyle: 'rgba(0, 0, 0, 0.3)',
+        strokeStyle: 'rgba(0, 0, 0, 0.05)',
       },
       path: {
         options: {},

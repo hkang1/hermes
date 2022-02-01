@@ -23,16 +23,6 @@ class CategoricalScale extends NiceScale {
     return value;
   }
 
-  public valueInRange(value: Primitive, range: Range<Primitive>): boolean {
-    const minIndex = this.categories.findIndex(category => category === range[0]);
-    const maxIndex = this.categories.findIndex(category => category === range[1]);
-    if (minIndex === -1 || minIndex === -1) return false;
-    for (let i = minIndex; i <= maxIndex; i++) {
-      if (this.categories[i] === value) return true;
-    }
-    return false;
-  }
-
   public valueToPos(value: Primitive): number {
     const stringValue = value2str(value);
     const index = this.tickLabels.findIndex(label => label === stringValue);
