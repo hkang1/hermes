@@ -1,12 +1,26 @@
-
 import { Primitive } from '../types';
 import { value2str } from '../utils/string';
+
 import NiceScale from './NiceScale';
 
 class CategoricalScale extends NiceScale {
-  constructor(categories: Primitive[] = []) {
+  constructor(protected categories: Primitive[] = []) {
     super(0, 0);
-    this.tickLabels = categories.map(category => value2str(category));
+    this.tickLabels = this.categories.map(category => value2str(category));
+  }
+
+  public posToValue(pos: number): Primitive {
+    let distance = Infinity;
+    let value: Primitive = Number.NaN;
+    for (let i = 0; i < this.tickPos.length; i++) {
+      const tickPos = this.tickPos[i];
+      const dp = Math.abs(pos - tickPos);
+      if (dp < distance) {
+        distance = dp;
+        value = this.categories[i];
+      }
+    }
+    return value;
   }
 
   public valueToPos(value: Primitive): number {
@@ -23,7 +37,7 @@ class CategoricalScale extends NiceScale {
     return 0;
   }
 
-  protected calculate() {
+  protected calculate(): void {
     // Calculate tick positions based on axis length and ticks.
     let traversed = 0;
     this.tickSpacing = this.axisLength / this.tickLabels.length;

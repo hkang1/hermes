@@ -1,5 +1,6 @@
 import * as DEFAULT from '../defaults';
 import * as t from '../types';
+
 import { rotatePoint } from './math';
 
 export const drawBoundary = (
@@ -93,11 +94,11 @@ export const drawData = (
 
   const bezierFactor = path.options.bezierFactor ?? DEFAULT.BEZIER_FACTOR;
   for (let i = 1; i < data.length; i++) {
-      const [ x1, y1 ] = [ data[i].x, data[i].y ];
-      if (path.type === t.PathType.Straight) {
+    const [ x1, y1 ] = [ data[i].x, data[i].y ];
+    if (path.type === t.PathType.Straight) {
       ctx.lineTo(x1, y1);
     } else if (path.type === t.PathType.Bezier) {
-      const [ x0, y0 ] = [ data[i-1].x, data[i-1].y ];
+      const [ x0, y0 ] = [ data[i - 1].x, data[i - 1].y ];
       const [ cp0x, cp0y ] = [
         x0 + (isHorizontal ? (x1 - x0) * bezierFactor : 0),
         y0 + (isHorizontal ? 0 : (y1 - y0) * bezierFactor),
@@ -219,9 +220,9 @@ export const getTextBoundary = (
   w: number,
   h: number,
   rad?: number,
-  offsetX: number = 0,
-  offsetY: number = 0,
-  padding: number = 0,
+  offsetX = 0,
+  offsetY = 0,
+  padding = 0,
 ): t.Boundary => {
   const x0 = x + offsetX - padding;
   const y0 = y + offsetY - padding;
@@ -248,7 +249,11 @@ export const getTextBoundary = (
   return boundary;
 };
 
-export const getTextSize = (ctx: CanvasRenderingContext2D, text: string, font: string = DEFAULT.FONT): t.Size => {
+export const getTextSize = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  font: string = DEFAULT.FONT,
+): t.Size => {
   ctx.font = font;
   const metrics = ctx.measureText(text);
   const w = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;

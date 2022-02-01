@@ -1,15 +1,18 @@
 import { Primitive } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
+
 import NiceScale from './NiceScale';
 
 class LinearScale extends NiceScale {
-  constructor(minValue: number, maxValue: number) {
-    super(minValue, maxValue);
-  }
-
   public valueToPos(value: Primitive): number {
     return this.valueToPercent(value) * this.axisLength;
+  }
+
+  public posToValue(pos: number): number {
+    const min = this.ticks[0];
+    const max = this.ticks[this.ticks.length - 1];
+    return (pos / this.axisLength) * (max - min) + min;
   }
 
   public valueToPercent(value: Primitive): number {
@@ -17,7 +20,7 @@ class LinearScale extends NiceScale {
     return (value - this.minValue) / (this.maxValue - this.minValue);
   }
 
-  protected calculate() {
+  protected calculate(): void {
     this.range = this.niceNum(this.maxValue - this.minValue, false);
     this.tickSpacing = this.niceNum(this.range / (this.maxTicks - 1), true);
     this.min = Math.floor(this.minValue / this.tickSpacing) * this.tickSpacing;

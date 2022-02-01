@@ -1,6 +1,7 @@
 import { Primitive } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
+
 import NiceScale from './NiceScale';
 
 export const DEFAULT_LOG_BASE = 10;
@@ -8,14 +9,13 @@ export const DEFAULT_LOG_BASE = 10;
 class LogScale extends NiceScale {
   protected denominator: number;
   protected log: (x: number) => number;
-  protected logBase: number;
-  protected maxExp: number = NaN;
-  protected minExp: number = NaN;
+  protected maxExp: number = Number.NaN;
+  protected minExp: number = Number.NaN;
 
   constructor(
     minValue: number,
     maxValue: number,
-    logBase: number = DEFAULT_LOG_BASE,
+    protected logBase: number = DEFAULT_LOG_BASE,
   ) {
     super(minValue, maxValue);
     this.denominator = 1;
@@ -34,6 +34,11 @@ class LogScale extends NiceScale {
     this.calculate();
   }
 
+  public posToValue(pos: number): number {
+    const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
+    return this.logBase ** exp;
+  }
+
   public valueToPos(value: Primitive): number {
     return this.valueToPercent(value) * this.axisLength;
   }
@@ -44,7 +49,7 @@ class LogScale extends NiceScale {
     return (exp - this.minExp) / (this.maxExp - this.minExp);
   }
 
-  protected calculate() {
+  protected calculate(): void {
     this.log = this.logBase === 10 ? Math.log10 : this.logBase === 2 ? Math.log2 : Math.log;
     this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
 

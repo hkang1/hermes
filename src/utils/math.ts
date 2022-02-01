@@ -64,11 +64,12 @@ export const isPointInTriangle = (p: Point, a: Point, b: Point, c: Point): boole
 export const percentRectIntersection = (r0: Rect, r1: Rect): number => {
   const [ r0x0, r0x1, r0y0, r0y1 ] = [ r0.x, r0.x + r0.w, r0.y, r0.y + r0.h ];
   const [ r1x0, r1x1, r1y0, r1y1 ] = [ r1.x, r1.x + r1.w, r1.y, r1.y + r1.h ];
-  const intersectionArea = Math.max(0, Math.min(r0x1, r1x1) - Math.max(r0x0, r1x0)) * Math.max(0, Math.min(r0y1, r1y1) - Math.max(r0y0, r1y0));
-  const unionArea = (r0.w * r0.h) + (r1.w * r1.h) - intersectionArea;
-  return intersectionArea / unionArea;
+  const intersectionArea = Math.max(0, Math.min(r0x1, r1x1) - Math.max(r0x0, r1x0)) *
+    Math.max(0, Math.min(r0y1, r1y1) - Math.max(r0y0, r1y0));
+  // const unionArea = (r0.w * r0.h) + (r1.w * r1.h) - intersectionArea;
+  return intersectionArea / Math.min(r0.w * r0.h, r1.w * r1.h);
 };
 
 export const shiftRect = (rect: Rect, shift: Point): Rect => {
-  return { h: rect.h, w: rect.w, x: rect.x + shift.x, y: rect.y + shift.y  };
+  return { h: rect.h, w: rect.w, x: rect.x + shift.x, y: rect.y + shift.y };
 };

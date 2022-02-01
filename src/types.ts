@@ -1,6 +1,7 @@
 import CategoricalScale from './classes/CategoricalScale';
 import LinearScale from './classes/LinearScale';
 import LogScale from './classes/LogScale';
+import NiceScale from './classes/NiceScale';
 
 /**
  * TYPES
@@ -56,7 +57,10 @@ export enum Direction {
 }
 
 export enum DragType {
-  DimensionAxis = 'dimension-axis',
+  DimensionFilterCreate = 'dimension-filter-create',
+  DimensionFilterMove = 'dimension-filter-move',
+  DimensionFilterResizeAfter = 'dimension-filter-resize-after',
+  DimensionFilterResizeBefore = 'dimension-filter-resize-before',
   DimensionLabel = 'dimension-label',
   None = 'none',
 }
@@ -93,7 +97,7 @@ export interface Axis {
   categories?: Primitive[];
   logBase?: number;
   range?: Range;
-  scale?: CategoricalScale | LinearScale | LogScale;
+  scale: CategoricalScale | LinearScale | LogScale;
   type: AxisType;
 }
 
@@ -119,6 +123,13 @@ export interface Dimension {
 
 export interface DimensionLabelOptions extends LabelOptions {
   boundaryPadding: number;
+}
+
+export interface Filter {
+  p0: number;         // starting axis pixel position relative to axisStart.(x|y).
+  p1: number;         // ending axis pixel position relative to axisStart.(x|y).
+  value0: Primitive;  // starting axis value.
+  value1: Primitive;  // ending axis value.
 }
 
 export interface FilterOptions extends StyleShape {
@@ -175,13 +186,26 @@ export interface HermesOptions {
 }
 
 export interface Drag {
-  bound0?: Rect;
-  bound1?: Rect;
-  index: number;
-  offset: Point;
-  p0: Point;
-  p1: Point;
+  dimension: {
+    bound0?: Rect;
+    bound1?: Rect;
+    offset: Point;
+  };
+  filters: {
+    active: Filter;
+    axes: Record<DimensionKey, Filter[]>;
+    key?: DimensionKey;
+  };
+  shared: {
+    index: number;
+    p0: Point;
+    p1: Point;
+  };
   type: DragType;
+}
+
+export interface Filters {
+  [key: DimensionKey]: Filter[];
 }
 
 export interface Internal {

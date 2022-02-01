@@ -27,6 +27,8 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         lineWidth: 1,
       },
       filter: {
+        fillStyle: 'rgba(0, 0, 0, 0.3)',
+        strokeStyle: 'rgba(0, 0, 0, 1.0)',
         width: 30,
       },
       label: {
@@ -74,12 +76,28 @@ export const HERMES_OPTIONS: t.HermesOptions = {
   },
 };
 
+export const FILTER = {
+  p0: Number.NaN,
+  p1: Number.NaN,
+  value0: Number.NaN,
+  value1: Number.NaN,
+};
+
 export const DRAG = {
-  bound0: undefined,
-  bound1: undefined,
-  index: -1,
-  offset: { x: 0, y: 0 },
-  p0: { x: Number.NaN, y: Number.NaN },
-  p1: { x: Number.NaN, y: Number.NaN },
+  dimension: {
+    bound0: undefined,
+    bound1: undefined,
+    offset: { x: 0, y: 0 },
+  },
+  filters: {
+    active: FILTER,
+    axes: {},
+    key: undefined,
+  },
+  shared: {
+    index: -1,
+    p0: { x: Number.NaN, y: Number.NaN },
+    p1: { x: Number.NaN, y: Number.NaN },
+  },
   type: t.DragType.None,
 };

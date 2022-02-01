@@ -306,6 +306,8 @@ class NiceScale {
      * @param maxTicks the maximum number of tick marks for the axis
      */
     constructor(minValue, maxValue) {
+        this.minValue = minValue;
+        this.maxValue = maxValue;
         this.range = 0;
         this.tickLabels = [];
         this.tickPos = [];
@@ -368,7 +370,21 @@ class NiceScale {
 class CategoricalScale extends NiceScale {
     constructor(categories = []) {
         super(0, 0);
-        this.tickLabels = categories.map(category => value2str(category));
+        this.categories = categories;
+        this.tickLabels = this.categories.map(category => value2str(category));
+    }
+    posToValue(pos) {
+        let distance = Infinity;
+        let value = Number.NaN;
+        for (let i = 0; i < this.tickPos.length; i++) {
+            const tickPos = this.tickPos[i];
+            const dp = Math.abs(pos - tickPos);
+            if (dp < distance) {
+                distance = dp;
+                value = this.categories[i];
+            }
+        }
+        return value;
     }
     valueToPos(value) {
         const stringValue = value2str(value);
@@ -411,11 +427,13 @@ class HermesError extends Error {
 }
 
 class LinearScale extends NiceScale {
-    constructor(minValue, maxValue) {
-        super(minValue, maxValue);
-    }
     valueToPos(value) {
         return this.valueToPercent(value) * this.axisLength;
+    }
+    posToValue(pos) {
+        const min = this.ticks[0];
+        const max = this.ticks[this.ticks.length - 1];
+        return (pos / this.axisLength) * (max - min) + min;
     }
     valueToPercent(value) {
         if (!isNumber(value))
@@ -447,8 +465,9 @@ const DEFAULT_LOG_BASE = 10;
 class LogScale extends NiceScale {
     constructor(minValue, maxValue, logBase = DEFAULT_LOG_BASE) {
         super(minValue, maxValue);
-        this.maxExp = NaN;
-        this.minExp = NaN;
+        this.logBase = logBase;
+        this.maxExp = Number.NaN;
+        this.minExp = Number.NaN;
         this.denominator = 1;
         this.log = Math.log;
         this.logBase = logBase;
@@ -458,6 +477,10 @@ class LogScale extends NiceScale {
         this.maxValue = maxValue;
         this.logBase = logBase;
         this.calculate();
+    }
+    posToValue(pos) {
+        const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
+        return this.logBase ** exp;
     }
     valueToPos(value) {
         return this.valueToPercent(value) * this.axisLength;
@@ -514,7 +537,10 @@ var Direction;
 })(Direction || (Direction = {}));
 var DragType;
 (function (DragType) {
-    DragType["DimensionAxis"] = "dimension-axis";
+    DragType["DimensionFilterCreate"] = "dimension-filter-create";
+    DragType["DimensionFilterMove"] = "dimension-filter-move";
+    DragType["DimensionFilterResizeAfter"] = "dimension-filter-resize-after";
+    DragType["DimensionFilterResizeBefore"] = "dimension-filter-resize-before";
     DragType["DimensionLabel"] = "dimension-label";
     DragType["None"] = "none";
 })(DragType || (DragType = {}));
@@ -564,6 +590,8 @@ const HERMES_OPTIONS = {
                 lineWidth: 1,
             },
             filter: {
+                fillStyle: 'rgba(0, 0, 0, 0.3)',
+                strokeStyle: 'rgba(0, 0, 0, 1.0)',
                 width: 30,
             },
             label: {
@@ -610,13 +638,28 @@ const HERMES_OPTIONS = {
         padding: 50,
     },
 };
+const FILTER = {
+    p0: Number.NaN,
+    p1: Number.NaN,
+    value0: Number.NaN,
+    value1: Number.NaN,
+};
 const DRAG = {
-    bound0: undefined,
-    bound1: undefined,
-    index: -1,
-    offset: { x: 0, y: 0 },
-    p0: { x: Number.NaN, y: Number.NaN },
-    p1: { x: Number.NaN, y: Number.NaN },
+    dimension: {
+        bound0: undefined,
+        bound1: undefined,
+        offset: { x: 0, y: 0 },
+    },
+    filters: {
+        active: FILTER,
+        axes: {},
+        key: undefined,
+    },
+    shared: {
+        index: -1,
+        p0: { x: Number.NaN, y: Number.NaN },
+        p1: { x: Number.NaN, y: Number.NaN },
+    },
     type: DragType.None,
 };
 
@@ -662,9 +705,10 @@ const isPointInTriangle = (p, a, b, c) => {
 const percentRectIntersection = (r0, r1) => {
     const [r0x0, r0x1, r0y0, r0y1] = [r0.x, r0.x + r0.w, r0.y, r0.y + r0.h];
     const [r1x0, r1x1, r1y0, r1y1] = [r1.x, r1.x + r1.w, r1.y, r1.y + r1.h];
-    const intersectionArea = Math.max(0, Math.min(r0x1, r1x1) - Math.max(r0x0, r1x0)) * Math.max(0, Math.min(r0y1, r1y1) - Math.max(r0y0, r1y0));
-    const unionArea = (r0.w * r0.h) + (r1.w * r1.h) - intersectionArea;
-    return intersectionArea / unionArea;
+    const intersectionArea = Math.max(0, Math.min(r0x1, r1x1) - Math.max(r0x0, r1x0)) *
+        Math.max(0, Math.min(r0y1, r1y1) - Math.max(r0y0, r1y0));
+    // const unionArea = (r0.w * r0.h) + (r1.w * r1.h) - intersectionArea;
+    return intersectionArea / Math.min(r0.w * r0.h, r1.w * r1.h);
 };
 const shiftRect = (rect, shift) => {
     return { h: rect.h, w: rect.w, x: rect.x + shift.x, y: rect.y + shift.y };
@@ -912,61 +956,74 @@ const getElement = (target) => {
     return document.querySelector(target);
 };
 
+const getAxisPositionValue = (cursor, layout, direction, scale) => {
+    const key = direction === Direction.Horizontal ? 'y' : 'x';
+    const min = layout.bound[key] + layout.axisStart[key];
+    const max = layout.bound[key] + layout.axisStop[key];
+    const pos = Math.min(max, Math.max(min, cursor[key])) - min;
+    return scale.posToValue(pos);
+};
+const getDragBound = (index, drag, bound) => {
+    const isLabelDrag = drag.type === DragType.DimensionLabel && drag.shared.index === index;
+    return isLabelDrag && drag.dimension.bound1 ? drag.dimension.bound1 : bound;
+};
+
+const scale = new LinearScale(0, 100);
 const dimensionSamples = [
     {
-        axis: { range: [0.2, 0.8], type: AxisType.Linear },
+        axis: { range: [0.2, 0.8], scale, type: AxisType.Linear },
         key: 'dropout',
         label: 'Dropout',
     },
     {
-        axis: { range: [5, 30], type: AxisType.Linear },
+        axis: { range: [5, 30], scale, type: AxisType.Linear },
         key: 'global-batch-size',
         label: 'Global Batch Size',
     },
     {
-        axis: { categories: [4, 8, 16, 32, 64], type: AxisType.Categorical },
+        axis: { categories: [4, 8, 16, 32, 64], scale, type: AxisType.Categorical },
         key: 'layer-dense-size',
         label: 'Layer Dense Size',
     },
     {
-        axis: { categories: [true, false], type: AxisType.Categorical },
+        axis: { categories: [true, false], scale, type: AxisType.Categorical },
         key: 'layer-inverse',
         label: 'Layer Inverse',
     },
     {
-        axis: { logBase: 10, range: [0.0001, 0.1], type: AxisType.Logarithmic },
+        axis: { logBase: 10, range: [0.0001, 0.1], scale, type: AxisType.Logarithmic },
         key: 'learning-rate',
         label: 'Learning Rate',
     },
     {
-        axis: { logBase: 10, range: [0.000001, 0.001], type: AxisType.Logarithmic },
+        axis: { logBase: 10, range: [0.000001, 0.001], scale, type: AxisType.Logarithmic },
         key: 'learning-rate-decay',
         label: 'Learning Rate Decay',
     },
     {
-        axis: { logBase: 2, range: [1, 16], type: AxisType.Logarithmic },
+        axis: { logBase: 2, range: [1, 16], scale, type: AxisType.Logarithmic },
         key: 'layer-split-factor',
         label: 'Layer Split Factor',
     },
     {
-        axis: { range: [0.5, 0.9], type: AxisType.Linear },
+        axis: { range: [0.5, 0.9], scale, type: AxisType.Linear },
         key: 'metrics-base',
         label: 'Metrics Base',
     },
     {
-        axis: { range: [8, 64], type: AxisType.Linear },
+        axis: { range: [8, 64], scale, type: AxisType.Linear },
         key: 'n-filters',
         label: 'N Filters',
     },
 ];
 const metricDimensionSamples = [
     {
-        axis: { range: [0.55, 0.99], type: AxisType.Linear },
+        axis: { range: [0.55, 0.99], scale, type: AxisType.Linear },
         key: 'accuracy',
         label: 'Accuracy',
     },
     {
-        axis: { range: [1.7, 2.4], type: AxisType.Linear },
+        axis: { range: [1.7, 2.4], scale, type: AxisType.Linear },
         key: 'loss',
         label: 'Loss',
     },
@@ -1032,11 +1089,8 @@ class Hermes {
     constructor(target, data, dimensions, options = {}) {
         this.size = { h: 0, w: 0 };
         this.drag = clone(DRAG);
+        this.filters = {};
         this._ = undefined;
-        this.getDragBound = (index, drag, bound) => {
-            const isLabelDrag = drag.type === DragType.DimensionLabel && drag.index === index;
-            return isLabelDrag && drag.bound1 ? drag.bound1 : bound;
-        };
         const element = getElement(target);
         if (!element)
             throw new HermesError('Target element selector did not match anything.');
@@ -1140,7 +1194,6 @@ class Hermes {
         const _dsa = _.dims.shared.axes;
         const _dsl = _.dims.shared.label;
         const _dsly = _.dims.shared.layout;
-        const _drag = this.drag;
         const dimCount = this.dimensions.length;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const dimLabelStyle = this.options.style.dimension.label;
@@ -1151,7 +1204,6 @@ class Hermes {
         const isLabelBefore = dimLabelStyle.placement === LabelPlacement.Before;
         const isLabelAngled = dimLabelStyle.angle != null;
         const isAxesBefore = axesLabelStyle.placement === LabelPlacement.Before;
-        _drag.type === DragType.DimensionLabel;
         /**
          * Calculate actual render area (canvas minus padding).
          */
@@ -1382,7 +1434,6 @@ class Hermes {
             return;
         // console.time('render time');
         const { h, w } = this.size;
-        this._.layout;
         const _dl = this._.dims.list;
         const _dsl = this._.dims.shared.label;
         const _drag = this.drag;
@@ -1402,7 +1453,7 @@ class Hermes {
                 var _a, _b, _c, _d, _e;
                 const key = dimension.key;
                 const layout = _dl[i].layout;
-                const bound = this.getDragBound(i, _drag, layout.bound);
+                const bound = getDragBound(i, _drag, layout.bound);
                 const value = this.data[key][k];
                 const pos = (_b = (_a = dimension.axis.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) !== null && _b !== void 0 ? _b : 0;
                 const x = bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
@@ -1424,7 +1475,7 @@ class Hermes {
         }
         this.dimensions.forEach((dimension, i) => {
             var _a;
-            const bound = this.getDragBound(i, _drag, _dl[i].layout.bound);
+            const bound = getDragBound(i, _drag, _dl[i].layout.bound);
             const labelPoint = _dl[i].layout.labelPoint;
             const x = bound.x + labelPoint.x;
             const y = bound.y + labelPoint.y;
@@ -1437,12 +1488,14 @@ class Hermes {
             drawTickTextStyle.textBaseline = isHorizontal ? undefined : (isAxesBefore ? 'bottom' : 'top');
         }
         _dl.forEach((dim, i) => {
-            const bound = this.getDragBound(i, _drag, dim.layout.bound);
+            const key = this.dimensions[i].key;
+            const bound = getDragBound(i, _drag, dim.layout.bound);
             const axisStart = dim.layout.axisStart;
             const axisStop = dim.layout.axisStop;
             const tickLabels = dim.axes.tickLabels;
             const tickPos = dim.axes.tickPos;
             const tickLengthFactor = isAxesBefore ? -1 : 1;
+            const filters = this.filters[key] || [];
             drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, axesStyle.axis);
             for (let i = 0; i < tickLabels.length; i++) {
                 const xOffset = isHorizontal ? 0 : tickPos[i];
@@ -1462,6 +1515,10 @@ class Hermes {
                 const tickLabel = tickLabels[i];
                 drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
             }
+            filters.forEach(filter => {
+                console.log('filter', bound.x + axisStart.x - (axesStyle.filter.width / 2), bound.y + axisStart.y + filter.p0, axesStyle.filter.width, filter.p1 - filter.p0);
+                drawRect(this.ctx, bound.x + axisStart.x - (axesStyle.filter.width / 2), filter.p0, axesStyle.filter.width, filter.p1 - filter.p0, axesStyle.filter);
+            });
         });
         // console.timeEnd('render time');
     }
@@ -1490,7 +1547,6 @@ class Hermes {
             const axisBoundary = dim.layout.axisBoundary;
             const labelPoint = dim.layout.labelPoint;
             const labelBoundary = dim.layout.labelBoundary;
-            console.log('labelBoundary', labelBoundary);
             drawRect(this.ctx, isHorizontal ? _l.padding[3] + i * _dsly.space : bound.x, isHorizontal ? bound.y : _l.padding[0] + i * _dsly.space, isHorizontal ? _dsly.space : bound.w, isHorizontal ? bound.h : _dsly.space, dimStyle);
             drawRect(this.ctx, bound.x, bound.y, bound.w, bound.h, boundStyle);
             drawCircle(this.ctx, bound.x + labelPoint.x, bound.y + labelPoint.y, 3, labelPointStyle);
@@ -1503,65 +1559,96 @@ class Hermes {
             return;
         const [x, y] = [e.clientX, e.clientY];
         const _drag = this.drag;
+        const _drs = this.drag.shared;
+        const _drd = this.drag.dimension;
+        const _drf = this.drag.filters;
         const _dl = this._.dims.list;
+        const isHorizontal = this.options.direction === Direction.Horizontal;
         this._.dims.list.forEach((dim, i) => {
             // Check to see if a dimension label was targeted.
             const labelBoundary = dim.layout.labelBoundary;
             if (isPointInTriangle({ x, y }, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
                 isPointInTriangle({ x, y }, labelBoundary[2], labelBoundary[3], labelBoundary[0])) {
-                _drag.bound0 = _dl[i].layout.bound;
-                _drag.index = i;
-                _drag.p0 = { x, y };
-                _drag.p1 = { x, y };
                 _drag.type = DragType.DimensionLabel;
+                _drd.bound0 = _dl[i].layout.bound;
+                _drs.index = i;
+                _drs.p0 = { x, y };
+                _drs.p1 = { x, y };
             }
             // Check to see if a dimension axis was targeted.
             const axisBoundary = dim.layout.axisBoundary;
             if (isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
                 isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
-                console.log('axis filtering');
-                _drag.bound0 = _dl[i].layout.bound;
-                _drag.index = i;
-                _drag.p0 = { x, y };
-                _drag.p1 = { x, y };
-                _drag.type = DragType.DimensionAxis;
+                _drag.type = DragType.DimensionFilterCreate;
+                _drs.index = i;
+                _drs.p0 = { x, y };
+                _drs.p1 = { x, y };
+                _drf.key = this.dimensions[i].key;
+                _drf.active.p0 = _drs.p0[isHorizontal ? 'y' : 'x'];
+                _drf.active.value0 = getAxisPositionValue(_drs.p0, _dl[i].layout, this.options.direction, this.dimensions[i].axis.scale);
             }
         });
     }
     handleMouseMove(e) {
-        if (!this._ || this.drag.type === DragType.None)
+        if (!this._)
             return;
         const [x, y] = [e.clientX, e.clientY];
         const _drag = this.drag;
+        const _drs = this.drag.shared;
+        const _drd = this.drag.dimension;
+        const _drf = this.drag.filters;
         const _dl = this._.dims.list;
         const isHorizontal = this.options.direction === Direction.Horizontal;
-        _drag.p1 = { x, y };
-        _drag.offset = {
-            x: isHorizontal ? _drag.p1.x - _drag.p0.x : 0,
-            y: isHorizontal ? 0 : _drag.p1.y - _drag.p0.y,
+        _drs.p1 = { x, y };
+        _drd.offset = {
+            x: isHorizontal ? _drs.p1.x - _drs.p0.x : 0,
+            y: isHorizontal ? 0 : _drs.p1.y - _drs.p0.y,
         };
-        _drag.bound1 = _drag.bound0 ? shiftRect(_drag.bound0, _drag.offset) : undefined;
+        _drd.bound1 = _drd.bound0 ? shiftRect(_drd.bound0, _drd.offset) : undefined;
         for (let i = 0; i < _dl.length; i++) {
-            // Skip the current dimension being dragged.
-            if (i === _drag.index || !_drag.bound1)
-                continue;
-            // If the drag dimension boundary intersects with the current dimension, swap them.
+            const layout = _dl[i].layout;
+            /**
+             * Check that...
+             * 1. dimension drag type is triggered by the label
+             * 2. dimension being dragged isn't being the dimension getting compared to (i)
+             * 3. dimension doesn't intersect
+             */
             if (_drag.type === DragType.DimensionLabel &&
-                percentRectIntersection(_drag.bound1, _dl[i].layout.bound) > 0.4) {
+                _drs.index !== i && _drd.bound1 &&
+                percentRectIntersection(_drd.bound1, layout.bound) > 0.4) {
                 // Swap dragging dimension with the dimension it intersects with.
-                const tempDim = this.dimensions[_drag.index];
-                this.dimensions[_drag.index] = this.dimensions[i];
+                const tempDim = this.dimensions[_drs.index];
+                this.dimensions[_drs.index] = this.dimensions[i];
                 this.dimensions[i] = tempDim;
-                // Update the drag dimension index.
-                _drag.index = i;
-                break;
+                // Update the drag dimension shared..
+                _drs.index = i;
             }
+        }
+        // Update dimension filter creating dragging data.
+        if (_drag.type === DragType.DimensionFilterCreate) {
+            _drf.active.p1 = _drs.p1[isHorizontal ? 'y' : 'x'];
+            _drf.active.value1 = getAxisPositionValue(_drs.p1, _dl[_drs.index].layout, this.options.direction, this.dimensions[_drs.index].axis.scale);
         }
         this.calculate();
     }
     handleMouseUp(e) {
         if (!this._ || this.drag.type === DragType.None)
             return;
+        const [x, y] = [e.clientX, e.clientY];
+        const _drag = this.drag;
+        const _filter = this.filters;
+        const _drs = this.drag.shared;
+        const _drf = this.drag.filters;
+        const _dl = this._.dims.list;
+        const isHorizontal = this.options.direction === Direction.Horizontal;
+        _drs.p1 = { x, y };
+        // Save newly created dimension filter.
+        if (_drag.type === DragType.DimensionFilterCreate && _drf.key) {
+            _drf.active.p1 = _drs.p1[isHorizontal ? 'y' : 'x'];
+            _drf.active.value1 = getAxisPositionValue(_drs.p1, _dl[_drs.index].layout, this.options.direction, this.dimensions[_drs.index].axis.scale);
+            _filter[_drf.key] = _filter[_drf.key] || [];
+            _filter[_drf.key].push(_drf.active);
+        }
         // Reset drag info.
         this.drag = clone(DRAG);
         this.calculate();

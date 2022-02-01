@@ -5,20 +5,20 @@
  * https://stackoverflow.com/questions/8506881/nice-label-algorithm-for-charts-with-minimum-ticks
  */
 
+import { Primitive } from '../types';
+
 const MIN_TICK_DISTANCE = 50;
 
 abstract class NiceScale {
   public max: number;
   public min: number;
-  public range: number = 0;
+  public range = 0;
   public tickLabels: string[] = [];
   public tickPos: number[] = [];
   public ticks: number[] = [];
-  public tickSpacing: number = 0;
-  protected axisLength: number = 1;
-  protected maxTicks: number = 1;
-  protected maxValue: number;
-  protected minValue: number;
+  public tickSpacing = 0;
+  protected axisLength = 1;
+  protected maxTicks = 1;
 
   /**
    * Instantiates a new instance of the NiceScale class.
@@ -27,40 +27,24 @@ abstract class NiceScale {
    * @param maxValue the maximum data point on the axis
    * @param maxTicks the maximum number of tick marks for the axis
    */
-  constructor(minValue: number, maxValue: number) {
+  constructor(protected minValue: number, protected maxValue: number) {
     this.minValue = minValue;
     this.maxValue = maxValue;
     this.max = maxValue;
     this.min = minValue;
   }
 
-  public setAxisLength(axisLength: number) {
+  public setAxisLength(axisLength: number): void {
     this.axisLength = axisLength;
     this.maxTicks = axisLength / MIN_TICK_DISTANCE;
     this.calculate();
   }
 
-  public setMinMaxValues(minValue: number, maxValue: number) {
+  public setMinMaxValues(minValue: number, maxValue: number): void {
     this.minValue = minValue;
     this.maxValue = maxValue;
     this.calculate();
   }
-
-  /**
-   * Convert value into a position on the axis based on the axis length.
-   */
-  public abstract valueToPos(value: number): number;
-
-  /**
-   * Convert value into a percent of the min / max range.
-   */
-  public abstract valueToPercent(value: number): number;
-
-  /**
-   * Calculate and update values for tick spacing and nice
-   * minimum and maximum data points on the axis.
-   */
-  protected abstract calculate(): void;
 
   /**
    * Returns a "nice" number approximately equal to range.
@@ -90,6 +74,27 @@ abstract class NiceScale {
 
     return niceFraction * 10 ** exponent;
   }
+
+  /**
+   * Convert the axis position to axis value.
+   */
+  public abstract posToValue(pos: number): Primitive;
+
+  /**
+   * Convert value into a position on the axis based on the axis length.
+   */
+  public abstract valueToPos(value: number): number;
+
+  /**
+    * Convert value into a percent of the min / max range.
+    */
+  public abstract valueToPercent(value: number): number;
+
+  /**
+   * Calculate and update values for tick spacing and nice
+   * minimum and maximum data points on the axis.
+   */
+  protected abstract calculate(): void;
 }
 
 export default NiceScale;

@@ -8,7 +8,7 @@
     <div id="hermes"></div>
     <script>
       const tester = Hermes.getTester();
-      const dimensions = tester.generateDimensions(10);
+      const dimensions = tester.generateDimensions(10, false);
       const data = tester.generateData(dimensions, 100);
       console.log('dims', dimensions);
       console.log('data', data);

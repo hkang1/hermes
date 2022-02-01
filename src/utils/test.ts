@@ -1,49 +1,52 @@
-import * as t from '../types';
+import LinearScale from '../classes/LinearScale';
 import * as DEFAULT from '../defaults';
+import * as t from '../types';
+
+const scale = new LinearScale(0, 100);
 
 const dimensionSamples: t.Dimension[] = [
   {
-    axis: { range: [ 0.2, 0.8 ], type: t.AxisType.Linear },
+    axis: { range: [ 0.2, 0.8 ], scale, type: t.AxisType.Linear },
     key: 'dropout',
     label: 'Dropout',
   },
   {
-    axis: { range: [ 5, 30 ], type: t.AxisType.Linear },
+    axis: { range: [ 5, 30 ], scale, type: t.AxisType.Linear },
     key: 'global-batch-size',
     label: 'Global Batch Size',
   },
   {
-    axis: { categories: [ 4, 8, 16, 32, 64 ], type: t.AxisType.Categorical },
+    axis: { categories: [ 4, 8, 16, 32, 64 ], scale, type: t.AxisType.Categorical },
     key: 'layer-dense-size',
     label: 'Layer Dense Size',
   },
   {
-    axis: { categories: [ true, false ], type: t.AxisType.Categorical },
+    axis: { categories: [ true, false ], scale, type: t.AxisType.Categorical },
     key: 'layer-inverse',
     label: 'Layer Inverse',
   },
   {
-    axis: { logBase: 10, range: [ 0.0001, 0.1 ], type: t.AxisType.Logarithmic },
+    axis: { logBase: 10, range: [ 0.0001, 0.1 ], scale, type: t.AxisType.Logarithmic },
     key: 'learning-rate',
     label: 'Learning Rate',
   },
   {
-    axis: { logBase: 10, range: [ 0.000001, 0.001 ], type: t.AxisType.Logarithmic },
+    axis: { logBase: 10, range: [ 0.000001, 0.001 ], scale, type: t.AxisType.Logarithmic },
     key: 'learning-rate-decay',
     label: 'Learning Rate Decay',
   },
   {
-    axis: { logBase: 2, range: [ 1, 16 ], type: t.AxisType.Logarithmic },
+    axis: { logBase: 2, range: [ 1, 16 ], scale, type: t.AxisType.Logarithmic },
     key: 'layer-split-factor',
     label: 'Layer Split Factor',
   },
   {
-    axis: { range: [ 0.5, 0.9 ], type: t.AxisType.Linear },
+    axis: { range: [ 0.5, 0.9 ], scale, type: t.AxisType.Linear },
     key: 'metrics-base',
     label: 'Metrics Base',
   },
   {
-    axis: { range: [ 8, 64 ], type: t.AxisType.Linear },
+    axis: { range: [ 8, 64 ], scale, type: t.AxisType.Linear },
     key: 'n-filters',
     label: 'N Filters',
   },
@@ -51,12 +54,12 @@ const dimensionSamples: t.Dimension[] = [
 
 const metricDimensionSamples: t.Dimension[] = [
   {
-    axis: { range: [ 0.55, 0.99 ], type: t.AxisType.Linear },
+    axis: { range: [ 0.55, 0.99 ], scale, type: t.AxisType.Linear },
     key: 'accuracy',
     label: 'Accuracy',
   },
   {
-    axis: { range: [ 1.7, 2.4 ], type: t.AxisType.Linear },
+    axis: { range: [ 1.7, 2.4 ], scale, type: t.AxisType.Linear },
     key: 'loss',
     label: 'Loss',
   },
