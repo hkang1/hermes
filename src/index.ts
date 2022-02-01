@@ -11,7 +11,7 @@ import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
 import { clone, getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
-import { getAxisPositionValue, getDragBound } from './utils/interaction';
+import { getAxisPositionValue, getDragBound, isFilterEmpty, isIntersectingFilters, mergeFilters } from './utils/interaction';
 import { isPointInTriangle, percentRectIntersection, shiftRect } from './utils/math';
 import * as tester from './utils/test';
 
@@ -396,6 +396,28 @@ class Hermes {
     this._ = _;
   }
 
+  // 0 - 1 => 1
+  // 0 - 2
+  // 1 - 2
+  private mergeFilters(): void {
+    Object.keys(this.filters).forEach(key => {
+      const filters = this.filters[key] || [];
+      for (let i = 0; i < filters.length - 1; i++) {
+        for (let j = i + 1; j < filters.length; j++) {
+          if (isFilterEmpty(filters[i]) || isFilterEmpty(filters[j])) continue;
+          /**
+           * If overlap, merge into higher indexed filter and remove lower indexed
+           * filter to avoid checking the removed filter during the loop.
+           */
+          if (isIntersectingFilters(filters[i], filters[j])) {
+            filters[j] = mergeFilters(filters[i], filters[j]);
+            filters[i] = clone(DEFAULT.FILTER);
+          }
+        }
+      }
+    });
+  }
+
   private draw(): void {
     if (!this._) return;
 
@@ -500,13 +522,6 @@ class Hermes {
       }
 
       filters.forEach(filter => {
-        console.log(
-          'filter',
-          bound.x + axisStart.x - (axesStyle.filter.width / 2),
-          bound.y + axisStart.y + filter.p0,
-          axesStyle.filter.width,
-          filter.p1 - filter.p0,
-        );
         canvas.drawRect(
           this.ctx,
           bound.x + axisStart.x - (axesStyle.filter.width / 2),
@@ -575,6 +590,7 @@ class Hermes {
 
     const [ x, y ] = [ e.clientX, e.clientY ];
     const _drag = this.drag;
+    const _filter = this.filters;
     const _drs = this.drag.shared;
     const _drd = this.drag.dimension;
     const _drf = this.drag.filters;
@@ -606,13 +622,19 @@ class Hermes {
         _drs.p0 = { x, y };
         _drs.p1 = { x, y };
         _drf.key = this.dimensions[i].key;
-        _drf.active.p0 = _drs.p0[isHorizontal ? 'y' : 'x'];
-        _drf.active.value0 = getAxisPositionValue(
+
+        const p0 = _drs.p0[isHorizontal ? 'y' : 'x'];
+        const value0 = getAxisPositionValue(
           _drs.p0,
           _dl[i].layout,
           this.options.direction,
           this.dimensions[i].axis.scale,
         );
+        _drf.active = { p0, p1: p0, value0, value1: value0 };
+
+        // Store active filter into filter list.
+        _filter[_drf.key] = _filter[_drf.key] || [];
+        _filter[_drf.key].push(_drf.active);
       }
     });
   }
@@ -678,7 +700,6 @@ class Hermes {
 
     const [ x, y ] = [ e.clientX, e.clientY ];
     const _drag = this.drag;
-    const _filter = this.filters;
     const _drs = this.drag.shared;
     const _drf = this.drag.filters;
     const _dl = this._.dims.list;
@@ -686,8 +707,8 @@ class Hermes {
 
     _drs.p1 = { x, y };
 
-    // Save newly created dimension filter.
     if (_drag.type === t.DragType.DimensionFilterCreate && _drf.key) {
+      // Update filter data before removing reference.
       _drf.active.p1 = _drs.p1[isHorizontal ? 'y' : 'x'];
       _drf.active.value1 = getAxisPositionValue(
         _drs.p1,
@@ -696,13 +717,22 @@ class Hermes {
         this.dimensions[_drs.index].axis.scale,
       );
 
-      _filter[_drf.key] = _filter[_drf.key] || [];
-      _filter[_drf.key].push(_drf.active);
+      // Swap p0 and p1 if p1 is less than p0.
+      if (_drf.active.p1 < _drf.active.p0) {
+        const [ tempP, tempValue ] = [ _drf.active.p1, _drf.active.value1 ];
+        [ _drf.active.p1, _drf.active.value1 ] = [ _drf.active.p0, _drf.active.value0 ];
+        [ _drf.active.p0, _drf.active.value0 ] = [ tempP, tempValue ];
+      }
+
+      // Overwrite active filter to remove reference to filter in filters list.
+      _drf.active = DEFAULT.FILTER;
+      _drf.key = undefined;
     }
 
     // Reset drag info.
     this.drag = clone(DEFAULT.DRAG);
 
+    this.mergeFilters();
     this.calculate();
   }
 }

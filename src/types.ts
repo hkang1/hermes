@@ -193,7 +193,6 @@ export interface Drag {
   };
   filters: {
     active: Filter;
-    axes: Record<DimensionKey, Filter[]>;
     key?: DimensionKey;
   };
   shared: {

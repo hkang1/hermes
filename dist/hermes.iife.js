@@ -968,6 +968,32 @@ var Hermes = (function () {
       const isLabelDrag = drag.type === DragType.DimensionLabel && drag.shared.index === index;
       return isLabelDrag && drag.dimension.bound1 ? drag.dimension.bound1 : bound;
   };
+  const isFilterEmpty = (filter) => {
+      return isNaN(filter.p0) && isNaN(filter.p1);
+  };
+  const isIntersectingFilters = (filter0, filter1) => {
+      return filter0.p0 <= filter1.p1 && filter1.p0 <= filter0.p1;
+  };
+  const mergeFilters = (filter0, filter1) => {
+      const newFilter = clone(FILTER);
+      if (filter0.p0 < filter1.p0) {
+          newFilter.p0 = filter0.p0;
+          newFilter.value0 = filter0.value0;
+      }
+      else {
+          newFilter.p0 = filter1.p0;
+          newFilter.value0 = filter1.value0;
+      }
+      if (filter0.p1 > filter1.p1) {
+          newFilter.p1 = filter0.p1;
+          newFilter.value1 = filter0.value1;
+      }
+      else {
+          newFilter.p1 = filter1.p1;
+          newFilter.value1 = filter1.value1;
+      }
+      return newFilter;
+  };
 
   const scale = new LinearScale(0, 100);
   const dimensionSamples = [
@@ -1429,6 +1455,28 @@ var Hermes = (function () {
           }
           this._ = _;
       }
+      // 0 - 1 => 1
+      // 0 - 2
+      // 1 - 2
+      mergeFilters() {
+          Object.keys(this.filters).forEach(key => {
+              const filters = this.filters[key] || [];
+              for (let i = 0; i < filters.length - 1; i++) {
+                  for (let j = i + 1; j < filters.length; j++) {
+                      if (isFilterEmpty(filters[i]) || isFilterEmpty(filters[j]))
+                          continue;
+                      /**
+                       * If overlap, merge into higher indexed filter and remove lower indexed
+                       * filter to avoid checking the removed filter during the loop.
+                       */
+                      if (isIntersectingFilters(filters[i], filters[j])) {
+                          filters[j] = mergeFilters(filters[i], filters[j]);
+                          filters[i] = clone(FILTER);
+                      }
+                  }
+              }
+          });
+      }
       draw() {
           var _a;
           if (!this._)
@@ -1517,7 +1565,6 @@ var Hermes = (function () {
                   drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
               }
               filters.forEach(filter => {
-                  console.log('filter', bound.x + axisStart.x - (axesStyle.filter.width / 2), bound.y + axisStart.y + filter.p0, axesStyle.filter.width, filter.p1 - filter.p0);
                   drawRect(this.ctx, bound.x + axisStart.x - (axesStyle.filter.width / 2), filter.p0, axesStyle.filter.width, filter.p1 - filter.p0, axesStyle.filter);
               });
           });
@@ -1560,6 +1607,7 @@ var Hermes = (function () {
               return;
           const [x, y] = [e.clientX, e.clientY];
           const _drag = this.drag;
+          const _filter = this.filters;
           const _drs = this.drag.shared;
           const _drd = this.drag.dimension;
           const _drf = this.drag.filters;
@@ -1585,8 +1633,12 @@ var Hermes = (function () {
                   _drs.p0 = { x, y };
                   _drs.p1 = { x, y };
                   _drf.key = this.dimensions[i].key;
-                  _drf.active.p0 = _drs.p0[isHorizontal ? 'y' : 'x'];
-                  _drf.active.value0 = getAxisPositionValue(_drs.p0, _dl[i].layout, this.options.direction, this.dimensions[i].axis.scale);
+                  const p0 = _drs.p0[isHorizontal ? 'y' : 'x'];
+                  const value0 = getAxisPositionValue(_drs.p0, _dl[i].layout, this.options.direction, this.dimensions[i].axis.scale);
+                  _drf.active = { p0, p1: p0, value0, value1: value0 };
+                  // Store active filter into filter list.
+                  _filter[_drf.key] = _filter[_drf.key] || [];
+                  _filter[_drf.key].push(_drf.active);
               }
           });
       }
@@ -1637,21 +1689,28 @@ var Hermes = (function () {
               return;
           const [x, y] = [e.clientX, e.clientY];
           const _drag = this.drag;
-          const _filter = this.filters;
           const _drs = this.drag.shared;
           const _drf = this.drag.filters;
           const _dl = this._.dims.list;
           const isHorizontal = this.options.direction === Direction.Horizontal;
           _drs.p1 = { x, y };
-          // Save newly created dimension filter.
           if (_drag.type === DragType.DimensionFilterCreate && _drf.key) {
+              // Update filter data before removing reference.
               _drf.active.p1 = _drs.p1[isHorizontal ? 'y' : 'x'];
               _drf.active.value1 = getAxisPositionValue(_drs.p1, _dl[_drs.index].layout, this.options.direction, this.dimensions[_drs.index].axis.scale);
-              _filter[_drf.key] = _filter[_drf.key] || [];
-              _filter[_drf.key].push(_drf.active);
+              // Swap p0 and p1 if p1 is less than p0.
+              if (_drf.active.p1 < _drf.active.p0) {
+                  const [tempP, tempValue] = [_drf.active.p1, _drf.active.value1];
+                  [_drf.active.p1, _drf.active.value1] = [_drf.active.p0, _drf.active.value0];
+                  [_drf.active.p0, _drf.active.value0] = [tempP, tempValue];
+              }
+              // Overwrite active filter to remove reference to filter in filters list.
+              _drf.active = FILTER;
+              _drf.key = undefined;
           }
           // Reset drag info.
           this.drag = clone(DRAG);
+          this.mergeFilters();
           this.calculate();
       }
   }
