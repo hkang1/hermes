@@ -442,15 +442,22 @@ class LinearScale extends NiceScale {
     }
     calculate() {
         this.range = this.niceNum(this.maxValue - this.minValue, false);
-        this.tickSpacing = this.niceNum(this.range / (this.maxTicks - 1), true);
+        this.tickSpacing = this.niceNum(this.range / this.maxTicks, true);
         this.min = Math.floor(this.minValue / this.tickSpacing) * this.tickSpacing;
         this.max = Math.ceil(this.maxValue / this.tickSpacing) * this.tickSpacing;
-        // Generate ticks based on min, max and tick spacing.
+        /**
+         * Generate ticks based on min, max and tick spacing.
+         * Due to rounding errors, the final tick can get cut off if
+         * traversing from `min` to `max` with fractional `tickSpacing`.
+         * Instead pre-calculate number of ticks and calculate accordingly.
+         */
+        const count = Math.round((this.max - this.min) / this.tickSpacing);
         this.ticks = [];
         this.tickLabels = [];
-        for (let i = this.min; i <= this.max; i += this.tickSpacing) {
-            this.ticks.push(i);
-            this.tickLabels.push(readableTick(i));
+        for (let i = 0; i <= count; i++) {
+            const tick = i * this.tickSpacing + this.min;
+            this.ticks.push(tick);
+            this.tickLabels.push(readableTick(tick));
         }
         // Calculate tick positions based on axis length and ticks.
         const offset = this.axisLength / (this.ticks.length - 1);
@@ -498,11 +505,19 @@ class LogScale extends NiceScale {
         this.maxExp = Math.ceil(this.log(this.maxValue) / this.denominator);
         this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
         this.tickSpacing = 1;
-        // Tick spacing is exp based rather than actual log values.
+        /**
+         * For log scale, tick spacing is exp based rather than actual log values.
+         * Generate ticks based on `minExp`, `maxExp` and `tickSpacing`.
+         * Due to rounding errors, the final tick can get cut off if
+         * traversing from `minExp` to `maxExp` with fractional `tickSpacing`.
+         * Instead pre-calculate number of ticks and calculate accordingly.
+         */
+        const count = Math.round((this.maxExp - this.minExp) / this.tickSpacing);
         this.ticks = [];
         this.tickLabels = [];
-        for (let i = this.minExp; i <= this.maxExp; i += this.tickSpacing) {
-            const tickValue = this.logBase ** i;
+        for (let i = 0; i <= count; i++) {
+            const tickExp = i * this.tickSpacing + this.minExp;
+            const tickValue = this.logBase ** tickExp;
             this.ticks.push(tickValue);
             this.tickLabels.push(readableTick(tickValue));
         }

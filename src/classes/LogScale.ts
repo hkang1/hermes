@@ -58,11 +58,19 @@ class LogScale extends NiceScale {
     this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
     this.tickSpacing = 1;
 
-    // Tick spacing is exp based rather than actual log values.
+    /**
+     * For log scale, tick spacing is exp based rather than actual log values.
+     * Generate ticks based on `minExp`, `maxExp` and `tickSpacing`.
+     * Due to rounding errors, the final tick can get cut off if
+     * traversing from `minExp` to `maxExp` with fractional `tickSpacing`.
+     * Instead pre-calculate number of ticks and calculate accordingly.
+     */
+    const count = Math.round((this.maxExp - this.minExp) / this.tickSpacing);
     this.ticks = [];
     this.tickLabels = [];
-    for (let i = this.minExp; i <= this.maxExp; i += this.tickSpacing) {
-      const tickValue = this.logBase ** i;
+    for (let i = 0; i <= count; i++) {
+      const tickExp = i * this.tickSpacing + this.minExp;
+      const tickValue = this.logBase ** tickExp;
       this.ticks.push(tickValue);
       this.tickLabels.push(readableTick(tickValue));
     }

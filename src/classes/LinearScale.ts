@@ -1,4 +1,4 @@
-import { Primitive, Range } from '../types';
+import { Primitive } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 
@@ -24,16 +24,23 @@ class LinearScale extends NiceScale {
 
   protected calculate(): void {
     this.range = this.niceNum(this.maxValue - this.minValue, false);
-    this.tickSpacing = this.niceNum(this.range / (this.maxTicks - 1), true);
+    this.tickSpacing = this.niceNum(this.range / this.maxTicks, true);
     this.min = Math.floor(this.minValue / this.tickSpacing) * this.tickSpacing;
     this.max = Math.ceil(this.maxValue / this.tickSpacing) * this.tickSpacing;
 
-    // Generate ticks based on min, max and tick spacing.
+    /**
+     * Generate ticks based on min, max and tick spacing.
+     * Due to rounding errors, the final tick can get cut off if
+     * traversing from `min` to `max` with fractional `tickSpacing`.
+     * Instead pre-calculate number of ticks and calculate accordingly.
+     */
+    const count = Math.round((this.max - this.min) / this.tickSpacing);
     this.ticks = [];
     this.tickLabels = [];
-    for (let i = this.min; i <= this.max; i += this.tickSpacing) {
-      this.ticks.push(i);
-      this.tickLabels.push(readableTick(i));
+    for (let i = 0; i <= count; i++) {
+      const tick = i * this.tickSpacing + this.min;
+      this.ticks.push(tick);
+      this.tickLabels.push(readableTick(tick));
     }
 
     // Calculate tick positions based on axis length and ticks.
