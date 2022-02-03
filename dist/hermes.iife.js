@@ -573,6 +573,13 @@ var Hermes = (function () {
       PathType["Straight"] = "straight";
   })(PathType || (PathType = {}));
 
+  /**
+   * Invalid defaults.
+   */
+  const INVALID_VALUE = Number.NaN;
+  /**
+   * Style defaults.
+   */
   const BEZIER_FACTOR = 0.3;
   const DIRECTION = 'inherit';
   const FILL_STYLE = 'black';
@@ -584,7 +591,9 @@ var Hermes = (function () {
   const MITER_LIMIT = 10.0;
   const STROKE_STYLE = 'black';
   const TEXT_BASELINE = 'middle';
-  const INVALID_VALUE = Number.NaN;
+  /**
+   * Framework options defaults.
+   */
   const HERMES_OPTIONS = {
       direction: Direction.Horizontal,
       style: {
@@ -668,6 +677,9 @@ var Hermes = (function () {
       type: DragType.None,
   };
 
+  const distance = (pointA, pointB) => {
+      return Math.sqrt((pointB.x - pointA.x) ** 2 + (pointB.y - pointA.y) ** 2);
+  };
   const rotatePoint = (x, y, rad, px = 0, py = 0) => {
       const dx = (x - px);
       const dy = (y - py);
@@ -1463,6 +1475,7 @@ var Hermes = (function () {
           const _drag = this.drag;
           const _drs = _drag.shared;
           const _drf = _drag.filters;
+          const _filters = this.filters;
           const isHorizontal = this.options.direction === Direction.Horizontal;
           const filterKey = isHorizontal ? 'y' : 'x';
           if (_drag.type !== DragType.DimensionFilterCreate || !_drf.key)
@@ -1479,6 +1492,22 @@ var Hermes = (function () {
           // Whether or not to finalize active filter and removing reference to it.
           if (!finalize)
               return;
+          /**
+           * Check to see if the release event is near the starting event.
+           * If so, remove the previously added filter and clear out the active filter.
+           */
+          if (distance(_drs.p0, _drs.p1) < 5) {
+              // Remove matching filter based on event position value.
+              const filters = _filters[_drf.key] || [];
+              const pos = (_drf.active.p1 - _drf.active.p0) / 2 + _drf.active.p0;
+              const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
+              if (removeIndex !== -1)
+                  filters.splice(removeIndex, 1);
+              // Remove newly created active filter.
+              const activeIndex = filters.findIndex(filter => filter === _drf.active);
+              if (activeIndex !== -1)
+                  filters.splice(activeIndex, 1);
+          }
           // Swap p0 and p1 if p1 is less than p0.
           if (_drf.active.p1 < _drf.active.p0) {
               const [tempP, tempValue] = [_drf.active.p1, _drf.active.value1];
@@ -1669,7 +1698,7 @@ var Hermes = (function () {
               return;
           const [x, y] = [e.clientX, e.clientY];
           const _drag = this.drag;
-          const _filter = this.filters;
+          const _filters = this.filters;
           const _drs = this.drag.shared;
           const _drd = this.drag.dimension;
           const _drf = this.drag.filters;
@@ -1703,8 +1732,8 @@ var Hermes = (function () {
                   const value0 = getAxisPositionValue(p0, axisStop[filterKey] - axisStart[filterKey], this.dimensions[i].axis.scale);
                   _drf.active = { p0, p1: p0, value0, value1: value0 };
                   // Store active filter into filter list.
-                  _filter[_drf.key] = _filter[_drf.key] || [];
-                  _filter[_drf.key].push(_drf.active);
+                  _filters[_drf.key] = _filters[_drf.key] || [];
+                  _filters[_drf.key].push(_drf.active);
               }
           });
       }

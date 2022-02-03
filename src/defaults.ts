@@ -1,5 +1,15 @@
 import * as t from './types';
 
+/**
+ * Invalid defaults.
+ */
+export const INVALID_VALUE = Number.NaN;
+export const INVALID_POINT = { x: Number.NaN, y: Number.NaN };
+export const INVALID_RECT = { h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN };
+
+/**
+ * Style defaults.
+ */
 export const BEZIER_FACTOR = 0.3;
 export const DIRECTION: CanvasDirection = 'inherit';
 export const FILL_STYLE = 'black';
@@ -13,10 +23,9 @@ export const STROKE_STYLE = 'black';
 export const TEXT_ALIGN = 'left';
 export const TEXT_BASELINE = 'middle';
 
-export const INVALID_VALUE = Number.NaN;
-export const INVALID_POINT = { x: Number.NaN, y: Number.NaN };
-export const INVALID_RECT = { h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN };
-
+/**
+ * Framework options defaults.
+ */
 export const HERMES_OPTIONS: t.HermesOptions = {
   direction: t.Direction.Horizontal,
   style: {

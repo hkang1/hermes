@@ -12,7 +12,7 @@ import { scale2rgba } from './utils/color';
 import { clone, getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
 import * as ix from './utils/interaction';
-import { isPointInTriangle, percentRectIntersection, shiftRect } from './utils/math';
+import { distance, isPointInTriangle, percentRectIntersection, shiftRect } from './utils/math';
 import * as tester from './utils/test';
 
 class Hermes {
@@ -403,6 +403,7 @@ class Hermes {
     const _drag = this.drag;
     const _drs = _drag.shared;
     const _drf = _drag.filters;
+    const _filters = this.filters;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const filterKey = isHorizontal ? 'y' : 'x';
 
@@ -426,6 +427,22 @@ class Hermes {
 
     // Whether or not to finalize active filter and removing reference to it.
     if (!finalize) return;
+
+    /**
+     * Check to see if the release event is near the starting event.
+     * If so, remove the previously added filter and clear out the active filter.
+     */
+    if (distance(_drs.p0, _drs.p1) < 5) {
+      // Remove matching filter based on event position value.
+      const filters = _filters[_drf.key] || [];
+      const pos = (_drf.active.p1 - _drf.active.p0) / 2 + _drf.active.p0;
+      const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
+      if (removeIndex !== -1) filters.splice(removeIndex, 1);
+
+      // Remove newly created active filter.
+      const activeIndex = filters.findIndex(filter => filter === _drf.active);
+      if (activeIndex !== -1) filters.splice(activeIndex, 1);
+    }
 
     // Swap p0 and p1 if p1 is less than p0.
     if (_drf.active.p1 < _drf.active.p0) {
@@ -658,7 +675,7 @@ class Hermes {
 
     const [ x, y ] = [ e.clientX, e.clientY ];
     const _drag = this.drag;
-    const _filter = this.filters;
+    const _filters = this.filters;
     const _drs = this.drag.shared;
     const _drd = this.drag.dimension;
     const _drf = this.drag.filters;
@@ -704,8 +721,8 @@ class Hermes {
         _drf.active = { p0, p1: p0, value0, value1: value0 };
 
         // Store active filter into filter list.
-        _filter[_drf.key] = _filter[_drf.key] || [];
-        _filter[_drf.key].push(_drf.active);
+        _filters[_drf.key] = _filters[_drf.key] || [];
+        _filters[_drf.key].push(_drf.active);
       }
     });
   }
