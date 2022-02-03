@@ -105,13 +105,20 @@ export interface AxisOptions extends StyleLine {
   boundaryPadding: number;
 }
 
+export interface DataColorScale {
+  colors: string[];
+  dimensionKey: DimensionKey;
+}
+
 export interface DataOptions {
   colorScale?: {
     colors: string[];
     dimensionKey: DimensionKey;
   };
   default: StyleLine;
+  defaultColorScale?: DataColorScale;
   filtered: StyleLine;
+  filteredColorScale?: DataColorScale;
   path: PathOptions;
 }
 

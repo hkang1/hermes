@@ -17,38 +17,41 @@
         style: {
           axes: {
             axis: {
-              color: 'rgba(0, 0, 0, 0.3)',
+              // color: 'rgba(0, 0, 0, 0.3)',
             },
             label: {
               // angle: -Math.PI / 4,
-              color: 'rgba(0, 0, 0, 1.0)',
+              // color: 'rgba(0, 0, 0, 1.0)',
               placement: 'after',
             },
             tick: {
-              color: 'rgba(0, 0, 0, 0.3)',
+              // color: 'rgba(0, 0, 0, 0.3)',
             }
           },
           data: {
-            colorScale: {
-              colors: [
-                'rgba(255, 0, 0, 0.7)',
-                'rgba(255, 127, 0, 0.7)',
-                'rgba(255, 255, 0, 0.7)',
-                'rgba(0, 255, 0, 0.7)',
-                'rgba(0, 0, 255, 0.7)',
-                'rgba(75, 0, 130, 0.7)',
-                'rgba(148, 0, 211, 0.7)',
-              ],
-              dimensionKey: dimensions[dimensions.length - 1].key,
-            },
+            // colorScale: {
+            //   colors: [
+            //     // 'rgba(255, 0, 0, 0.7)',
+            //     // 'rgba(255, 127, 0, 0.7)',
+            //     // 'rgba(255, 255, 0, 0.7)',
+            //     // 'rgba(0, 255, 0, 0.7)',
+            //     // 'rgba(0, 0, 255, 0.7)',
+            //     // 'rgba(75, 0, 130, 0.7)',
+            //     // 'rgba(148, 0, 211, 0.7)',
+            //     'rgba(255, 100, 0, 0.7)',
+            //     'rgba(0, 200, 50, 0.7)',
+            //   ],
+            //   dimensionKey: dimensions[dimensions.length - 1].key,
+            // },
             path: {
-              type: 'bezier',
+              type: 'straight',
             },
             width: 1,
           },
           dimension: {
             label: {
-              // angle: -1 * Math.PI / 4,
+              angle: Math.PI / 4,
+              // angle: undefined,
               placement: 'before',
             },
             layout: 'axis-evenly-spaced',

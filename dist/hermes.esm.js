@@ -600,14 +600,14 @@ const HERMES_OPTIONS = {
     style: {
         axes: {
             axis: {
-                boundaryPadding: 10,
-                fillStyle: 'black',
+                boundaryPadding: 15,
                 lineWidth: 1,
+                strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
             filter: {
-                fillStyle: 'rgba(0, 0, 0, 0.3)',
-                strokeStyle: 'rgba(0, 0, 0, 1.0)',
-                width: 30,
+                fillStyle: 'rgba(0, 0, 0, 1.0)',
+                strokeStyle: 'rgba(255, 255, 255, 1.0)',
+                width: 4,
             },
             label: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
@@ -618,19 +618,19 @@ const HERMES_OPTIONS = {
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
             },
             tick: {
-                fillStyle: 'black',
                 length: 4,
                 lineWidth: 1,
+                strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
         },
         data: {
             default: {
                 lineWidth: 1,
-                strokeStyle: 'rgba(82, 144, 244, 0.3)',
+                strokeStyle: 'rgba(82, 144, 244, 1.0)',
             },
             filtered: {
                 lineWidth: 1,
-                strokeStyle: 'rgba(0, 0, 0, 0.05)',
+                strokeStyle: 'rgba(82, 144, 244, 0.1)',
             },
             path: {
                 options: {},
@@ -642,15 +642,15 @@ const HERMES_OPTIONS = {
                 angle: Math.PI / 4,
                 boundaryPadding: 5,
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
-                font: 'normal 12px sans-serif',
+                font: 'normal 11px sans-serif',
                 lineWidth: 3,
-                offset: 10,
+                offset: 16,
                 placement: LabelPlacement.Before,
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
             },
             layout: DimensionLayout.AxisEvenlySpaced,
         },
-        padding: 50,
+        padding: [32, 16, 64, 16],
     },
 };
 const FILTER = {
@@ -1524,19 +1524,26 @@ class Hermes {
                     const scaleColor = scale2rgba(((_e = dataStyle.colorScale) === null || _e === void 0 ? void 0 : _e.colors) || [], percent);
                     dataDefaultStyle.strokeStyle = scaleColor;
                 }
+                /**
+                 * Check for filters on this dimension and make the filtering
+                 * use AND behavior instead of OR between all the dimensions.
+                 */
                 if (_filters[key] && _filters[key].length !== 0) {
                     hasFilters = true;
+                    let hasMatchedFilter = false;
                     for (let f = 0; f < _filters[key].length; f++) {
                         const filter = _filters[key][f];
                         if (pos >= filter.p0 && pos <= filter.p1) {
-                            isFilteredOut = true;
+                            hasMatchedFilter = true;
                             break;
                         }
                     }
+                    if (!hasMatchedFilter)
+                        isFilteredOut = true;
                 }
                 return { x, y };
             });
-            if (hasFilters && !isFilteredOut)
+            if (hasFilters && isFilteredOut)
                 dataDefaultStyle = dataStyle.filtered;
             drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
         }

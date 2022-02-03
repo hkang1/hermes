@@ -458,21 +458,29 @@ class Hermes {
           dataDefaultStyle.strokeStyle = scaleColor;
         }
 
+        /**
+         * Check for filters on this dimension and make the filtering
+         * use AND behavior instead of OR between all the dimensions.
+         */
         if (_filters[key] && _filters[key].length !== 0) {
           hasFilters = true;
+
+          let hasMatchedFilter = false;
           for (let f = 0; f < _filters[key].length; f++) {
             const filter = _filters[key][f];
             if (pos >= filter.p0 && pos <= filter.p1) {
-              isFilteredOut = true;
+              hasMatchedFilter = true;
               break;
             }
           }
+
+          if (!hasMatchedFilter) isFilteredOut = true;
         }
 
         return { x, y };
       });
 
-      if (hasFilters && !isFilteredOut) dataDefaultStyle = dataStyle.filtered;
+      if (hasFilters && isFilteredOut) dataDefaultStyle = dataStyle.filtered;
 
       canvas.drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
     }
