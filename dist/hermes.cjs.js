@@ -561,19 +561,6 @@ var DragType;
     DragType["DimensionLabel"] = "dimension-label";
     DragType["None"] = "none";
 })(DragType || (DragType = {}));
-var FontWeight;
-(function (FontWeight) {
-    FontWeight["Bold"] = "bold";
-    FontWeight["Bolder"] = "bolder";
-    FontWeight["Lighter"] = "lighter";
-    FontWeight["Normal"] = "normal";
-})(FontWeight || (FontWeight = {}));
-var FontStyle;
-(function (FontStyle) {
-    FontStyle["Italic"] = "italic";
-    FontStyle["Normal"] = "normal";
-    FontStyle["Oblique"] = "oblique";
-})(FontStyle || (FontStyle = {}));
 var LabelPlacement;
 (function (LabelPlacement) {
     LabelPlacement["After"] = "after";

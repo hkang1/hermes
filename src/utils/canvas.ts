@@ -206,14 +206,6 @@ export const drawText = (
   ctx.restore();
 };
 
-export const getFont = (font: t.Font): string => {
-  const style = font.style || t.FontStyle.Normal;
-  const weight = font.weight || t.FontWeight.Normal;
-  const size = `${font.size || 14}px`;
-  const family = font.family || 'sans-serif';
-  return [ style, weight, size, family ].join(' ');
-};
-
 export const getTextBoundary = (
   x: number,
   y: number,

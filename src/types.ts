@@ -1,7 +1,6 @@
 import CategoricalScale from './classes/CategoricalScale';
 import LinearScale from './classes/LinearScale';
 import LogScale from './classes/LogScale';
-import NiceScale from './classes/NiceScale';
 
 /**
  * TYPES
@@ -63,19 +62,6 @@ export enum DragType {
   DimensionFilterResizeBefore = 'dimension-filter-resize-before',
   DimensionLabel = 'dimension-label',
   None = 'none',
-}
-
-export enum FontWeight {
-  Bold = 'bold',
-  Bolder = 'bolder',
-  Lighter = 'lighter',
-  Normal = 'normal',
-}
-
-export enum FontStyle {
-  Italic = 'italic',
-  Normal = 'normal',
-  Oblique = 'oblique',
 }
 
 export enum LabelPlacement {
@@ -141,13 +127,6 @@ export interface Filter {
 
 export interface FilterOptions extends StyleShape {
   width: number;
-}
-
-export interface Font {
-  family?: string;
-  size?: number;
-  style?: FontStyle;
-  weight?: FontWeight | number;
 }
 
 export interface LabelOptions extends StyleText {
