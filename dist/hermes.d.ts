@@ -19,6 +19,7 @@ declare class Hermes {
     private calculate;
     private calculateScales;
     private calculateLayout;
+    private setActiveFilter;
     private updateActiveFilter;
     private mergeFilters;
     private draw;

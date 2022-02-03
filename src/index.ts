@@ -396,6 +396,23 @@ class Hermes {
     this._ = _;
   }
 
+  private setActiveFilter(key: string, pos: number, value: t.Primitive): void {
+    const _filters = this.filters;
+    const _drf = this.drag.filters;
+
+    // See if there is an existing matching filter based on position.
+    const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
+    if (index !== -1) {
+      _drf.active = _filters[key][index];
+    } else {
+      _drf.active = { p0: pos, p1: pos, value0: value, value1: value };
+
+      // Store active filter into filter list.
+      _filters[key] = _filters[key] || [];
+      _filters[key].push(_drf.active);
+    }
+  }
+
   private updateActiveFilter(finalize = false): void {
     if (!this._) return;
 
@@ -438,10 +455,6 @@ class Hermes {
       const pos = (_drf.active.p1 - _drf.active.p0) / 2 + _drf.active.p0;
       const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
       if (removeIndex !== -1) filters.splice(removeIndex, 1);
-
-      // Remove newly created active filter.
-      const activeIndex = filters.findIndex(filter => filter === _drf.active);
-      if (activeIndex !== -1) filters.splice(activeIndex, 1);
     }
 
     // Swap p0 and p1 if p1 is less than p0.
@@ -718,11 +731,8 @@ class Hermes {
           axisStop[filterKey] - axisStart[filterKey],
           this.dimensions[i].axis.scale,
         );
-        _drf.active = { p0, p1: p0, value0, value1: value0 };
 
-        // Store active filter into filter list.
-        _filters[_drf.key] = _filters[_drf.key] || [];
-        _filters[_drf.key].push(_drf.active);
+        this.setActiveFilter(_drf.key, p0, value0);
       }
     });
   }
