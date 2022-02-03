@@ -1533,7 +1533,9 @@ class Hermes {
                     let hasMatchedFilter = false;
                     for (let f = 0; f < _filters[key].length; f++) {
                         const filter = _filters[key][f];
-                        if (pos >= filter.p0 && pos <= filter.p1) {
+                        const filterMin = Math.min(filter.p0, filter.p1);
+                        const filterMax = Math.max(filter.p0, filter.p1);
+                        if (pos >= filterMin && pos <= filterMax) {
                             hasMatchedFilter = true;
                             break;
                         }
