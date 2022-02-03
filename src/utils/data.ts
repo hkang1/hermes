@@ -16,6 +16,10 @@ export const clone = <T = unknown>(data: T): T => {
   return JSON.parse(JSON.stringify(data));
 };
 
+export const capDataRange = (data: number, range: Range): number => {
+  return Math.min(range[1], Math.max(range[0], data));
+};
+
 export const getDataRange = (data: unknown[]): Range => {
   return data.reduce((acc: Range, x) => {
     if (isNumber(x)) {

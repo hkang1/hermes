@@ -9,7 +9,7 @@ import * as DEFAULT from './defaults';
 import * as t from './types';
 import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
-import { clone, getDataRange } from './utils/data';
+import { capDataRange, clone, getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
 import * as ix from './utils/interaction';
 import { distance, isPointInTriangle, percentRectIntersection, shiftRect } from './utils/math';
@@ -403,9 +403,14 @@ class Hermes {
     // See if there is an existing matching filter based on position.
     const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
     if (index !== -1) {
+      const filter = _filters[key][index];
       _drf.active = _filters[key][index];
+      _drf.active.startP0 = filter.p0;
+      _drf.active.startP1 = filter.p1;
+      _drf.existing = true;
     } else {
       _drf.active = { p0: pos, p1: pos, value0: value, value1: value };
+      _drf.existing = false;
 
       // Store active filter into filter list.
       _filters[key] = _filters[key] || [];
@@ -413,7 +418,7 @@ class Hermes {
     }
   }
 
-  private updateActiveFilter(finalize = false): void {
+  private updateActiveFilter(e: MouseEvent): void {
     if (!this._) return;
 
     const _dl = this._.dims.list;
@@ -426,24 +431,55 @@ class Hermes {
 
     if (_drag.type !== t.DragType.DimensionFilterCreate || !_drf.key) return;
 
-    // Update filter data before removing reference.
     const bound = _dl[_drs.index].layout.bound;
-    const axisStart = _dl[_drs.index].layout.axisStart;
-    const axisStop = _dl[_drs.index].layout.axisStop;
+    const axisStart = _dl[_drs.index].layout.axisStart[filterKey];
+    const axisStop = _dl[_drs.index].layout.axisStop[filterKey];
+    const axisRange: t.Range = [ 0, axisStop - axisStart ];
 
-    // Cap the p1 position to the axis limits.
-    let p1 = _drs.p1[filterKey] - bound[filterKey] - axisStart[filterKey];
-    p1 = Math.min(axisStop[filterKey] - axisStart[filterKey], Math.max(0, p1));
+    /**
+     * If the active filter previously exists, we want to drag it,
+     * otherwise we want to change the size of the new one based on event position.
+     */
+    if (_drf.existing) {
+      const startP0 = _drf.active.startP0 ?? 0;
+      const startP1 = _drf.active.startP1 ?? 0;
+      const startLength = startP1 - startP0;
+      const shift = _drs.p1[filterKey] - _drs.p0[filterKey];
 
-    _drf.active.p1 = p1;
-    _drf.active.value1 = ix.getAxisPositionValue(
-      _drf.active.p1,
-      axisStop[filterKey] - axisStart[filterKey],
-      this.dimensions[_drs.index].axis.scale,
-    );
+      _drf.active.p0 = startP0 + shift;
+      _drf.active.p1 = startP1 + shift;
+
+      // Cap the drag to the axis edges.
+      if (_drf.active.p0 < axisRange[0]) {
+        _drf.active.p0 = 0;
+        _drf.active.p1 = startLength;
+      } else if (_drf.active.p1 > axisRange[1]) {
+        _drf.active.p0 = axisRange[1] - startLength;
+        _drf.active.p1 = axisRange[1];
+      }
+
+      _drf.active.value0 = ix.getAxisPositionValue(
+        _drf.active.p0,
+        axisStop - axisStart,
+        this.dimensions[_drs.index].axis.scale,
+      );
+      _drf.active.value1 = ix.getAxisPositionValue(
+        _drf.active.p1,
+        axisStop - axisStart,
+        this.dimensions[_drs.index].axis.scale,
+      );
+    } else {
+      // Update filter data before removing reference.
+      _drf.active.p1 = capDataRange(_drs.p1[filterKey] - bound[filterKey] - axisStart, axisRange);
+      _drf.active.value1 = ix.getAxisPositionValue(
+        _drf.active.p1,
+        axisStop - axisStart,
+        this.dimensions[_drs.index].axis.scale,
+      );
+    }
 
     // Whether or not to finalize active filter and removing reference to it.
-    if (!finalize) return;
+    if (e.type !== 'mouseup') return;
 
     /**
      * Check to see if the release event is near the starting event.
@@ -465,7 +501,7 @@ class Hermes {
     }
 
     // Overwrite active filter to remove reference to filter in filters list.
-    _drf.active = DEFAULT.FILTER;
+    _drf.active = { ...DEFAULT.FILTER };
     _drf.key = undefined;
 
     this.mergeFilters();
@@ -493,8 +529,6 @@ class Hermes {
 
   private draw(): void {
     if (!this._) return;
-
-    // console.time('render time');
 
     const { h, w } = this.size;
     const _dl = this._.dims.list;
@@ -630,8 +664,6 @@ class Hermes {
         canvas.drawRect(this.ctx, x, y, w, h, axesStyle.filter);
       });
     });
-
-    // console.timeEnd('render time');
   }
 
   private drawDebugOutline(): void {
@@ -688,7 +720,6 @@ class Hermes {
 
     const [ x, y ] = [ e.clientX, e.clientY ];
     const _drag = this.drag;
-    const _filters = this.filters;
     const _drs = this.drag.shared;
     const _drd = this.drag.dimension;
     const _drf = this.drag.filters;
@@ -779,7 +810,7 @@ class Hermes {
     }
 
     // Update dimension filter creating dragging data.
-    this.updateActiveFilter();
+    this.updateActiveFilter(e);
 
     this.calculate();
   }
@@ -792,7 +823,7 @@ class Hermes {
 
     _drs.p1 = { x, y };
 
-    this.updateActiveFilter(true);
+    this.updateActiveFilter(e);
 
     // Reset drag info.
     this.drag = clone(DEFAULT.DRAG);

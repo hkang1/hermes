@@ -1,4 +1,4 @@
-import { Primitive, Range } from '../types';
+import { Primitive } from '../types';
 import { value2str } from '../utils/string';
 
 import NiceScale from './NiceScale';

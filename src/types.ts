@@ -125,6 +125,11 @@ export interface Filter {
   value1: Primitive;  // ending axis value.
 }
 
+export interface FilterActive extends Filter {
+  startP0?: number;   // Initial p0 value before an existing filter is shifted via dragging.
+  startP1?: number;   // Initial p1 value before an existing filter is shifted via dragging.
+}
+
 export interface FilterOptions extends StyleShape {
   width: number;
 }
@@ -178,7 +183,8 @@ export interface Drag {
     offset: Point;
   };
   filters: {
-    active: Filter;
+    active: FilterActive;
+    existing: boolean;
     key?: DimensionKey;
   };
   shared: {

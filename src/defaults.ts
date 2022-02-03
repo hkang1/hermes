@@ -85,14 +85,14 @@ export const HERMES_OPTIONS: t.HermesOptions = {
   },
 };
 
-export const FILTER = {
+export const FILTER: t.Filter = {
   p0: Number.NaN,
   p1: Number.NaN,
   value0: Number.NaN,
   value1: Number.NaN,
 };
 
-export const DRAG = {
+export const DRAG: t.Drag = {
   dimension: {
     bound0: undefined,
     bound1: undefined,
@@ -100,7 +100,7 @@ export const DRAG = {
   },
   filters: {
     active: FILTER,
-    axes: {},
+    existing: false,
     key: undefined,
   },
   shared: {

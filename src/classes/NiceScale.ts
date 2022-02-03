@@ -5,7 +5,7 @@
  * https://stackoverflow.com/questions/8506881/nice-label-algorithm-for-charts-with-minimum-ticks
  */
 
-import { Primitive, Range } from '../types';
+import { Primitive } from '../types';
 
 const MIN_TICK_DISTANCE = 50;
 
