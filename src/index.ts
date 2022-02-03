@@ -396,6 +396,51 @@ class Hermes {
     this._ = _;
   }
 
+  private updateActiveFilter(finalize = false): void {
+    if (!this._) return;
+
+    const _dl = this._.dims.list;
+    const _drag = this.drag;
+    const _drs = _drag.shared;
+    const _drf = _drag.filters;
+    const isHorizontal = this.options.direction === t.Direction.Horizontal;
+    const filterKey = isHorizontal ? 'y' : 'x';
+
+    if (_drag.type !== t.DragType.DimensionFilterCreate || !_drf.key) return;
+
+    // Update filter data before removing reference.
+    const bound = _dl[_drs.index].layout.bound;
+    const axisStart = _dl[_drs.index].layout.axisStart;
+    const axisStop = _dl[_drs.index].layout.axisStop;
+
+    // Cap the p1 position to the axis limits.
+    let p1 = _drs.p1[filterKey] - bound[filterKey] - axisStart[filterKey];
+    p1 = Math.min(axisStop[filterKey] - axisStart[filterKey], Math.max(0, p1));
+
+    _drf.active.p1 = p1;
+    _drf.active.value1 = ix.getAxisPositionValue(
+      _drf.active.p1,
+      axisStop[filterKey] - axisStart[filterKey],
+      this.dimensions[_drs.index].axis.scale,
+    );
+
+    // Whether or not to finalize active filter and removing reference to it.
+    if (!finalize) return;
+
+    // Swap p0 and p1 if p1 is less than p0.
+    if (_drf.active.p1 < _drf.active.p0) {
+      const [ tempP, tempValue ] = [ _drf.active.p1, _drf.active.value1 ];
+      [ _drf.active.p1, _drf.active.value1 ] = [ _drf.active.p0, _drf.active.value0 ];
+      [ _drf.active.p0, _drf.active.value0 ] = [ tempP, tempValue ];
+    }
+
+    // Overwrite active filter to remove reference to filter in filters list.
+    _drf.active = DEFAULT.FILTER;
+    _drf.key = undefined;
+
+    this.mergeFilters();
+  }
+
   private mergeFilters(): void {
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
@@ -672,10 +717,8 @@ class Hermes {
     const _drag = this.drag;
     const _drs = this.drag.shared;
     const _drd = this.drag.dimension;
-    const _drf = this.drag.filters;
     const _dl = this._.dims.list;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
-    const filterKey = isHorizontal ? 'y' : 'x';
 
     _drs.p1 = { x, y };
     _drd.offset = {
@@ -709,17 +752,7 @@ class Hermes {
     }
 
     // Update dimension filter creating dragging data.
-    if (_drag.type === t.DragType.DimensionFilterCreate && _drf.key) {
-      const bound = _dl[_drs.index].layout.bound;
-      const axisStart = _dl[_drs.index].layout.axisStart;
-      const axisStop = _dl[_drs.index].layout.axisStop;
-      _drf.active.p1 = _drs.p1[filterKey] - bound[filterKey] - axisStart[filterKey];
-      _drf.active.value1 = ix.getAxisPositionValue(
-        _drf.active.p1,
-        axisStop[filterKey] - axisStart[filterKey],
-        this.dimensions[_drs.index].axis.scale,
-      );
-    }
+    this.updateActiveFilter();
 
     this.calculate();
   }
@@ -728,43 +761,15 @@ class Hermes {
     if (!this._ || this.drag.type === t.DragType.None) return;
 
     const [ x, y ] = [ e.clientX, e.clientY ];
-    const _drag = this.drag;
     const _drs = this.drag.shared;
-    const _drf = this.drag.filters;
-    const _dl = this._.dims.list;
-    const isHorizontal = this.options.direction === t.Direction.Horizontal;
-    const filterKey = isHorizontal ? 'y' : 'x';
 
     _drs.p1 = { x, y };
 
-    if (_drag.type === t.DragType.DimensionFilterCreate && _drf.key) {
-      // Update filter data before removing reference.
-      const bound = _dl[_drs.index].layout.bound;
-      const axisStart = _dl[_drs.index].layout.axisStart;
-      const axisStop = _dl[_drs.index].layout.axisStop;
-      _drf.active.p1 = _drs.p1[filterKey] - bound[filterKey] - axisStart[filterKey];
-      _drf.active.value1 = ix.getAxisPositionValue(
-        _drf.active.p1,
-        axisStop[filterKey] - axisStart[filterKey],
-        this.dimensions[_drs.index].axis.scale,
-      );
-
-      // Swap p0 and p1 if p1 is less than p0.
-      if (_drf.active.p1 < _drf.active.p0) {
-        const [ tempP, tempValue ] = [ _drf.active.p1, _drf.active.value1 ];
-        [ _drf.active.p1, _drf.active.value1 ] = [ _drf.active.p0, _drf.active.value0 ];
-        [ _drf.active.p0, _drf.active.value0 ] = [ tempP, tempValue ];
-      }
-
-      // Overwrite active filter to remove reference to filter in filters list.
-      _drf.active = DEFAULT.FILTER;
-      _drf.key = undefined;
-    }
+    this.updateActiveFilter(true);
 
     // Reset drag info.
     this.drag = clone(DEFAULT.DRAG);
 
-    this.mergeFilters();
     this.calculate();
   }
 }
