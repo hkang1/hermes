@@ -72,11 +72,7 @@ class Hermes {
     this.options = deepmerge(DEFAULT.HERMES_OPTIONS, options) as t.HermesOptions;
 
     // Add resize observer to detect target element resizing.
-    this.resizeObserver = new ResizeObserver(entries => {
-      const rect = entries[0].contentRect;
-      this.setSize(rect.width, rect.height);
-      this.calculate();
-    });
+    this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
     this.resizeObserver.observe(this.element);
 
     // Add mouse event handlers.
@@ -84,9 +80,8 @@ class Hermes {
     window.addEventListener('mousemove', this.handleMouseMove.bind(this));
     window.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
-    // Enable draw animation frames.
     this.calculate();
-    // window.requestAnimationFrame(this.draw.bind(this));
+    this.draw();
   }
 
   static getTester(): any {
@@ -106,7 +101,6 @@ class Hermes {
   private calculate(): void {
     this.calculateScales();
     this.calculateLayout();
-    this.draw();
   }
 
   private calculateScales(): void {
@@ -224,7 +218,7 @@ class Hermes {
     /**
      * Go through each axis and figure out the sizes of each axis labels.
      */
-    const axisLength = _dsa.stop - _dsa.start;
+    _dsa.length = _dsa.stop - _dsa.start;
     _dsa.labelFactor = isAxesBefore ? -1 : 1;
     _dsly.totalBoundSpace = 0;
     this.dimensions.forEach((dimension, i) => {
@@ -240,7 +234,7 @@ class Hermes {
       _dlia.tickPos = [];
       _dlia.maxLength = 0;
       if (scale) {
-        scale.setAxisLength(axisLength);
+        scale.setAxisLength(_dsa.length);
 
         _dlia.tickLabels = scale.tickLabels.slice();
         _dlia.tickPos = scale.tickPos.slice();
@@ -526,6 +520,15 @@ class Hermes {
     this.mergeFilters();
   }
 
+  private resizeFilters(factor: number): void {
+    Object.values(this.filters).forEach(filters => {
+      for (let i = 0; i < filters.length; i++) {
+        filters[i].p0 *= factor;
+        filters[i].p1 *= factor;
+      }
+    });
+  }
+
   private mergeFilters(): void {
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
@@ -738,6 +741,27 @@ class Hermes {
     });
   }
 
+  private handleResize(entries: ResizeObserverEntry[]) {
+    const { width: w1, height: h1 } = entries[0].contentRect;
+    const { w: w0, h: h0 } = this.size;
+    if (!this._ || (w0 === w1 && h0 === h1)) return;
+
+    /**
+     * We save the old axis length before we calculate the new axis length,
+     * in order to calculate the amount of change (a factor) to apply to the
+     * filter positions (which are based on the old axis length).
+     */
+    const axisLength0 = this._.dims.shared.axes.length;
+
+    this.setSize(w1, h1);
+    this.calculate();
+
+    const axisLength1 = this._.dims.shared.axes.length;
+
+    this.resizeFilters(axisLength1 / axisLength0);
+    this.draw();
+  }
+
   private handleMouseDown(e: MouseEvent): void {
     if (!this._) return;
 
@@ -836,6 +860,7 @@ class Hermes {
     this.updateActiveFilter(e);
 
     this.calculate();
+    this.draw();
   }
 
   private handleMouseUp(e: MouseEvent): void {
@@ -852,6 +877,7 @@ class Hermes {
     this.drag = clone(DEFAULT.DRAG);
 
     this.calculate();
+    this.draw();
   }
 }
 

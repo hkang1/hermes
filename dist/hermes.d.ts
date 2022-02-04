@@ -21,9 +21,11 @@ declare class Hermes {
     private calculateLayout;
     private setActiveFilter;
     private updateActiveFilter;
+    private resizeFilters;
     private mergeFilters;
     private draw;
     private drawDebugOutline;
+    private handleResize;
     private handleMouseDown;
     private handleMouseMove;
     private handleMouseUp;

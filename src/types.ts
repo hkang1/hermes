@@ -228,6 +228,7 @@ export interface Internal {
     shared: {
       axes: {
         labelFactor: number;
+        length: number;
         maxTicks: number;
         start: number;
         stop: number;

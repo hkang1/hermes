@@ -1172,19 +1172,14 @@ var Hermes = (function () {
           this.dimensions = dimensions;
           this.options = deepmerge(HERMES_OPTIONS, options);
           // Add resize observer to detect target element resizing.
-          this.resizeObserver = new ResizeObserver(entries => {
-              const rect = entries[0].contentRect;
-              this.setSize(rect.width, rect.height);
-              this.calculate();
-          });
+          this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
           this.resizeObserver.observe(this.element);
           // Add mouse event handlers.
           this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
           window.addEventListener('mousemove', this.handleMouseMove.bind(this));
           window.addEventListener('mouseup', this.handleMouseUp.bind(this));
-          // Enable draw animation frames.
           this.calculate();
-          // window.requestAnimationFrame(this.draw.bind(this));
+          this.draw();
       }
       static getTester() {
           return tester;
@@ -1200,7 +1195,6 @@ var Hermes = (function () {
       calculate() {
           this.calculateScales();
           this.calculateLayout();
-          this.draw();
       }
       calculateScales() {
           this.dimensions.forEach(dimension => {
@@ -1315,7 +1309,7 @@ var Hermes = (function () {
           /**
            * Go through each axis and figure out the sizes of each axis labels.
            */
-          const axisLength = _dsa.stop - _dsa.start;
+          _dsa.length = _dsa.stop - _dsa.start;
           _dsa.labelFactor = isAxesBefore ? -1 : 1;
           _dsly.totalBoundSpace = 0;
           this.dimensions.forEach((dimension, i) => {
@@ -1330,7 +1324,7 @@ var Hermes = (function () {
               _dlia.tickPos = [];
               _dlia.maxLength = 0;
               if (scale) {
-                  scale.setAxisLength(axisLength);
+                  scale.setAxisLength(_dsa.length);
                   _dlia.tickLabels = scale.tickLabels.slice();
                   _dlia.tickPos = scale.tickPos.slice();
                   scale.tickLabels.forEach(tickLabel => {
@@ -1583,6 +1577,14 @@ var Hermes = (function () {
           _drf.key = undefined;
           this.mergeFilters();
       }
+      resizeFilters(factor) {
+          Object.values(this.filters).forEach(filters => {
+              for (let i = 0; i < filters.length; i++) {
+                  filters[i].p0 *= factor;
+                  filters[i].p1 *= factor;
+              }
+          });
+      }
       mergeFilters() {
           Object.keys(this.filters).forEach(key => {
               const filters = this.filters[key] || [];
@@ -1759,6 +1761,23 @@ var Hermes = (function () {
               drawBoundary(this.ctx, axisBoundary, axisBoundaryStyle);
           });
       }
+      handleResize(entries) {
+          const { width: w1, height: h1 } = entries[0].contentRect;
+          const { w: w0, h: h0 } = this.size;
+          if (!this._ || (w0 === w1 && h0 === h1))
+              return;
+          /**
+           * We save the old axis length before we calculate the new axis length,
+           * in order to calculate the amount of change (a factor) to apply to the
+           * filter positions (which are based on the old axis length).
+           */
+          const axisLength0 = this._.dims.shared.axes.length;
+          this.setSize(w1, h1);
+          this.calculate();
+          const axisLength1 = this._.dims.shared.axes.length;
+          this.resizeFilters(axisLength1 / axisLength0);
+          this.draw();
+      }
       handleMouseDown(e) {
           if (!this._)
               return;
@@ -1836,6 +1855,7 @@ var Hermes = (function () {
           // Update dimension filter creating dragging data.
           this.updateActiveFilter(e);
           this.calculate();
+          this.draw();
       }
       handleMouseUp(e) {
           if (!this._ || this.drag.action === ActionType.None)
@@ -1847,6 +1867,7 @@ var Hermes = (function () {
           // Reset drag info.
           this.drag = clone(DRAG);
           this.calculate();
+          this.draw();
       }
   }
 
