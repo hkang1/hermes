@@ -975,6 +975,8 @@ var Hermes = (function () {
       return document.querySelector(target);
   };
 
+  const FILTER_REMOVE_THRESHOLD = 1;
+  const FILTER_RESIZE_THRESHOLD = 3;
   const getAxisPositionValue = (pos, range, scale) => {
       const posCapped = Math.min(range, Math.max(0, pos)) - 0;
       return scale.posToValue(posCapped);
@@ -1477,11 +1479,18 @@ var Hermes = (function () {
           // See if there is an existing matching filter based on position.
           const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
           if (index !== -1) {
-              const filter = _filters[key][index];
-              _drag.action = ActionType.FilterMove;
               _drf.active = _filters[key][index];
-              _drf.active.startP0 = filter.p0;
-              _drf.active.startP1 = filter.p1;
+              _drf.active.startP0 = _drf.active.p0;
+              _drf.active.startP1 = _drf.active.p1;
+              if (pos >= _drf.active.p0 && pos <= _drf.active.p0 + FILTER_RESIZE_THRESHOLD) {
+                  _drag.action = ActionType.FilterResizeBefore;
+              }
+              else if (pos >= _drf.active.p1 - FILTER_RESIZE_THRESHOLD && pos <= _drf.active.p1) {
+                  _drag.action = ActionType.FilterResizeAfter;
+              }
+              else {
+                  _drag.action = ActionType.FilterMove;
+              }
           }
           else {
               _drag.action = ActionType.FilterCreate;
@@ -1505,6 +1514,8 @@ var Hermes = (function () {
           const isFilterAction = [
               ActionType.FilterCreate,
               ActionType.FilterMove,
+              ActionType.FilterResizeAfter,
+              ActionType.FilterResizeBefore,
           ].includes(_drag.action);
           if (!isFilterAction || !_drf.key)
               return;
@@ -1535,8 +1546,11 @@ var Hermes = (function () {
               _drf.active.value0 = getAxisPositionValue(_drf.active.p0, axisStop - axisStart, this.dimensions[_drs.index].axis.scale);
               _drf.active.value1 = getAxisPositionValue(_drf.active.p1, axisStop - axisStart, this.dimensions[_drs.index].axis.scale);
           }
+          else if (_drag.action === ActionType.FilterResizeBefore) {
+              _drf.active.p0 = capDataRange(_drs.p1[filterKey] - bound[filterKey] - axisStart, axisRange);
+              _drf.active.value0 = getAxisPositionValue(_drf.active.p0, axisStop - axisStart, this.dimensions[_drs.index].axis.scale);
+          }
           else {
-              // Update filter data before removing reference.
               _drf.active.p1 = capDataRange(_drs.p1[filterKey] - bound[filterKey] - axisStart, axisRange);
               _drf.active.value1 = getAxisPositionValue(_drf.active.p1, axisStop - axisStart, this.dimensions[_drs.index].axis.scale);
           }
@@ -1547,7 +1561,7 @@ var Hermes = (function () {
            * Check to see if the release event is near the starting event.
            * If so, remove the previously added filter and clear out the active filter.
            */
-          if (distance(_drs.p0, _drs.p1) < 5) {
+          if (distance(_drs.p0, _drs.p1) < FILTER_REMOVE_THRESHOLD) {
               // Remove matching filter based on event position value.
               const filters = _filters[_drf.key] || [];
               const pos = (_drf.active.p1 - _drf.active.p0) / 2 + _drf.active.p0;

@@ -404,11 +404,17 @@ class Hermes {
     // See if there is an existing matching filter based on position.
     const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
     if (index !== -1) {
-      const filter = _filters[key][index];
-      _drag.action = t.ActionType.FilterMove;
       _drf.active = _filters[key][index];
-      _drf.active.startP0 = filter.p0;
-      _drf.active.startP1 = filter.p1;
+      _drf.active.startP0 = _drf.active.p0;
+      _drf.active.startP1 = _drf.active.p1;
+
+      if (pos >= _drf.active.p0 && pos <= _drf.active.p0 + ix.FILTER_RESIZE_THRESHOLD) {
+        _drag.action = t.ActionType.FilterResizeBefore;
+      } else if (pos >= _drf.active.p1 - ix.FILTER_RESIZE_THRESHOLD && pos <= _drf.active.p1) {
+        _drag.action = t.ActionType.FilterResizeAfter;
+      } else {
+        _drag.action = t.ActionType.FilterMove;
+      }
     } else {
       _drag.action = t.ActionType.FilterCreate;
       _drf.active = { p0: pos, p1: pos, value0: value, value1: value };
@@ -432,6 +438,8 @@ class Hermes {
     const isFilterAction = [
       t.ActionType.FilterCreate,
       t.ActionType.FilterMove,
+      t.ActionType.FilterResizeAfter,
+      t.ActionType.FilterResizeBefore,
     ].includes(_drag.action);
 
     if (!isFilterAction || !_drf.key) return;
@@ -473,8 +481,14 @@ class Hermes {
         axisStop - axisStart,
         this.dimensions[_drs.index].axis.scale,
       );
+    } else if (_drag.action === t.ActionType.FilterResizeBefore) {
+      _drf.active.p0 = capDataRange(_drs.p1[filterKey] - bound[filterKey] - axisStart, axisRange);
+      _drf.active.value0 = ix.getAxisPositionValue(
+        _drf.active.p0,
+        axisStop - axisStart,
+        this.dimensions[_drs.index].axis.scale,
+      );
     } else {
-      // Update filter data before removing reference.
       _drf.active.p1 = capDataRange(_drs.p1[filterKey] - bound[filterKey] - axisStart, axisRange);
       _drf.active.value1 = ix.getAxisPositionValue(
         _drf.active.p1,
@@ -490,7 +504,7 @@ class Hermes {
      * Check to see if the release event is near the starting event.
      * If so, remove the previously added filter and clear out the active filter.
      */
-    if (distance(_drs.p0, _drs.p1) < 5) {
+    if (distance(_drs.p0, _drs.p1) < ix.FILTER_REMOVE_THRESHOLD) {
       // Remove matching filter based on event position value.
       const filters = _filters[_drf.key] || [];
       const pos = (_drf.active.p1 - _drf.active.p0) / 2 + _drf.active.p0;

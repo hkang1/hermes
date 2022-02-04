@@ -4,6 +4,9 @@ import * as t from '../types';
 
 import { clone } from './data';
 
+export const FILTER_REMOVE_THRESHOLD = 1;
+export const FILTER_RESIZE_THRESHOLD = 3;
+
 export const getAxisPositionValue = (
   pos: number,
   range: number,
