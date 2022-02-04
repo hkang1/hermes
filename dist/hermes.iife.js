@@ -988,6 +988,9 @@ var Hermes = (function () {
   const isFilterEmpty = (filter) => {
       return isNaN(filter.p0) && isNaN(filter.p1);
   };
+  const isFilterInvalid = (filter) => {
+      return filter.p0 >= filter.p1;
+  };
   const isIntersectingFilters = (filter0, filter1) => {
       return filter0.p0 <= filter1.p1 && filter1.p0 <= filter0.p1;
   };
@@ -1584,6 +1587,10 @@ var Hermes = (function () {
           Object.keys(this.filters).forEach(key => {
               const filters = this.filters[key] || [];
               for (let i = 0; i < filters.length - 1; i++) {
+                  if (isFilterInvalid(filters[i])) {
+                      filters[i] = { ...FILTER };
+                      continue;
+                  }
                   for (let j = i + 1; j < filters.length; j++) {
                       if (isFilterEmpty(filters[i]) || isFilterEmpty(filters[j]))
                           continue;

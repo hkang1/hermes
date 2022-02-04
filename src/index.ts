@@ -530,6 +530,10 @@ class Hermes {
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
       for (let i = 0; i < filters.length - 1; i++) {
+        if (ix.isFilterInvalid(filters[i])) {
+          filters[i] = { ...DEFAULT.FILTER };
+          continue;
+        }
         for (let j = i + 1; j < filters.length; j++) {
           if (ix.isFilterEmpty(filters[i]) || ix.isFilterEmpty(filters[j])) continue;
           /**

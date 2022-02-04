@@ -25,6 +25,10 @@ export const isFilterEmpty = (filter: t.Filter): boolean => {
   return isNaN(filter.p0) && isNaN(filter.p1);
 };
 
+export const isFilterInvalid = (filter: t.Filter): boolean => {
+  return filter.p0 >= filter.p1;
+};
+
 export const isIntersectingFilters = (filter0: t.Filter, filter1: t.Filter): boolean => {
   return filter0.p0 <= filter1.p1 && filter1.p0 <= filter0.p1;
 };
