@@ -556,15 +556,15 @@ var Hermes = (function () {
       Direction["Horizontal"] = "horizontal";
       Direction["Vertical"] = "vertical";
   })(Direction || (Direction = {}));
-  var DragType;
-  (function (DragType) {
-      DragType["DimensionFilterCreate"] = "dimension-filter-create";
-      DragType["DimensionFilterMove"] = "dimension-filter-move";
-      DragType["DimensionFilterResizeAfter"] = "dimension-filter-resize-after";
-      DragType["DimensionFilterResizeBefore"] = "dimension-filter-resize-before";
-      DragType["DimensionLabel"] = "dimension-label";
-      DragType["None"] = "none";
-  })(DragType || (DragType = {}));
+  var ActionType;
+  (function (ActionType) {
+      ActionType["FilterCreate"] = "filter-create";
+      ActionType["FilterMove"] = "filter-move";
+      ActionType["FilterResizeAfter"] = "filter-resize-after";
+      ActionType["FilterResizeBefore"] = "filter-resize-before";
+      ActionType["LabelMove"] = "label-move";
+      ActionType["None"] = "none";
+  })(ActionType || (ActionType = {}));
   var LabelPlacement;
   (function (LabelPlacement) {
       LabelPlacement["After"] = "after";
@@ -662,6 +662,7 @@ var Hermes = (function () {
       value1: Number.NaN,
   };
   const DRAG = {
+      action: ActionType.None,
       dimension: {
           bound0: undefined,
           bound1: undefined,
@@ -669,7 +670,6 @@ var Hermes = (function () {
       },
       filters: {
           active: FILTER,
-          existing: false,
           key: undefined,
       },
       shared: {
@@ -677,7 +677,6 @@ var Hermes = (function () {
           p0: { x: Number.NaN, y: Number.NaN },
           p1: { x: Number.NaN, y: Number.NaN },
       },
-      type: DragType.None,
   };
 
   const distance = (pointA, pointB) => {
@@ -981,7 +980,7 @@ var Hermes = (function () {
       return scale.posToValue(posCapped);
   };
   const getDragBound = (index, drag, bound) => {
-      const isLabelDrag = drag.type === DragType.DimensionLabel && drag.shared.index === index;
+      const isLabelDrag = drag.action === ActionType.LabelMove && drag.shared.index === index;
       return isLabelDrag && drag.dimension.bound1 ? drag.dimension.bound1 : bound;
   };
   const isFilterEmpty = (filter) => {
@@ -1473,19 +1472,20 @@ var Hermes = (function () {
       }
       setActiveFilter(key, pos, value) {
           const _filters = this.filters;
-          const _drf = this.drag.filters;
+          const _drag = this.drag;
+          const _drf = _drag.filters;
           // See if there is an existing matching filter based on position.
           const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
           if (index !== -1) {
               const filter = _filters[key][index];
+              _drag.action = ActionType.FilterMove;
               _drf.active = _filters[key][index];
               _drf.active.startP0 = filter.p0;
               _drf.active.startP1 = filter.p1;
-              _drf.existing = true;
           }
           else {
+              _drag.action = ActionType.FilterCreate;
               _drf.active = { p0: pos, p1: pos, value0: value, value1: value };
-              _drf.existing = false;
               // Store active filter into filter list.
               _filters[key] = _filters[key] || [];
               _filters[key].push(_drf.active);
@@ -1502,7 +1502,11 @@ var Hermes = (function () {
           const _filters = this.filters;
           const isHorizontal = this.options.direction === Direction.Horizontal;
           const filterKey = isHorizontal ? 'y' : 'x';
-          if (_drag.type !== DragType.DimensionFilterCreate || !_drf.key)
+          const isFilterAction = [
+              ActionType.FilterCreate,
+              ActionType.FilterMove,
+          ].includes(_drag.action);
+          if (!isFilterAction || !_drf.key)
               return;
           const bound = _dl[_drs.index].layout.bound;
           const axisStart = _dl[_drs.index].layout.axisStart[filterKey];
@@ -1512,7 +1516,7 @@ var Hermes = (function () {
            * If the active filter previously exists, we want to drag it,
            * otherwise we want to change the size of the new one based on event position.
            */
-          if (_drf.existing) {
+          if (_drag.action === ActionType.FilterMove) {
               const startP0 = (_a = _drf.active.startP0) !== null && _a !== void 0 ? _a : 0;
               const startP1 = (_b = _drf.active.startP1) !== null && _b !== void 0 ? _b : 0;
               const startLength = startP1 - startP0;
@@ -1750,7 +1754,7 @@ var Hermes = (function () {
               const labelBoundary = dim.layout.labelBoundary;
               if (isPointInTriangle({ x, y }, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
                   isPointInTriangle({ x, y }, labelBoundary[2], labelBoundary[3], labelBoundary[0])) {
-                  _drag.type = DragType.DimensionLabel;
+                  _drag.action = ActionType.LabelMove;
                   _drd.bound0 = _dl[i].layout.bound;
                   _drs.index = i;
                   _drs.p0 = { x, y };
@@ -1763,7 +1767,7 @@ var Hermes = (function () {
               const axisBoundary = dim.layout.axisBoundary;
               if (isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
                   isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
-                  _drag.type = DragType.DimensionFilterCreate;
+                  _drag.action = ActionType.FilterCreate;
                   _drs.index = i;
                   _drs.p0 = { x, y };
                   _drs.p1 = { x, y };
@@ -1797,7 +1801,7 @@ var Hermes = (function () {
                * 2. dimension being dragged isn't being the dimension getting compared to (i)
                * 3. dimension doesn't intersect
                */
-              if (_drag.type === DragType.DimensionLabel &&
+              if (_drag.action === ActionType.LabelMove &&
                   _drs.index !== i && _drd.bound1 &&
                   percentRectIntersection(_drd.bound1, layout.bound) > 0.4) {
                   // Swap dragging dimension with the dimension it intersects with.
@@ -1813,7 +1817,7 @@ var Hermes = (function () {
           this.calculate();
       }
       handleMouseUp(e) {
-          if (!this._ || this.drag.type === DragType.None)
+          if (!this._ || this.drag.action === ActionType.None)
               return;
           const [x, y] = [e.clientX, e.clientY];
           const _drs = this.drag.shared;

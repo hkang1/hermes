@@ -55,12 +55,12 @@ export enum Direction {
   Vertical = 'vertical',
 }
 
-export enum DragType {
-  DimensionFilterCreate = 'dimension-filter-create',
-  DimensionFilterMove = 'dimension-filter-move',
-  DimensionFilterResizeAfter = 'dimension-filter-resize-after',
-  DimensionFilterResizeBefore = 'dimension-filter-resize-before',
-  DimensionLabel = 'dimension-label',
+export enum ActionType {
+  FilterCreate = 'filter-create',
+  FilterMove = 'filter-move',
+  FilterResizeAfter = 'filter-resize-after',
+  FilterResizeBefore = 'filter-resize-before',
+  LabelMove = 'label-move',
   None = 'none',
 }
 
@@ -114,7 +114,7 @@ export interface Dimension {
   label: string;
 }
 
-export interface DimensionLabelOptions extends LabelOptions {
+export interface LabelMoveOptions extends LabelOptions {
   boundaryPadding: number;
 }
 
@@ -169,7 +169,7 @@ export interface HermesOptions {
     };
     data: DataOptions;
     dimension: {
-      label: DimensionLabelOptions;
+      label: LabelMoveOptions;
       layout: DimensionLayout;
     };
     padding: Padding;
@@ -177,6 +177,7 @@ export interface HermesOptions {
 }
 
 export interface Drag {
+  action: ActionType;
   dimension: {
     bound0?: Rect;
     bound1?: Rect;
@@ -184,7 +185,6 @@ export interface Drag {
   };
   filters: {
     active: FilterActive;
-    existing: boolean;
     key?: DimensionKey;
   };
   shared: {
@@ -192,7 +192,6 @@ export interface Drag {
     p0: Point;
     p1: Point;
   };
-  type: DragType;
 }
 
 export interface Filters {

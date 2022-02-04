@@ -398,19 +398,20 @@ class Hermes {
 
   private setActiveFilter(key: string, pos: number, value: t.Primitive): void {
     const _filters = this.filters;
-    const _drf = this.drag.filters;
+    const _drag = this.drag;
+    const _drf = _drag.filters;
 
     // See if there is an existing matching filter based on position.
     const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
     if (index !== -1) {
       const filter = _filters[key][index];
+      _drag.action = t.ActionType.FilterMove;
       _drf.active = _filters[key][index];
       _drf.active.startP0 = filter.p0;
       _drf.active.startP1 = filter.p1;
-      _drf.existing = true;
     } else {
+      _drag.action = t.ActionType.FilterCreate;
       _drf.active = { p0: pos, p1: pos, value0: value, value1: value };
-      _drf.existing = false;
 
       // Store active filter into filter list.
       _filters[key] = _filters[key] || [];
@@ -428,8 +429,12 @@ class Hermes {
     const _filters = this.filters;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const filterKey = isHorizontal ? 'y' : 'x';
+    const isFilterAction = [
+      t.ActionType.FilterCreate,
+      t.ActionType.FilterMove,
+    ].includes(_drag.action);
 
-    if (_drag.type !== t.DragType.DimensionFilterCreate || !_drf.key) return;
+    if (!isFilterAction || !_drf.key) return;
 
     const bound = _dl[_drs.index].layout.bound;
     const axisStart = _dl[_drs.index].layout.axisStart[filterKey];
@@ -440,7 +445,7 @@ class Hermes {
      * If the active filter previously exists, we want to drag it,
      * otherwise we want to change the size of the new one based on event position.
      */
-    if (_drf.existing) {
+    if (_drag.action === t.ActionType.FilterMove) {
       const startP0 = _drf.active.startP0 ?? 0;
       const startP1 = _drf.active.startP1 ?? 0;
       const startLength = startP1 - startP0;
@@ -734,7 +739,7 @@ class Hermes {
         isPointInTriangle({ x, y }, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
         isPointInTriangle({ x, y }, labelBoundary[2], labelBoundary[3], labelBoundary[0])
       ) {
-        _drag.type = t.DragType.DimensionLabel;
+        _drag.action = t.ActionType.LabelMove;
         _drd.bound0 = _dl[i].layout.bound;
         _drs.index = i;
         _drs.p0 = { x, y };
@@ -750,7 +755,7 @@ class Hermes {
         isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
         isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])
       ) {
-        _drag.type = t.DragType.DimensionFilterCreate;
+        _drag.action = t.ActionType.FilterCreate;
         _drs.index = i;
         _drs.p0 = { x, y };
         _drs.p1 = { x, y };
@@ -795,7 +800,7 @@ class Hermes {
        * 3. dimension doesn't intersect
        */
       if (
-        _drag.type === t.DragType.DimensionLabel &&
+        _drag.action === t.ActionType.LabelMove &&
         _drs.index !== i && _drd.bound1 &&
         percentRectIntersection(_drd.bound1, layout.bound) > 0.4
       ) {
@@ -816,7 +821,7 @@ class Hermes {
   }
 
   private handleMouseUp(e: MouseEvent): void {
-    if (!this._ || this.drag.type === t.DragType.None) return;
+    if (!this._ || this.drag.action === t.ActionType.None) return;
 
     const [ x, y ] = [ e.clientX, e.clientY ];
     const _drs = this.drag.shared;

@@ -14,7 +14,7 @@ export const getAxisPositionValue = (
 };
 
 export const getDragBound = (index: number, drag: t.Drag, bound: t.Rect): t.Rect => {
-  const isLabelDrag = drag.type === t.DragType.DimensionLabel && drag.shared.index === index;
+  const isLabelDrag = drag.action === t.ActionType.LabelMove && drag.shared.index === index;
   return isLabelDrag && drag.dimension.bound1 ? drag.dimension.bound1 : bound;
 };
 

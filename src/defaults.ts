@@ -93,6 +93,7 @@ export const FILTER: t.Filter = {
 };
 
 export const DRAG: t.Drag = {
+  action: t.ActionType.None,
   dimension: {
     bound0: undefined,
     bound1: undefined,
@@ -100,7 +101,6 @@ export const DRAG: t.Drag = {
   },
   filters: {
     active: FILTER,
-    existing: false,
     key: undefined,
   },
   shared: {
@@ -108,5 +108,4 @@ export const DRAG: t.Drag = {
     p0: { x: Number.NaN, y: Number.NaN },
     p1: { x: Number.NaN, y: Number.NaN },
   },
-  type: t.DragType.None,
 };

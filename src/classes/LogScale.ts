@@ -1,4 +1,4 @@
-import { Primitive, Range } from '../types';
+import { Primitive } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 
