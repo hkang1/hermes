@@ -7,15 +7,6 @@ import { clone } from './data';
 export const FILTER_REMOVE_THRESHOLD = 1;
 export const FILTER_RESIZE_THRESHOLD = 3;
 
-export const getAxisPositionValue = (
-  pos: number,
-  range: number,
-  scale: NiceScale,
-): t.Primitive => {
-  const posCapped = Math.min(range, Math.max(0, pos)) - 0;
-  return scale.posToValue(posCapped);
-};
-
 export const getDragBound = (index: number, drag: t.Drag, bound: t.Rect): t.Rect => {
   const isLabelDrag = drag.action === t.ActionType.LabelMove && drag.shared.index === index;
   return isLabelDrag && drag.dimension.bound1 ? drag.dimension.bound1 : bound;

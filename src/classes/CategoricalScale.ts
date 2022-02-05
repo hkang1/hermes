@@ -9,6 +9,10 @@ class CategoricalScale extends NiceScale {
     this.tickLabels = this.categories.map(category => value2str(category));
   }
 
+  public percentToValue(percent: number): Primitive {
+    return this.posToValue(percent * this.axisLength);
+  }
+
   public posToValue(pos: number): Primitive {
     let distance = Infinity;
     let value: Primitive = Number.NaN;

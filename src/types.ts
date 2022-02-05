@@ -119,8 +119,8 @@ export interface LabelMoveOptions extends LabelOptions {
 }
 
 export interface Filter {
-  p0: number;         // starting axis pixel position relative to axisStart.(x|y).
-  p1: number;         // ending axis pixel position relative to axisStart.(x|y).
+  p0: number;         // starting axis % position relative to axisStart.(x|y).
+  p1: number;         // ending axis % position relative to axisStart.(x|y).
   value0: Primitive;  // starting axis value.
   value1: Primitive;  // ending axis value.
 }

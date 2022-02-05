@@ -34,6 +34,11 @@ class LogScale extends NiceScale {
     this.calculate();
   }
 
+  public percentToValue(percent: number): number {
+    const exp = percent * (this.maxExp - this.minExp);
+    return this.logBase ** exp;
+  }
+
   public posToValue(pos: number): number {
     const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
     return this.logBase ** exp;

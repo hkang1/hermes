@@ -9,6 +9,12 @@ class LinearScale extends NiceScale {
     return this.valueToPercent(value) * this.axisLength;
   }
 
+  public percentToValue(percent: number): number {
+    const min = this.ticks[0];
+    const max = this.ticks[this.ticks.length - 1];
+    return percent * (max - min) + min;
+  }
+
   public posToValue(pos: number): number {
     const min = this.ticks[0];
     const max = this.ticks[this.ticks.length - 1];

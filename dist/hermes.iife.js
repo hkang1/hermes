@@ -377,6 +377,9 @@ var Hermes = (function () {
           this.categories = categories;
           this.tickLabels = this.categories.map(category => value2str(category));
       }
+      percentToValue(percent) {
+          return this.posToValue(percent * this.axisLength);
+      }
       posToValue(pos) {
           let distance = Infinity;
           let value = Number.NaN;
@@ -434,6 +437,11 @@ var Hermes = (function () {
       valueToPos(value) {
           return this.valueToPercent(value) * this.axisLength;
       }
+      percentToValue(percent) {
+          const min = this.ticks[0];
+          const max = this.ticks[this.ticks.length - 1];
+          return percent * (max - min) + min;
+      }
       posToValue(pos) {
           const min = this.ticks[0];
           const max = this.ticks[this.ticks.length - 1];
@@ -490,6 +498,10 @@ var Hermes = (function () {
           this.maxValue = maxValue;
           this.logBase = logBase;
           this.calculate();
+      }
+      percentToValue(percent) {
+          const exp = percent * (this.maxExp - this.minExp);
+          return this.logBase ** exp;
       }
       posToValue(pos) {
           const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
@@ -977,10 +989,6 @@ var Hermes = (function () {
 
   const FILTER_REMOVE_THRESHOLD = 1;
   const FILTER_RESIZE_THRESHOLD = 3;
-  const getAxisPositionValue = (pos, range, scale) => {
-      const posCapped = Math.min(range, Math.max(0, pos)) - 0;
-      return scale.posToValue(posCapped);
-  };
   const getDragBound = (index, drag, bound) => {
       const isLabelDrag = drag.action === ActionType.LabelMove && drag.shared.index === index;
       return isLabelDrag && drag.dimension.bound1 ? drag.dimension.bound1 : bound;
@@ -1470,19 +1478,24 @@ var Hermes = (function () {
           this._ = _;
       }
       setActiveFilter(key, pos, value) {
+          if (!this._)
+              return;
           const _filters = this.filters;
           const _drag = this.drag;
           const _drf = _drag.filters;
-          // See if there is an existing matching filter based on position.
+          const _dsa = this._.dims.shared.axes;
+          // See if there is an existing matching filter based on % position.
           const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
           if (index !== -1) {
               _drf.active = _filters[key][index];
               _drf.active.startP0 = _drf.active.p0;
               _drf.active.startP1 = _drf.active.p1;
-              if (pos >= _drf.active.p0 && pos <= _drf.active.p0 + FILTER_RESIZE_THRESHOLD) {
+              if (pos >= _drf.active.p0 &&
+                  pos <= _drf.active.p0 + (FILTER_RESIZE_THRESHOLD / _dsa.length)) {
                   _drag.action = ActionType.FilterResizeBefore;
               }
-              else if (pos >= _drf.active.p1 - FILTER_RESIZE_THRESHOLD && pos <= _drf.active.p1) {
+              else if (pos >= _drf.active.p1 - (FILTER_RESIZE_THRESHOLD / _dsa.length) &&
+                  pos <= _drf.active.p1) {
                   _drag.action = ActionType.FilterResizeAfter;
               }
               else {
@@ -1502,6 +1515,7 @@ var Hermes = (function () {
           if (!this._)
               return;
           const _dl = this._.dims.list;
+          const _dsa = this._.dims.shared.axes;
           const _drag = this.drag;
           const _drs = _drag.shared;
           const _drf = _drag.filters;
@@ -1518,8 +1532,6 @@ var Hermes = (function () {
               return;
           const bound = _dl[_drs.index].layout.bound;
           const axisStart = _dl[_drs.index].layout.axisStart[filterKey];
-          const axisStop = _dl[_drs.index].layout.axisStop[filterKey];
-          const axisRange = [0, axisStop - axisStart];
           /**
            * If the active filter previously exists, we want to drag it,
            * otherwise we want to change the size of the new one based on event position.
@@ -1528,28 +1540,30 @@ var Hermes = (function () {
               const startP0 = (_a = _drf.active.startP0) !== null && _a !== void 0 ? _a : 0;
               const startP1 = (_b = _drf.active.startP1) !== null && _b !== void 0 ? _b : 0;
               const startLength = startP1 - startP0;
-              const shift = _drs.p1[filterKey] - _drs.p0[filterKey];
+              const shift = (_drs.p1[filterKey] - _drs.p0[filterKey]) / _dsa.length;
               _drf.active.p0 = startP0 + shift;
               _drf.active.p1 = startP1 + shift;
               // Cap the drag to the axis edges.
-              if (_drf.active.p0 < axisRange[0]) {
+              if (_drf.active.p0 < 0.0) {
                   _drf.active.p0 = 0;
                   _drf.active.p1 = startLength;
               }
-              else if (_drf.active.p1 > axisRange[1]) {
-                  _drf.active.p0 = axisRange[1] - startLength;
-                  _drf.active.p1 = axisRange[1];
+              else if (_drf.active.p1 > 1.0) {
+                  _drf.active.p0 = 1.0 - startLength;
+                  _drf.active.p1 = 1.0;
               }
-              _drf.active.value0 = getAxisPositionValue(_drf.active.p0, axisStop - axisStart, this.dimensions[_drs.index].axis.scale);
-              _drf.active.value1 = getAxisPositionValue(_drf.active.p1, axisStop - axisStart, this.dimensions[_drs.index].axis.scale);
+              _drf.active.value0 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p0);
+              _drf.active.value1 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p1);
           }
           else if (_drag.action === ActionType.FilterResizeBefore) {
-              _drf.active.p0 = capDataRange(_drs.p1[filterKey] - bound[filterKey] - axisStart, axisRange);
-              _drf.active.value0 = getAxisPositionValue(_drf.active.p0, axisStop - axisStart, this.dimensions[_drs.index].axis.scale);
+              _drf.active.p0 = (_drs.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
+              _drf.active.p0 = capDataRange(_drf.active.p0, [0.0, 1.0]);
+              _drf.active.value0 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p0);
           }
           else {
-              _drf.active.p1 = capDataRange(_drs.p1[filterKey] - bound[filterKey] - axisStart, axisRange);
-              _drf.active.value1 = getAxisPositionValue(_drf.active.p1, axisStop - axisStart, this.dimensions[_drs.index].axis.scale);
+              _drf.active.p1 = (_drs.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
+              _drf.active.p1 = capDataRange(_drf.active.p1, [0.0, 1.0]);
+              _drf.active.value1 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p1);
           }
           // Whether or not to finalize active filter and removing reference to it.
           if (e.type !== 'mouseup')
@@ -1576,14 +1590,6 @@ var Hermes = (function () {
           _drf.active = { ...FILTER };
           _drf.key = undefined;
           this.mergeFilters();
-      }
-      resizeFilters(factor) {
-          Object.values(this.filters).forEach(filters => {
-              for (let i = 0; i < filters.length; i++) {
-                  filters[i].p0 *= factor;
-                  filters[i].p1 *= factor;
-              }
-          });
       }
       mergeFilters() {
           Object.keys(this.filters).forEach(key => {
@@ -1615,6 +1621,7 @@ var Hermes = (function () {
               return;
           const { h, w } = this.size;
           const _dl = this._.dims.list;
+          const _dsa = this._.dims.shared.axes;
           const _dsl = this._.dims.shared.label;
           const _drag = this.drag;
           const _filters = this.filters;
@@ -1633,17 +1640,18 @@ var Hermes = (function () {
               let hasFilters = false;
               let isFilteredOut = false;
               const series = this.dimensions.map((dimension, i) => {
-                  var _a, _b, _c, _d, _e;
+                  var _a, _b, _c, _d, _e, _f, _g;
                   const key = dimension.key;
                   const layout = _dl[i].layout;
                   const bound = getDragBound(i, _drag, layout.bound);
                   const value = this.data[key][k];
                   const pos = (_b = (_a = dimension.axis.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) !== null && _b !== void 0 ? _b : 0;
+                  const percent = (_d = (_c = dimension.axis.scale) === null || _c === void 0 ? void 0 : _c.valueToPercent(value)) !== null && _d !== void 0 ? _d : 0;
                   const x = bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
                   const y = bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
                   if (dimColorKey === key) {
-                      const percent = (_d = (_c = dimension.axis.scale) === null || _c === void 0 ? void 0 : _c.valueToPercent(value)) !== null && _d !== void 0 ? _d : 0;
-                      const scaleColor = scale2rgba(((_e = dataStyle.colorScale) === null || _e === void 0 ? void 0 : _e.colors) || [], percent);
+                      const percent = (_f = (_e = dimension.axis.scale) === null || _e === void 0 ? void 0 : _e.valueToPercent(value)) !== null && _f !== void 0 ? _f : 0;
+                      const scaleColor = scale2rgba(((_g = dataStyle.colorScale) === null || _g === void 0 ? void 0 : _g.colors) || [], percent);
                       dataDefaultStyle.strokeStyle = scaleColor;
                   }
                   /**
@@ -1657,7 +1665,7 @@ var Hermes = (function () {
                           const filter = _filters[key][f];
                           const filterMin = Math.min(filter.p0, filter.p1);
                           const filterMax = Math.max(filter.p0, filter.p1);
-                          if (pos >= filterMin && pos <= filterMax) {
+                          if (percent >= filterMin && percent <= filterMax) {
                               hasMatchedFilter = true;
                               break;
                           }
@@ -1720,11 +1728,13 @@ var Hermes = (function () {
                   drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
               }
               filters.forEach(filter => {
+                  const p0 = filter.p0 * _dsa.length;
+                  const p1 = filter.p1 * _dsa.length;
                   const halfWidth = axesStyle.filter.width / 2;
-                  const x = bound.x + axisStart.x + (isHorizontal ? -halfWidth : filter.p0);
-                  const y = bound.y + axisStart.y + (isHorizontal ? filter.p0 : -halfWidth);
-                  const w = isHorizontal ? axesStyle.filter.width : filter.p1 - filter.p0;
-                  const h = isHorizontal ? filter.p1 - filter.p0 : axesStyle.filter.width;
+                  const x = bound.x + axisStart.x + (isHorizontal ? -halfWidth : p0);
+                  const y = bound.y + axisStart.y + (isHorizontal ? p0 : -halfWidth);
+                  const w = isHorizontal ? axesStyle.filter.width : p1 - p0;
+                  const h = isHorizontal ? p1 - p0 : axesStyle.filter.width;
                   drawRect(this.ctx, x, y, w, h, axesStyle.filter);
               });
           });
@@ -1764,18 +1774,10 @@ var Hermes = (function () {
       handleResize(entries) {
           const { width: w1, height: h1 } = entries[0].contentRect;
           const { w: w0, h: h0 } = this.size;
-          if (!this._ || (w0 === w1 && h0 === h1))
+          if (w0 === w1 && h0 === h1)
               return;
-          /**
-           * We save the old axis length before we calculate the new axis length,
-           * in order to calculate the amount of change (a factor) to apply to the
-           * filter positions (which are based on the old axis length).
-           */
-          const axisLength0 = this._.dims.shared.axes.length;
           this.setSize(w1, h1);
           this.calculate();
-          const axisLength1 = this._.dims.shared.axes.length;
-          this.resizeFilters(axisLength1 / axisLength0);
           this.draw();
       }
       handleMouseDown(e) {
@@ -1787,6 +1789,7 @@ var Hermes = (function () {
           const _drd = this.drag.dimension;
           const _drf = this.drag.filters;
           const _dl = this._.dims.list;
+          const _dsa = this._.dims.shared.axes;
           const isHorizontal = this.options.direction === Direction.Horizontal;
           const filterKey = isHorizontal ? 'y' : 'x';
           this._.dims.list.forEach((dim, i) => {
@@ -1801,9 +1804,8 @@ var Hermes = (function () {
                   _drs.p1 = { x, y };
               }
               // Check to see if a dimension axis was targeted.
-              const bound = dim.layout.bound;
-              const axisStart = dim.layout.axisStart;
-              const axisStop = dim.layout.axisStop;
+              const bound = dim.layout.bound[filterKey];
+              const axisStart = dim.layout.axisStart[filterKey];
               const axisBoundary = dim.layout.axisBoundary;
               if (isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
                   isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
@@ -1812,8 +1814,8 @@ var Hermes = (function () {
                   _drs.p0 = { x, y };
                   _drs.p1 = { x, y };
                   _drf.key = this.dimensions[i].key;
-                  const p0 = _drs.p0[filterKey] - bound[filterKey] - axisStart[filterKey];
-                  const value0 = getAxisPositionValue(p0, axisStop[filterKey] - axisStart[filterKey], this.dimensions[i].axis.scale);
+                  const p0 = (_drs.p0[filterKey] - bound - axisStart) / _dsa.length;
+                  const value0 = this.dimensions[i].axis.scale.percentToValue(p0);
                   this.setActiveFilter(_drf.key, p0, value0);
               }
           });

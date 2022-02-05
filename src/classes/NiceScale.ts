@@ -76,6 +76,11 @@ abstract class NiceScale {
   }
 
   /**
+   * Convert the axis % position to axis value.
+   */
+  public abstract percentToValue(percent: number): Primitive;
+
+  /**
    * Convert the axis position to axis value.
    */
   public abstract posToValue(pos: number): Primitive;
