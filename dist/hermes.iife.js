@@ -592,6 +592,7 @@ var Hermes = (function () {
    * Invalid defaults.
    */
   const INVALID_VALUE = Number.NaN;
+  const INVALID_RECT = { h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN };
   /**
    * Style defaults.
    */
@@ -676,9 +677,10 @@ var Hermes = (function () {
   const DRAG = {
       action: ActionType.None,
       dimension: {
-          bound0: undefined,
-          bound1: undefined,
-          offset: { x: 0, y: 0 },
+          axis: 0,
+          bound: undefined,
+          boundOffset: undefined,
+          offset: 0,
       },
       filters: {
           active: FILTER,
@@ -728,18 +730,6 @@ var Hermes = (function () {
       const v = (dot00 * dot12 - dot01 * dot02) * inverseDenominator;
       // Check if the point is in the triangle.
       return u >= 0 && v >= 0 && u + v < 1;
-  };
-  /**
-   * Returns the percentage of intersection given two rectangles.
-   * https://stackoverflow.com/a/9325084/5402432
-   */
-  const percentRectIntersection = (r0, r1) => {
-      const [r0x0, r0x1, r0y0, r0y1] = [r0.x, r0.x + r0.w, r0.y, r0.y + r0.h];
-      const [r1x0, r1x1, r1y0, r1y1] = [r1.x, r1.x + r1.w, r1.y, r1.y + r1.h];
-      const intersectionArea = Math.max(0, Math.min(r0x1, r1x1) - Math.max(r0x0, r1x0)) *
-          Math.max(0, Math.min(r0y1, r1y1) - Math.max(r0y0, r1y0));
-      // const unionArea = (r0.w * r0.h) + (r1.w * r1.h) - intersectionArea;
-      return intersectionArea / Math.min(r0.w * r0.h, r1.w * r1.h);
   };
   const shiftRect = (rect, shift) => {
       return { h: rect.h, w: rect.w, x: rect.x + shift.x, y: rect.y + shift.y };
@@ -987,11 +977,14 @@ var Hermes = (function () {
       return document.querySelector(target);
   };
 
+  const DIMENSION_SWAP_THRESHOLD = 30;
   const FILTER_REMOVE_THRESHOLD = 1;
   const FILTER_RESIZE_THRESHOLD = 3;
   const getDragBound = (index, drag, bound) => {
       const isLabelDrag = drag.action === ActionType.LabelMove && drag.shared.index === index;
-      return isLabelDrag && drag.dimension.bound1 ? drag.dimension.bound1 : bound;
+      const dragBound = drag.dimension.bound || INVALID_RECT;
+      const offset = drag.dimension.boundOffset || { x: 0, y: 0 };
+      return isLabelDrag ? shiftRect(dragBound, offset) : bound;
   };
   const isFilterEmpty = (filter) => {
       return isNaN(filter.p0) && isNaN(filter.p1);
@@ -1788,25 +1781,26 @@ var Hermes = (function () {
           const _drs = this.drag.shared;
           const _drd = this.drag.dimension;
           const _drf = this.drag.filters;
-          const _dl = this._.dims.list;
           const _dsa = this._.dims.shared.axes;
           const isHorizontal = this.options.direction === Direction.Horizontal;
-          const filterKey = isHorizontal ? 'y' : 'x';
+          const hKey = isHorizontal ? 'x' : 'y';
+          const vKey = isHorizontal ? 'y' : 'x';
           this._.dims.list.forEach((dim, i) => {
+              const bound = dim.layout.bound;
+              const axisStart = dim.layout.axisStart;
+              const axisBoundary = dim.layout.axisBoundary;
               // Check to see if a dimension label was targeted.
               const labelBoundary = dim.layout.labelBoundary;
               if (isPointInTriangle({ x, y }, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
                   isPointInTriangle({ x, y }, labelBoundary[2], labelBoundary[3], labelBoundary[0])) {
                   _drag.action = ActionType.LabelMove;
-                  _drd.bound0 = _dl[i].layout.bound;
+                  _drd.axis = bound[hKey] + axisStart[hKey];
+                  _drd.bound = bound;
                   _drs.index = i;
                   _drs.p0 = { x, y };
                   _drs.p1 = { x, y };
               }
               // Check to see if a dimension axis was targeted.
-              const bound = dim.layout.bound[filterKey];
-              const axisStart = dim.layout.axisStart[filterKey];
-              const axisBoundary = dim.layout.axisBoundary;
               if (isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
                   isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
                   _drag.action = ActionType.FilterCreate;
@@ -1814,7 +1808,7 @@ var Hermes = (function () {
                   _drs.p0 = { x, y };
                   _drs.p1 = { x, y };
                   _drf.key = this.dimensions[i].key;
-                  const p0 = (_drs.p0[filterKey] - bound - axisStart) / _dsa.length;
+                  const p0 = (_drs.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
                   const value0 = this.dimensions[i].axis.scale.percentToValue(p0);
                   this.setActiveFilter(_drf.key, p0, value0);
               }
@@ -1829,29 +1823,32 @@ var Hermes = (function () {
           const _drd = this.drag.dimension;
           const _dl = this._.dims.list;
           const isHorizontal = this.options.direction === Direction.Horizontal;
+          const hKey = isHorizontal ? 'x' : 'y';
           _drs.p1 = { x, y };
-          _drd.offset = {
+          _drd.boundOffset = {
               x: isHorizontal ? _drs.p1.x - _drs.p0.x : 0,
               y: isHorizontal ? 0 : _drs.p1.y - _drs.p0.y,
           };
-          _drd.bound1 = _drd.bound0 ? shiftRect(_drd.bound0, _drd.offset) : undefined;
           for (let i = 0; i < _dl.length; i++) {
               const layout = _dl[i].layout;
+              const bound = layout.bound;
+              const axisStart = layout.axisStart;
+              const axisDistance = _drd.axis + _drd.boundOffset[hKey] - bound[hKey] + axisStart[hKey];
               /**
                * Check that...
                * 1. dimension drag type is triggered by the label
                * 2. dimension being dragged isn't being the dimension getting compared to (i)
-               * 3. dimension doesn't intersect
+               * 3. dimension is within a distance threshold
                */
-              if (_drag.action === ActionType.LabelMove &&
-                  _drs.index !== i && _drd.bound1 &&
-                  percentRectIntersection(_drd.bound1, layout.bound) > 0.4) {
+              if (_drag.action === ActionType.LabelMove && _drs.index !== i &&
+                  Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
                   // Swap dragging dimension with the dimension it intersects with.
                   const tempDim = this.dimensions[_drs.index];
                   this.dimensions[_drs.index] = this.dimensions[i];
                   this.dimensions[i] = tempDim;
-                  // Update the drag dimension shared..
+                  // Update the drag dimension's index
                   _drs.index = i;
+                  break;
               }
           }
           // Update dimension filter creating dragging data.

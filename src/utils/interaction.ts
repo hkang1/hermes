@@ -1,15 +1,18 @@
-import NiceScale from '../classes/NiceScale';
-import { FILTER } from '../defaults';
+import { FILTER, INVALID_RECT } from '../defaults';
 import * as t from '../types';
 
 import { clone } from './data';
+import { shiftRect } from './math';
 
+export const DIMENSION_SWAP_THRESHOLD = 30;
 export const FILTER_REMOVE_THRESHOLD = 1;
 export const FILTER_RESIZE_THRESHOLD = 3;
 
 export const getDragBound = (index: number, drag: t.Drag, bound: t.Rect): t.Rect => {
   const isLabelDrag = drag.action === t.ActionType.LabelMove && drag.shared.index === index;
-  return isLabelDrag && drag.dimension.bound1 ? drag.dimension.bound1 : bound;
+  const dragBound = drag.dimension.bound || INVALID_RECT;
+  const offset = drag.dimension.boundOffset || { x: 0, y: 0 };
+  return isLabelDrag ? shiftRect(dragBound, offset) : bound;
 };
 
 export const isFilterEmpty = (filter: t.Filter): boolean => {

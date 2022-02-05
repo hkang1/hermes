@@ -12,7 +12,7 @@ import { scale2rgba } from './utils/color';
 import { capDataRange, clone, getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
 import * as ix from './utils/interaction';
-import { distance, isPointInTriangle, percentRectIntersection, shiftRect } from './utils/math';
+import { distance, isPointInTriangle } from './utils/math';
 import * as tester from './utils/test';
 
 class Hermes {
@@ -748,12 +748,16 @@ class Hermes {
     const _drs = this.drag.shared;
     const _drd = this.drag.dimension;
     const _drf = this.drag.filters;
-    const _dl = this._.dims.list;
     const _dsa = this._.dims.shared.axes;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
-    const filterKey = isHorizontal ? 'y' : 'x';
+    const hKey = isHorizontal ? 'x' : 'y';
+    const vKey = isHorizontal ? 'y' : 'x';
 
     this._.dims.list.forEach((dim, i) => {
+      const bound = dim.layout.bound;
+      const axisStart = dim.layout.axisStart;
+      const axisBoundary = dim.layout.axisBoundary;
+
       // Check to see if a dimension label was targeted.
       const labelBoundary = dim.layout.labelBoundary;
       if (
@@ -761,16 +765,14 @@ class Hermes {
         isPointInTriangle({ x, y }, labelBoundary[2], labelBoundary[3], labelBoundary[0])
       ) {
         _drag.action = t.ActionType.LabelMove;
-        _drd.bound0 = _dl[i].layout.bound;
+        _drd.axis = bound[hKey] + axisStart[hKey];
+        _drd.bound = bound;
         _drs.index = i;
         _drs.p0 = { x, y };
         _drs.p1 = { x, y };
       }
 
       // Check to see if a dimension axis was targeted.
-      const bound = dim.layout.bound[filterKey];
-      const axisStart = dim.layout.axisStart[filterKey];
-      const axisBoundary = dim.layout.axisBoundary;
       if (
         isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
         isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])
@@ -781,7 +783,7 @@ class Hermes {
         _drs.p1 = { x, y };
         _drf.key = this.dimensions[i].key;
 
-        const p0 = (_drs.p0[filterKey] - bound - axisStart) / _dsa.length;
+        const p0 = (_drs.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
         const value0 = this.dimensions[i].axis.scale.percentToValue(p0);
 
         this.setActiveFilter(_drf.key, p0, value0);
@@ -798,35 +800,39 @@ class Hermes {
     const _drd = this.drag.dimension;
     const _dl = this._.dims.list;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
+    const hKey = isHorizontal ? 'x' : 'y';
 
     _drs.p1 = { x, y };
-    _drd.offset = {
+    _drd.boundOffset = {
       x: isHorizontal ? _drs.p1.x - _drs.p0.x : 0,
       y: isHorizontal ? 0 : _drs.p1.y - _drs.p0.y,
     };
-    _drd.bound1 = _drd.bound0 ? shiftRect(_drd.bound0, _drd.offset) : undefined;
 
     for (let i = 0; i < _dl.length; i++) {
       const layout = _dl[i].layout;
+      const bound = layout.bound;
+      const axisStart = layout.axisStart;
+      const axisDistance = _drd.axis + _drd.boundOffset[hKey] - bound[hKey] + axisStart[hKey];
 
       /**
        * Check that...
        * 1. dimension drag type is triggered by the label
        * 2. dimension being dragged isn't being the dimension getting compared to (i)
-       * 3. dimension doesn't intersect
+       * 3. dimension is within a distance threshold
        */
       if (
-        _drag.action === t.ActionType.LabelMove &&
-        _drs.index !== i && _drd.bound1 &&
-        percentRectIntersection(_drd.bound1, layout.bound) > 0.4
+        _drag.action === t.ActionType.LabelMove && _drs.index !== i &&
+        Math.abs(axisDistance) < ix.DIMENSION_SWAP_THRESHOLD
       ) {
         // Swap dragging dimension with the dimension it intersects with.
         const tempDim = this.dimensions[_drs.index];
         this.dimensions[_drs.index] = this.dimensions[i];
         this.dimensions[i] = tempDim;
 
-        // Update the drag dimension shared..
+        // Update the drag dimension's index
         _drs.index = i;
+
+        break;
       }
     }
 

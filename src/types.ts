@@ -179,9 +179,10 @@ export interface HermesOptions {
 export interface Drag {
   action: ActionType;
   dimension: {
-    bound0?: Rect;
-    bound1?: Rect;
-    offset: Point;
+    axis: number;
+    bound?: Rect;
+    boundOffset?: Point;
+    offset: number;
   };
   filters: {
     active: FilterActive;

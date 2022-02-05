@@ -95,9 +95,10 @@ export const FILTER: t.Filter = {
 export const DRAG: t.Drag = {
   action: t.ActionType.None,
   dimension: {
-    bound0: undefined,
-    bound1: undefined,
-    offset: { x: 0, y: 0 },
+    axis: 0,
+    bound: undefined,
+    boundOffset: undefined,
+    offset: 0,
   },
   filters: {
     active: FILTER,
