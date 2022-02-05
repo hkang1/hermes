@@ -70,7 +70,7 @@ export const HERMES_OPTIONS: t.HermesOptions = {
     },
     dimension: {
       label: {
-        angle: Math.PI / 4,
+        angle: undefined,
         boundaryPadding: 5,
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         font: 'normal 11px sans-serif',

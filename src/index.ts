@@ -812,7 +812,7 @@ class Hermes {
       const layout = _dl[i].layout;
       const bound = layout.bound;
       const axisStart = layout.axisStart;
-      const axisDistance = _drd.axis + _drd.boundOffset[hKey] - bound[hKey] + axisStart[hKey];
+      const axisDistance = (_drd.axis + _drd.boundOffset[hKey]) - (bound[hKey] + axisStart[hKey]);
 
       /**
        * Check that...
