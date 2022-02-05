@@ -17,6 +17,7 @@ export type RecursivePartial<T> = { [P in keyof T]?: RecursivePartial<T[P]> };
  */
 
 export type Boundary = [ Point, Point, Point, Point ];
+export type Crisp = { crisp: boolean };
 export type Point = { x: number, y: number };
 export type Rect = Point & Size;
 export type Size = { h: number, w: number };
@@ -26,7 +27,7 @@ export type Size = { h: number, w: number };
  */
 
 export type DimensionKey = string;
-export type StyleLine =Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
+export type StyleLine =Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles & Crisp>;
 export type StyleShape = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
 export type StyleText = Partial<
   CanvasFillStrokeStyles &

@@ -133,8 +133,8 @@ export const drawLine = (
   ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
 
   ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  ctx.lineTo(x1, y1);
+  ctx.moveTo(roundPixel(x0), roundPixel(y0));
+  ctx.lineTo(roundPixel(x1), roundPixel(y1));
   ctx.stroke();
 
   ctx.restore();
@@ -261,4 +261,12 @@ export const normalizePadding = (padding: t.Padding): [ number, number, number, 
 
 export const normalizeRad = (rad: number): number => {
   return (rad + 2 * Math.PI) % (2 * Math.PI);
+};
+
+/**
+ * To produce crisp lines on canvas, the line coordinates need to sit on the half pixel.
+ * https://stackoverflow.com/a/13879402/5402432
+ */
+export const roundPixel = (x: number): number => {
+  return Math.round(x - 0.5) + 0.5;
 };

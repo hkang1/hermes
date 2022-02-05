@@ -828,8 +828,8 @@ const drawLine = (ctx, x0, y0, x1, y1, style = {}) => {
     ctx.miterLimit = style.miterLimit || MITER_LIMIT;
     ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
     ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(x1, y1);
+    ctx.moveTo(roundPixel(x0), roundPixel(y0));
+    ctx.lineTo(roundPixel(x1), roundPixel(y1));
     ctx.stroke();
     ctx.restore();
 };
@@ -909,6 +909,13 @@ const normalizePadding = (padding) => {
 };
 const normalizeRad = (rad) => {
     return (rad + 2 * Math.PI) % (2 * Math.PI);
+};
+/**
+ * To produce crisp lines on canvas, the line coordinates need to sit on the half pixel.
+ * https://stackoverflow.com/a/13879402/5402432
+ */
+const roundPixel = (x) => {
+    return Math.round(x - 0.5) + 0.5;
 };
 
 const hex2rgb = (hex) => {
