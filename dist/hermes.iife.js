@@ -404,7 +404,7 @@ var Hermes = (function () {
           const stringValue = value2str(value);
           const index = this.tickLabels.findIndex(label => label === stringValue);
           if (index !== -1)
-              return index / this.tickLabels.length;
+              return this.tickPos[index] / this.axisLength;
           return 0;
       }
       calculate() {
