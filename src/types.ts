@@ -18,15 +18,10 @@ export type RecursivePartial<T> = { [P in keyof T]?: RecursivePartial<T[P]> };
 
 export type Boundary = [ Point, Point, Point, Point ];
 export type Crisp = { crisp: boolean };
+export type Focus = { dimIndex: number, filterIndex?: number, type: FocusType };
 export type Point = { x: number, y: number };
 export type Rect = Point & Size;
 export type Size = { h: number, w: number };
-
-/**
- * Data Types
- */
-
-export type DimensionKey = string;
 export type StyleLine =Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles & Crisp>;
 export type StyleShape = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
 export type StyleText = Partial<
@@ -36,8 +31,23 @@ export type StyleText = Partial<
 >;
 
 /**
+ * Data Types
+ */
+
+export type DimensionKey = string;
+
+/**
  * ENUMERABLES
  */
+
+export enum ActionType {
+  FilterCreate = 'filter-create',
+  FilterMove = 'filter-move',
+  FilterResizeAfter = 'filter-resize-after',
+  FilterResizeBefore = 'filter-resize-before',
+  LabelMove = 'label-move',
+  None = 'none',
+}
 
 export enum AxisType {
   Categorical = 'categorical',
@@ -56,13 +66,10 @@ export enum Direction {
   Vertical = 'vertical',
 }
 
-export enum ActionType {
-  FilterCreate = 'filter-create',
-  FilterMove = 'filter-move',
-  FilterResizeAfter = 'filter-resize-after',
-  FilterResizeBefore = 'filter-resize-before',
-  LabelMove = 'label-move',
-  None = 'none',
+export enum FocusType {
+  DimensionLabel = 'dimension-label',
+  DimensionAxis = 'dimension-axis',
+  Filter = 'filter',
 }
 
 export enum LabelPlacement {

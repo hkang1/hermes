@@ -551,6 +551,15 @@ var Hermes = (function () {
   /**
    * ENUMERABLES
    */
+  var ActionType;
+  (function (ActionType) {
+      ActionType["FilterCreate"] = "filter-create";
+      ActionType["FilterMove"] = "filter-move";
+      ActionType["FilterResizeAfter"] = "filter-resize-after";
+      ActionType["FilterResizeBefore"] = "filter-resize-before";
+      ActionType["LabelMove"] = "label-move";
+      ActionType["None"] = "none";
+  })(ActionType || (ActionType = {}));
   var AxisType;
   (function (AxisType) {
       AxisType["Categorical"] = "categorical";
@@ -568,15 +577,12 @@ var Hermes = (function () {
       Direction["Horizontal"] = "horizontal";
       Direction["Vertical"] = "vertical";
   })(Direction || (Direction = {}));
-  var ActionType;
-  (function (ActionType) {
-      ActionType["FilterCreate"] = "filter-create";
-      ActionType["FilterMove"] = "filter-move";
-      ActionType["FilterResizeAfter"] = "filter-resize-after";
-      ActionType["FilterResizeBefore"] = "filter-resize-before";
-      ActionType["LabelMove"] = "label-move";
-      ActionType["None"] = "none";
-  })(ActionType || (ActionType = {}));
+  var FocusType;
+  (function (FocusType) {
+      FocusType["DimensionLabel"] = "dimension-label";
+      FocusType["DimensionAxis"] = "dimension-axis";
+      FocusType["Filter"] = "filter";
+  })(FocusType || (FocusType = {}));
   var LabelPlacement;
   (function (LabelPlacement) {
       LabelPlacement["After"] = "after";
@@ -1477,6 +1483,59 @@ var Hermes = (function () {
           }
           this._ = _;
       }
+      getFocusByPoint(point) {
+          if (!this._)
+              return;
+          for (let i = 0; i < this._.dims.list.length; i++) {
+              const dim = this._.dims.list[i];
+              // Check to see if a dimension label was targeted.
+              const labelBoundary = dim.layout.labelBoundary;
+              if (isPointInTriangle(point, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
+                  isPointInTriangle(point, labelBoundary[2], labelBoundary[3], labelBoundary[0])) {
+                  return { dimIndex: i, type: FocusType.DimensionLabel };
+              }
+              // Check to see if a dimension axis was targeted.
+              const axisBoundary = dim.layout.axisBoundary;
+              if (isPointInTriangle(point, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
+                  isPointInTriangle(point, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
+                  return { dimIndex: i, type: FocusType.DimensionAxis };
+              }
+          }
+      }
+      updateActiveLabel() {
+          if (!this._ || this.drag.action !== ActionType.LabelMove)
+              return;
+          const _dl = this._.dims.list;
+          const _drag = this.drag;
+          const _drd = _drag.dimension;
+          const _drs = _drag.shared;
+          const isHorizontal = this.options.direction === Direction.Horizontal;
+          const hKey = isHorizontal ? 'x' : 'y';
+          _drd.boundOffset = {
+              x: isHorizontal ? _drs.p1.x - _drs.p0.x : 0,
+              y: isHorizontal ? 0 : _drs.p1.y - _drs.p0.y,
+          };
+          for (let i = 0; i < _dl.length; i++) {
+              const layout = _dl[i].layout;
+              const bound = layout.bound;
+              const axisStart = layout.axisStart;
+              const axisDistance = (_drd.axis + _drd.boundOffset[hKey]) - (bound[hKey] + axisStart[hKey]);
+              /**
+               * Check that...
+               * 1. dimension drag type is triggered by the label
+               * 2. dimension being dragged isn't being the dimension getting compared to (i)
+               * 3. dimension is within a distance threshold
+               */
+              if (_drs.index !== i && Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
+                  // Swap dragging dimension with the dimension it intersects with.
+                  const tempDim = this.dimensions[_drs.index];
+                  this.dimensions[_drs.index] = this.dimensions[i];
+                  this.dimensions[i] = tempDim;
+                  // Update the drag dimension's index
+                  _drs.index = i;
+              }
+          }
+      }
       setActiveFilter(key, pos, value) {
           if (!this._)
               return;
@@ -1792,34 +1851,32 @@ var Hermes = (function () {
           const isHorizontal = this.options.direction === Direction.Horizontal;
           const hKey = isHorizontal ? 'x' : 'y';
           const vKey = isHorizontal ? 'y' : 'x';
-          this._.dims.list.forEach((dim, i) => {
-              const bound = dim.layout.bound;
-              const axisStart = dim.layout.axisStart;
-              const axisBoundary = dim.layout.axisBoundary;
-              // Check to see if a dimension label was targeted.
-              const labelBoundary = dim.layout.labelBoundary;
-              if (isPointInTriangle({ x, y }, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
-                  isPointInTriangle({ x, y }, labelBoundary[2], labelBoundary[3], labelBoundary[0])) {
+          const point = { x, y };
+          const focus = this.getFocusByPoint(point);
+          if (focus) {
+              const i = focus.dimIndex;
+              const layout = this._.dims.list[i].layout;
+              const bound = layout.bound;
+              const axisStart = layout.axisStart;
+              if ((focus === null || focus === void 0 ? void 0 : focus.type) === FocusType.DimensionLabel) {
                   _drag.action = ActionType.LabelMove;
                   _drd.axis = bound[hKey] + axisStart[hKey];
                   _drd.bound = bound;
                   _drs.index = i;
-                  _drs.p0 = { x, y };
-                  _drs.p1 = { x, y };
+                  _drs.p0 = point;
+                  _drs.p1 = point;
               }
-              // Check to see if a dimension axis was targeted.
-              if (isPointInTriangle({ x, y }, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
-                  isPointInTriangle({ x, y }, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
+              else if ((focus === null || focus === void 0 ? void 0 : focus.type) === FocusType.DimensionAxis) {
                   _drag.action = ActionType.FilterCreate;
                   _drs.index = i;
-                  _drs.p0 = { x, y };
-                  _drs.p1 = { x, y };
+                  _drs.p0 = point;
+                  _drs.p1 = point;
                   _drf.key = this.dimensions[i].key;
                   const p0 = (_drs.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
                   const value0 = this.dimensions[i].axis.scale.percentToValue(p0);
                   this.setActiveFilter(_drf.key, p0, value0);
               }
-          });
+          }
       }
       handleMouseMove(e) {
           if (!this._)
@@ -1827,37 +1884,10 @@ var Hermes = (function () {
           const [x, y] = [e.clientX, e.clientY];
           const _drag = this.drag;
           const _drs = this.drag.shared;
-          const _drd = this.drag.dimension;
-          const _dl = this._.dims.list;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
-          const hKey = isHorizontal ? 'x' : 'y';
           _drs.p1 = { x, y };
-          _drd.boundOffset = {
-              x: isHorizontal ? _drs.p1.x - _drs.p0.x : 0,
-              y: isHorizontal ? 0 : _drs.p1.y - _drs.p0.y,
-          };
-          for (let i = 0; i < _dl.length; i++) {
-              const layout = _dl[i].layout;
-              const bound = layout.bound;
-              const axisStart = layout.axisStart;
-              const axisDistance = (_drd.axis + _drd.boundOffset[hKey]) - (bound[hKey] + axisStart[hKey]);
-              /**
-               * Check that...
-               * 1. dimension drag type is triggered by the label
-               * 2. dimension being dragged isn't being the dimension getting compared to (i)
-               * 3. dimension is within a distance threshold
-               */
-              if (_drag.action === ActionType.LabelMove && _drs.index !== i &&
-                  Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
-                  // Swap dragging dimension with the dimension it intersects with.
-                  const tempDim = this.dimensions[_drs.index];
-                  this.dimensions[_drs.index] = this.dimensions[i];
-                  this.dimensions[i] = tempDim;
-                  // Update the drag dimension's index
-                  _drs.index = i;
-                  break;
-              }
-          }
+          // Update dimension dragging via label.
+          this.updateActiveLabel();
+          if (_drag.action === ActionType.None) ;
           // Update dimension filter creating dragging data.
           this.updateActiveFilter(e);
           this.calculate();
