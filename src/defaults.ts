@@ -92,7 +92,7 @@ export const FILTER: t.Filter = {
   value1: Number.NaN,
 };
 
-export const DRAG: t.Drag = {
+export const IX: t.IX = {
   action: t.ActionType.None,
   dimension: {
     axis: 0,
@@ -105,6 +105,7 @@ export const DRAG: t.Drag = {
     key: undefined,
   },
   shared: {
+    focus: undefined,
     index: -1,
     p0: { x: Number.NaN, y: Number.NaN },
     p1: { x: Number.NaN, y: Number.NaN },

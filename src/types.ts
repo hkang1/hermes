@@ -184,7 +184,7 @@ export interface HermesOptions {
   };
 }
 
-export interface Drag {
+export interface IX {
   action: ActionType;
   dimension: {
     axis: number;
@@ -197,6 +197,7 @@ export interface Drag {
     key?: DimensionKey;
   };
   shared: {
+    focus?: Focus;
     index: number;
     p0: Point;
     p1: Point;

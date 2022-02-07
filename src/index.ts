@@ -25,7 +25,7 @@ class Hermes {
   private dimensions: t.Dimension[];
   private options: t.HermesOptions;
   private size: t.Size = { h: 0, w: 0 };
-  private drag: t.Drag = clone(DEFAULT.DRAG);
+  private ix: t.IX = clone(DEFAULT.IX);
   private filters: t.Filters = {};
   private _?: t.Internal = undefined;
 
@@ -416,25 +416,25 @@ class Hermes {
   }
 
   private updateActiveLabel(): void {
-    if (!this._ || this.drag.action !== t.ActionType.LabelMove) return;
+    if (!this._ || this.ix.action !== t.ActionType.LabelMove) return;
 
     const _dl = this._.dims.list;
-    const _drag = this.drag;
-    const _drd = _drag.dimension;
-    const _drs = _drag.shared;
+    const _ix = this.ix;
+    const _ixd = _ix.dimension;
+    const _ixs = _ix.shared;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const hKey = isHorizontal ? 'x' : 'y';
 
-    _drd.boundOffset = {
-      x: isHorizontal ? _drs.p1.x - _drs.p0.x : 0,
-      y: isHorizontal ? 0 : _drs.p1.y - _drs.p0.y,
+    _ixd.boundOffset = {
+      x: isHorizontal ? _ixs.p1.x - _ixs.p0.x : 0,
+      y: isHorizontal ? 0 : _ixs.p1.y - _ixs.p0.y,
     };
 
     for (let i = 0; i < _dl.length; i++) {
       const layout = _dl[i].layout;
       const bound = layout.bound;
       const axisStart = layout.axisStart;
-      const axisDistance = (_drd.axis + _drd.boundOffset[hKey]) - (bound[hKey] + axisStart[hKey]);
+      const axisDistance = (_ixd.axis + _ixd.boundOffset[hKey]) - (bound[hKey] + axisStart[hKey]);
 
       /**
        * Check that...
@@ -442,14 +442,14 @@ class Hermes {
        * 2. dimension being dragged isn't being the dimension getting compared to (i)
        * 3. dimension is within a distance threshold
        */
-      if (_drs.index !== i && Math.abs(axisDistance) < ix.DIMENSION_SWAP_THRESHOLD) {
+      if (_ixs.index !== i && Math.abs(axisDistance) < ix.DIMENSION_SWAP_THRESHOLD) {
         // Swap dragging dimension with the dimension it intersects with.
-        const tempDim = this.dimensions[_drs.index];
-        this.dimensions[_drs.index] = this.dimensions[i];
+        const tempDim = this.dimensions[_ixs.index];
+        this.dimensions[_ixs.index] = this.dimensions[i];
         this.dimensions[i] = tempDim;
 
         // Update the drag dimension's index
-        _drs.index = i;
+        _ixs.index = i;
       }
     }
   }
@@ -458,37 +458,37 @@ class Hermes {
     if (!this._) return;
 
     const _filters = this.filters;
-    const _drag = this.drag;
-    const _drf = _drag.filters;
+    const _ix = this.ix;
+    const _ixf = _ix.filters;
     const _dsa = this._.dims.shared.axes;
 
     // See if there is an existing matching filter based on % position.
     const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
     if (index !== -1) {
-      _drf.active = _filters[key][index];
-      _drf.active.startP0 = _drf.active.p0;
-      _drf.active.startP1 = _drf.active.p1;
+      _ixf.active = _filters[key][index];
+      _ixf.active.startP0 = _ixf.active.p0;
+      _ixf.active.startP1 = _ixf.active.p1;
 
       if (
-        pos >= _drf.active.p0 &&
-        pos <= _drf.active.p0 + (ix.FILTER_RESIZE_THRESHOLD / _dsa.length)
+        pos >= _ixf.active.p0 &&
+        pos <= _ixf.active.p0 + (ix.FILTER_RESIZE_THRESHOLD / _dsa.length)
       ) {
-        _drag.action = t.ActionType.FilterResizeBefore;
+        _ix.action = t.ActionType.FilterResizeBefore;
       } else if (
-        pos >= _drf.active.p1 - (ix.FILTER_RESIZE_THRESHOLD / _dsa.length) &&
-        pos <= _drf.active.p1
+        pos >= _ixf.active.p1 - (ix.FILTER_RESIZE_THRESHOLD / _dsa.length) &&
+        pos <= _ixf.active.p1
       ) {
-        _drag.action = t.ActionType.FilterResizeAfter;
+        _ix.action = t.ActionType.FilterResizeAfter;
       } else {
-        _drag.action = t.ActionType.FilterMove;
+        _ix.action = t.ActionType.FilterMove;
       }
     } else {
-      _drag.action = t.ActionType.FilterCreate;
-      _drf.active = { p0: pos, p1: pos, value0: value, value1: value };
+      _ix.action = t.ActionType.FilterCreate;
+      _ixf.active = { p0: pos, p1: pos, value0: value, value1: value };
 
       // Store active filter into filter list.
       _filters[key] = _filters[key] || [];
-      _filters[key].push(_drf.active);
+      _filters[key].push(_ixf.active);
     }
   }
 
@@ -497,9 +497,9 @@ class Hermes {
 
     const _dl = this._.dims.list;
     const _dsa = this._.dims.shared.axes;
-    const _drag = this.drag;
-    const _drs = _drag.shared;
-    const _drf = _drag.filters;
+    const _ix = this.ix;
+    const _drs = _ix.shared;
+    const _drf = _ix.filters;
     const _filters = this.filters;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const filterKey = isHorizontal ? 'y' : 'x';
@@ -508,7 +508,7 @@ class Hermes {
       t.ActionType.FilterMove,
       t.ActionType.FilterResizeAfter,
       t.ActionType.FilterResizeBefore,
-    ].includes(_drag.action);
+    ].includes(_ix.action);
 
     if (!isFilterAction || !_drf.key) return;
 
@@ -519,7 +519,7 @@ class Hermes {
      * If the active filter previously exists, we want to drag it,
      * otherwise we want to change the size of the new one based on event position.
      */
-    if (_drag.action === t.ActionType.FilterMove) {
+    if (_ix.action === t.ActionType.FilterMove) {
       const startP0 = _drf.active.startP0 ?? 0;
       const startP1 = _drf.active.startP1 ?? 0;
       const startLength = startP1 - startP0;
@@ -539,7 +539,7 @@ class Hermes {
 
       _drf.active.value0 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p0);
       _drf.active.value1 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p1);
-    } else if (_drag.action === t.ActionType.FilterResizeBefore) {
+    } else if (_ix.action === t.ActionType.FilterResizeBefore) {
       _drf.active.p0 = (_drs.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
       _drf.active.p0 = capDataRange(_drf.active.p0, [ 0.0, 1.0 ]);
       _drf.active.value0 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p0);
@@ -575,13 +575,14 @@ class Hermes {
     _drf.active = { ...DEFAULT.FILTER };
     _drf.key = undefined;
 
-    this.mergeFilters();
+    this.cleanUpFilters();
   }
 
-  private mergeFilters(): void {
+  private cleanUpFilters(): void {
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
-      for (let i = 0; i < filters.length - 1; i++) {
+      for (let i = 0; i < filters.length; i++) {
+        // Remove invalid filters or filters that are sized 0.
         if (ix.isFilterInvalid(filters[i])) {
           filters[i] = { ...DEFAULT.FILTER };
           continue;
@@ -609,7 +610,7 @@ class Hermes {
     const _dl = this._.dims.list;
     const _dsa = this._.dims.shared.axes;
     const _dsl = this._.dims.shared.label;
-    const _drag = this.drag;
+    const _ix = this.ix;
     const _filters = this.filters;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const axesStyle = this.options.style.axes;
@@ -631,7 +632,7 @@ class Hermes {
       const series = this.dimensions.map((dimension, i) => {
         const key = dimension.key;
         const layout = _dl[i].layout;
-        const bound = ix.getDragBound(i, _drag, layout.bound);
+        const bound = ix.getDragBound(i, _ix, layout.bound);
         const value = this.data[key][k];
         const pos = dimension.axis.scale?.valueToPos(value) ?? 0;
         const percent = dimension.axis.scale?.valueToPercent(value) ?? 0;
@@ -680,7 +681,7 @@ class Hermes {
       dimTextStyle.textBaseline = isHorizontal ? (isLabelBefore ? 'bottom' : 'top') : undefined;
     }
     this.dimensions.forEach((dimension, i) => {
-      const bound = ix.getDragBound(i, _drag, _dl[i].layout.bound);
+      const bound = ix.getDragBound(i, _ix, _dl[i].layout.bound);
       const labelPoint = _dl[i].layout.labelPoint;
       const x = bound.x + labelPoint.x;
       const y = bound.y + labelPoint.y;
@@ -695,7 +696,7 @@ class Hermes {
     }
     _dl.forEach((dim, i) => {
       const key = this.dimensions[i].key;
-      const bound = ix.getDragBound(i, _drag, dim.layout.bound);
+      const bound = ix.getDragBound(i, _ix, dim.layout.bound);
       const axisStart = dim.layout.axisStart;
       const axisStop = dim.layout.axisStop;
       const tickLabels = dim.axes.tickLabels;
@@ -807,41 +808,39 @@ class Hermes {
   private handleMouseDown(e: MouseEvent): void {
     if (!this._) return;
 
-    const [ x, y ] = [ e.clientX, e.clientY ];
-    const _drag = this.drag;
-    const _drs = this.drag.shared;
-    const _drd = this.drag.dimension;
-    const _drf = this.drag.filters;
+    const _ix = this.ix;
+    const _ixs = this.ix.shared;
+    const _ixd = this.ix.dimension;
+    const _ixf = this.ix.filters;
     const _dsa = this._.dims.shared.axes;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const hKey = isHorizontal ? 'x' : 'y';
     const vKey = isHorizontal ? 'y' : 'x';
 
-    const point = { x, y };
-    const focus = this.getFocusByPoint(point);
-    if (focus) {
-      const i = focus.dimIndex;
+    const point = { x: e.clientX, y: e.clientY };
+    _ixs.p0 = point;
+    _ixs.p1 = point;
+    _ixs.focus = this.getFocusByPoint(point);
+
+    if (_ixs.focus) {
+      const i = _ixs.focus.dimIndex;
       const layout = this._.dims.list[i].layout;
       const bound = layout.bound;
       const axisStart = layout.axisStart;
-      if (focus?.type === t.FocusType.DimensionLabel) {
-        _drag.action = t.ActionType.LabelMove;
-        _drd.axis = bound[hKey] + axisStart[hKey];
-        _drd.bound = bound;
-        _drs.index = i;
-        _drs.p0 = point;
-        _drs.p1 = point;
-      } else if (focus?.type === t.FocusType.DimensionAxis) {
-        _drag.action = t.ActionType.FilterCreate;
-        _drs.index = i;
-        _drs.p0 = point;
-        _drs.p1 = point;
-        _drf.key = this.dimensions[i].key;
+      if (_ixs.focus?.type === t.FocusType.DimensionLabel) {
+        _ix.action = t.ActionType.LabelMove;
+        _ixd.axis = bound[hKey] + axisStart[hKey];
+        _ixd.bound = bound;
+        _ixs.index = i;
+      } else if (_ixs.focus?.type === t.FocusType.DimensionAxis) {
+        _ix.action = t.ActionType.FilterCreate;
+        _ixs.index = i;
+        _ixf.key = this.dimensions[i].key;
 
-        const p0 = (_drs.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
+        const p0 = (_ixs.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
         const value0 = this.dimensions[i].axis.scale.percentToValue(p0);
 
-        this.setActiveFilter(_drf.key, p0, value0);
+        this.setActiveFilter(_ixf.key, p0, value0);
       }
     }
   }
@@ -849,19 +848,13 @@ class Hermes {
   private handleMouseMove(e: MouseEvent): void {
     if (!this._) return;
 
-    const [ x, y ] = [ e.clientX, e.clientY ];
-    const _drag = this.drag;
-    const _drs = this.drag.shared;
-
-    _drs.p1 = { x, y };
+    const point = { x: e.clientX, y: e.clientY };
+    const _ixs = this.ix.shared;
+    _ixs.p1 = point;
+    _ixs.focus = this.getFocusByPoint(point);
 
     // Update dimension dragging via label.
     this.updateActiveLabel();
-
-    if (_drag.action === t.ActionType.None) {
-      // Look for hover items.
-      // this.getItemByPoint({ x, y });
-    }
 
     // Update dimension filter creating dragging data.
     this.updateActiveFilter(e);
@@ -871,17 +864,17 @@ class Hermes {
   }
 
   private handleMouseUp(e: MouseEvent): void {
-    if (!this._ || this.drag.action === t.ActionType.None) return;
+    if (!this._ || this.ix.action === t.ActionType.None) return;
 
-    const [ x, y ] = [ e.clientX, e.clientY ];
-    const _drs = this.drag.shared;
-
-    _drs.p1 = { x, y };
+    const point = { x: e.clientX, y: e.clientY };
+    const _ixs = this.ix.shared;
+    _ixs.p1 = point;
+    _ixs.focus = this.getFocusByPoint(point);
 
     this.updateActiveFilter(e);
 
     // Reset drag info.
-    this.drag = clone(DEFAULT.DRAG);
+    this.ix = clone(DEFAULT.IX);
 
     this.calculate();
     this.draw();

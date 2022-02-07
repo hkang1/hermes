@@ -9,7 +9,7 @@ declare class Hermes {
     private dimensions;
     private options;
     private size;
-    private drag;
+    private ix;
     private filters;
     private _?;
     constructor(target: HTMLElement | string, data: t.HermesData, dimensions: t.Dimension[], options?: t.RecursivePartial<t.HermesOptions>);
@@ -23,7 +23,7 @@ declare class Hermes {
     private updateActiveLabel;
     private setActiveFilter;
     private updateActiveFilter;
-    private mergeFilters;
+    private cleanUpFilters;
     private draw;
     private drawDebugOutline;
     private handleResize;
