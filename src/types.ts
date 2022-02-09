@@ -93,7 +93,7 @@ export enum PathType {
  */
 
 export interface Axis {
-  auto?: boolean;
+  // auto?: boolean;
   categories?: Primitive[];
   logBase?: number;
   range?: Range;

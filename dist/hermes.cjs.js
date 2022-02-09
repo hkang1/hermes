@@ -631,21 +631,18 @@ const HERMES_OPTIONS = {
                 lineWidth: 1,
                 strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
-            axisActve: { strokeStyle: 'rgba(0, 0, 255, 1.0)' },
-            axisHover: { strokeStyle: 'rgba(0, 255, 0, 1.0)' },
+            axisActve: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
+            axisHover: {
+                lineWidth: 1.5,
+                strokeStyle: 'rgba(82, 144, 244, 1.0)',
+            },
             filter: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
                 width: 4,
             },
-            filterActive: {
-                fillStyle: 'rgba(255, 0, 0, 1.0)',
-                strokeStyle: 'rgba(0, 0, 255, 1.0)',
-            },
-            filterHover: {
-                fillStyle: 'rgba(0, 255, 0, 1.0)',
-                strokeStyle: 'rgba(0, 255, 0, 1.0)',
-            },
+            filterActive: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
+            filterHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
             label: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 font: 'normal 11px sans-serif',
@@ -654,15 +651,15 @@ const HERMES_OPTIONS = {
                 placement: LabelPlacement.Before,
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
             },
-            labelActive: { fillStyle: 'rgba(0, 0, 255, 1.0)' },
-            labelHover: { fillStyle: 'rgba(255, 0, 0, 1.0)' },
+            labelActive: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
+            labelHover: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
             tick: {
                 length: 4,
                 lineWidth: 1,
                 strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
-            tickActive: { strokeStyle: 'rgba(0, 0, 255, 1.0)' },
-            tickHover: { strokeStyle: 'rgba(0, 255, 0, 1.0)' },
+            tickActive: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
+            tickHover: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
         },
         data: {
             default: {
@@ -671,7 +668,7 @@ const HERMES_OPTIONS = {
             },
             filtered: {
                 lineWidth: 1,
-                strokeStyle: 'rgba(82, 144, 244, 0.1)',
+                strokeStyle: 'rgba(0, 0, 0, 0.05)',
             },
             path: {
                 options: {},
@@ -689,8 +686,8 @@ const HERMES_OPTIONS = {
                 placement: LabelPlacement.Before,
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
             },
-            labelActive: { fillStyle: 'rgba(0, 0, 255, 1.0)' },
-            labelHover: { fillStyle: 'rgba(255, 0, 0, 1.0)' },
+            labelActive: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
+            labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
             layout: DimensionLayout.AxisEvenlySpaced,
         },
         padding: [32, 16, 64, 16],
@@ -864,9 +861,11 @@ const drawLine = (ctx, x0, y0, x1, y1, style = {}) => {
 };
 const drawRect = (ctx, x, y, w, h, style = {}) => {
     ctx.save();
+    const rx = roundPixel(x);
+    const ry = roundPixel(y);
     if (style.fillStyle) {
         ctx.fillStyle = style.fillStyle || FILL_STYLE;
-        ctx.fillRect(x, y, w, h);
+        ctx.fillRect(rx, ry, w, h);
     }
     if (style.strokeStyle) {
         ctx.lineCap = style.lineCap || LINE_CAP;
@@ -875,7 +874,7 @@ const drawRect = (ctx, x, y, w, h, style = {}) => {
         ctx.lineWidth = style.lineWidth || LINE_WIDTH;
         ctx.miterLimit = style.miterLimit || MITER_LIMIT;
         ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
-        ctx.strokeRect(x, y, w, h);
+        ctx.strokeRect(rx, ry, w, h);
     }
     ctx.restore();
 };
@@ -1772,6 +1771,40 @@ class Hermes {
             this.filters[key] = filters.filter(filter => !isFilterEmpty(filter));
         });
     }
+    updateCursor() {
+        const _ix = this.ix;
+        const _ixsa = _ix.shared.action;
+        const _ixsf = _ix.shared.focus;
+        const isHorizontal = this.options.direction === Direction.Horizontal;
+        let cursor = 'default';
+        if (_ixsa.type !== ActionType.None) {
+            if ([ActionType.FilterMove, ActionType.LabelMove].includes(_ixsa.type)) {
+                cursor = 'grabbing';
+            }
+            else if ([
+                ActionType.FilterResizeAfter,
+                ActionType.FilterResizeBefore,
+            ].includes(_ixsa.type)) {
+                cursor = isHorizontal ? 'ns-resize' : 'ew-resize';
+            }
+            else if (_ixsa.type === ActionType.FilterCreate) {
+                cursor = 'crosshair';
+            }
+            // this.canvas.style.cursor =
+        }
+        else if (_ixsf !== undefined) {
+            if (_ixsf.type === FocusType.DimensionLabel) {
+                cursor = 'grab';
+            }
+            else if (_ixsf.type === FocusType.DimensionAxis) {
+                cursor = 'crosshair';
+            }
+            else if (_ixsf.type === FocusType.Filter) {
+                cursor = 'grab';
+            }
+        }
+        this.canvas.style.cursor = cursor;
+    }
     draw() {
         var _a;
         if (!this._)
@@ -1977,6 +2010,8 @@ class Hermes {
                 this.setActiveFilter(_ixf.key, p0, value0);
             }
         }
+        // Update cursor pointer based on type and position.
+        this.updateCursor();
         this.calculate();
         this.draw();
     }
@@ -1991,6 +2026,8 @@ class Hermes {
         this.updateActiveLabel();
         // Update dimension filter creating dragging data.
         this.updateActiveFilter(e);
+        // Update cursor pointer based on type and position.
+        this.updateCursor();
         this.calculate();
         this.draw();
     }
@@ -2001,9 +2038,12 @@ class Hermes {
         const _ixs = this.ix.shared;
         _ixs.action.p1 = point;
         _ixs.focus = this.getFocusByPoint(point);
+        // Update active filter upon release event.
         this.updateActiveFilter(e);
         // Reset drag info.
         this.ix = clone(IX);
+        // Update cursor pointer based on type and position.
+        this.updateCursor();
         this.calculate();
         this.draw();
     }

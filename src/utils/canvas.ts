@@ -150,9 +150,12 @@ export const drawRect = (
 ): void => {
   ctx.save();
 
+  const rx = roundPixel(x);
+  const ry = roundPixel(y);
+
   if (style.fillStyle) {
     ctx.fillStyle = style.fillStyle || DEFAULT.FILL_STYLE;
-    ctx.fillRect(x, y, w, h);
+    ctx.fillRect(rx, ry, w, h);
   }
   if (style.strokeStyle) {
     ctx.lineCap = style.lineCap || DEFAULT.LINE_CAP;
@@ -161,7 +164,7 @@ export const drawRect = (
     ctx.lineWidth = style.lineWidth || DEFAULT.LINE_WIDTH;
     ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
     ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
-    ctx.strokeRect(x, y, w, h);
+    ctx.strokeRect(rx, ry, w, h);
   }
 
   ctx.restore();

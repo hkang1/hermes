@@ -25,6 +25,7 @@ declare class Hermes {
     private setActiveFilter;
     private updateActiveFilter;
     private cleanUpFilters;
+    private updateCursor;
     private draw;
     private drawDebugOutline;
     private handleResize;

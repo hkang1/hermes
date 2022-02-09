@@ -690,6 +690,37 @@ class Hermes {
     });
   }
 
+  private updateCursor(): void {
+    const _ix = this.ix;
+    const _ixsa = _ix.shared.action;
+    const _ixsf = _ix.shared.focus;
+    const isHorizontal = this.options.direction === t.Direction.Horizontal;
+
+    let cursor = 'default';
+    if (_ixsa.type !== t.ActionType.None) {
+      if ([ t.ActionType.FilterMove, t.ActionType.LabelMove ].includes(_ixsa.type)) {
+        cursor = 'grabbing';
+      } else if ([
+        t.ActionType.FilterResizeAfter,
+        t.ActionType.FilterResizeBefore,
+      ].includes(_ixsa.type)) {
+        cursor = isHorizontal ? 'ns-resize' : 'ew-resize';
+      } else if (_ixsa.type === t.ActionType.FilterCreate) {
+        cursor = 'crosshair';
+      }
+      // this.canvas.style.cursor =
+    } else if (_ixsf !== undefined) {
+      if (_ixsf.type === t.FocusType.DimensionLabel) {
+        cursor = 'grab';
+      } else if (_ixsf.type === t.FocusType.DimensionAxis) {
+        cursor = 'crosshair';
+      } else if (_ixsf.type === t.FocusType.Filter) {
+        cursor = 'grab';
+      }
+    }
+    this.canvas.style.cursor = cursor;
+  }
+
   private draw(): void {
     if (!this._) return;
 
@@ -935,6 +966,9 @@ class Hermes {
       }
     }
 
+    // Update cursor pointer based on type and position.
+    this.updateCursor();
+
     this.calculate();
     this.draw();
   }
@@ -953,6 +987,9 @@ class Hermes {
     // Update dimension filter creating dragging data.
     this.updateActiveFilter(e);
 
+    // Update cursor pointer based on type and position.
+    this.updateCursor();
+
     this.calculate();
     this.draw();
   }
@@ -965,10 +1002,14 @@ class Hermes {
     _ixs.action.p1 = point;
     _ixs.focus = this.getFocusByPoint(point);
 
+    // Update active filter upon release event.
     this.updateActiveFilter(e);
 
     // Reset drag info.
     this.ix = clone(DEFAULT.IX);
+
+    // Update cursor pointer based on type and position.
+    this.updateCursor();
 
     this.calculate();
     this.draw();

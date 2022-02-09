@@ -41,21 +41,18 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         lineWidth: 1,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
-      axisActve: { strokeStyle: 'rgba(0, 0, 255, 1.0)' },
-      axisHover: { strokeStyle: 'rgba(0, 255, 0, 1.0)' },
+      axisActve: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
+      axisHover: {
+        lineWidth: 1.5,
+        strokeStyle: 'rgba(82, 144, 244, 1.0)',
+      },
       filter: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
         width: 4,
       },
-      filterActive: {
-        fillStyle: 'rgba(255, 0, 0, 1.0)',
-        strokeStyle: 'rgba(0, 0, 255, 1.0)',
-      },
-      filterHover: {
-        fillStyle: 'rgba(0, 255, 0, 1.0)',
-        strokeStyle: 'rgba(0, 255, 0, 1.0)',
-      },
+      filterActive: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
+      filterHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
       label: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         font: 'normal 11px sans-serif',
@@ -64,15 +61,15 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         placement: t.LabelPlacement.Before,
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
-      labelActive: { fillStyle: 'rgba(0, 0, 255, 1.0)' },
-      labelHover: { fillStyle: 'rgba(255, 0, 0, 1.0)' },
+      labelActive: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
+      labelHover: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
       tick: {
         length: 4,
         lineWidth: 1,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
-      tickActive: { strokeStyle: 'rgba(0, 0, 255, 1.0)' },
-      tickHover: { strokeStyle: 'rgba(0, 255, 0, 1.0)' },
+      tickActive: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
+      tickHover: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
     },
     data: {
       default: {
@@ -81,7 +78,7 @@ export const HERMES_OPTIONS: t.HermesOptions = {
       },
       filtered: {
         lineWidth: 1,
-        strokeStyle: 'rgba(82, 144, 244, 0.1)',
+        strokeStyle: 'rgba(0, 0, 0, 0.05)',
       },
       path: {
         options: {},
@@ -99,8 +96,8 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         placement: t.LabelPlacement.Before,
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
-      labelActive: { fillStyle: 'rgba(0, 0, 255, 1.0)' },
-      labelHover: { fillStyle: 'rgba(255, 0, 0, 1.0)' },
+      labelActive: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
+      labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },
     padding: [ 32, 16, 64, 16 ],
