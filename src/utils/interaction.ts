@@ -9,7 +9,8 @@ export const FILTER_REMOVE_THRESHOLD = 1;
 export const FILTER_RESIZE_THRESHOLD = 3;
 
 export const getDragBound = (index: number, ix: t.IX, bound: t.Rect): t.Rect => {
-  const isLabelDrag = ix.action === t.ActionType.LabelMove && ix.shared.index === index;
+  const action = ix.shared.action;
+  const isLabelDrag = action.type === t.ActionType.LabelMove && action.dimIndex === index;
   const dragBound = ix.dimension.bound || INVALID_RECT;
   const offset = ix.dimension.boundOffset || { x: 0, y: 0 };
   return isLabelDrag ? shiftRect(dragBound, offset) : bound;

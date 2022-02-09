@@ -16,13 +16,19 @@ export type RecursivePartial<T> = { [P in keyof T]?: RecursivePartial<T[P]> };
  * Canvas Rendering Types
  */
 
+export type Action = {
+  dimIndex: number,
+  filterIndex?: number,
+  p0: Point,
+  p1: Point,
+  type: ActionType,
+};
 export type Boundary = [ Point, Point, Point, Point ];
-export type Crisp = { crisp: boolean };
 export type Focus = { dimIndex: number, filterIndex?: number, type: FocusType };
 export type Point = { x: number, y: number };
 export type Rect = Point & Size;
 export type Size = { h: number, w: number };
-export type StyleLine =Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles & Crisp>;
+export type StyleLine = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
 export type StyleShape = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
 export type StyleText = Partial<
   CanvasFillStrokeStyles &
@@ -171,13 +177,23 @@ export interface HermesOptions {
   style: {
     axes: {
       axis: AxisOptions,
+      axisActve: StyleLine;
+      axisHover: StyleLine;
       filter: FilterOptions;
+      filterActive: StyleShape;
+      filterHover: StyleShape;
       label: LabelOptions;
+      labelActive: StyleText;
+      labelHover: StyleText;
       tick: TickOptions;
+      tickActive: StyleLine;
+      tickHover: StyleLine;
     };
     data: DataOptions;
     dimension: {
       label: LabelMoveOptions;
+      labelActive: StyleText;
+      labelHover: StyleText;
       layout: DimensionLayout;
     };
     padding: Padding;
@@ -185,7 +201,6 @@ export interface HermesOptions {
 }
 
 export interface IX {
-  action: ActionType;
   dimension: {
     axis: number;
     bound?: Rect;
@@ -197,10 +212,8 @@ export interface IX {
     key?: DimensionKey;
   };
   shared: {
+    action: Action;
     focus?: Focus;
-    index: number;
-    p0: Point;
-    p1: Point;
   };
 }
 
@@ -263,4 +276,11 @@ export interface Internal {
     drawRect: Rect;
     padding: [ number, number, number, number ];
   };
+  styles: {
+    axis: StyleLine;
+    filters: StyleShape[];
+    label: StyleText;
+    tick: StyleLine;
+    tickLabel: StyleText;
+  }[];
 }

@@ -6,6 +6,12 @@ import * as t from './types';
 export const INVALID_VALUE = Number.NaN;
 export const INVALID_POINT = { x: Number.NaN, y: Number.NaN };
 export const INVALID_RECT = { h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN };
+export const INVALID_ACTION = {
+  dimIndex: -1,
+  p0: INVALID_POINT,
+  p1: INVALID_POINT,
+  type: t.ActionType.None,
+};
 
 /**
  * Style defaults.
@@ -35,10 +41,20 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         lineWidth: 1,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
+      axisActve: { strokeStyle: 'rgba(0, 0, 255, 1.0)' },
+      axisHover: { strokeStyle: 'rgba(0, 255, 0, 1.0)' },
       filter: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
         width: 4,
+      },
+      filterActive: {
+        fillStyle: 'rgba(255, 0, 0, 1.0)',
+        strokeStyle: 'rgba(0, 0, 255, 1.0)',
+      },
+      filterHover: {
+        fillStyle: 'rgba(0, 255, 0, 1.0)',
+        strokeStyle: 'rgba(0, 255, 0, 1.0)',
       },
       label: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
@@ -48,11 +64,15 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         placement: t.LabelPlacement.Before,
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
+      labelActive: { fillStyle: 'rgba(0, 0, 255, 1.0)' },
+      labelHover: { fillStyle: 'rgba(255, 0, 0, 1.0)' },
       tick: {
         length: 4,
         lineWidth: 1,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
+      tickActive: { strokeStyle: 'rgba(0, 0, 255, 1.0)' },
+      tickHover: { strokeStyle: 'rgba(0, 255, 0, 1.0)' },
     },
     data: {
       default: {
@@ -79,6 +99,8 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         placement: t.LabelPlacement.Before,
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
+      labelActive: { fillStyle: 'rgba(0, 0, 255, 1.0)' },
+      labelHover: { fillStyle: 'rgba(255, 0, 0, 1.0)' },
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },
     padding: [ 32, 16, 64, 16 ],
@@ -93,7 +115,6 @@ export const FILTER: t.Filter = {
 };
 
 export const IX: t.IX = {
-  action: t.ActionType.None,
   dimension: {
     axis: 0,
     bound: undefined,
@@ -105,9 +126,7 @@ export const IX: t.IX = {
     key: undefined,
   },
   shared: {
+    action: INVALID_ACTION,
     focus: undefined,
-    index: -1,
-    p0: { x: Number.NaN, y: Number.NaN },
-    p1: { x: Number.NaN, y: Number.NaN },
   },
 };

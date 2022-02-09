@@ -595,7 +595,14 @@ var PathType;
  * Invalid defaults.
  */
 const INVALID_VALUE = Number.NaN;
+const INVALID_POINT = { x: Number.NaN, y: Number.NaN };
 const INVALID_RECT = { h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN };
+const INVALID_ACTION = {
+    dimIndex: -1,
+    p0: INVALID_POINT,
+    p1: INVALID_POINT,
+    type: ActionType.None,
+};
 /**
  * Style defaults.
  */
@@ -622,10 +629,20 @@ const HERMES_OPTIONS = {
                 lineWidth: 1,
                 strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
+            axisActve: { strokeStyle: 'rgba(0, 0, 255, 1.0)' },
+            axisHover: { strokeStyle: 'rgba(0, 255, 0, 1.0)' },
             filter: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
                 width: 4,
+            },
+            filterActive: {
+                fillStyle: 'rgba(255, 0, 0, 1.0)',
+                strokeStyle: 'rgba(0, 0, 255, 1.0)',
+            },
+            filterHover: {
+                fillStyle: 'rgba(0, 255, 0, 1.0)',
+                strokeStyle: 'rgba(0, 255, 0, 1.0)',
             },
             label: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
@@ -635,11 +652,15 @@ const HERMES_OPTIONS = {
                 placement: LabelPlacement.Before,
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
             },
+            labelActive: { fillStyle: 'rgba(0, 0, 255, 1.0)' },
+            labelHover: { fillStyle: 'rgba(255, 0, 0, 1.0)' },
             tick: {
                 length: 4,
                 lineWidth: 1,
                 strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
+            tickActive: { strokeStyle: 'rgba(0, 0, 255, 1.0)' },
+            tickHover: { strokeStyle: 'rgba(0, 255, 0, 1.0)' },
         },
         data: {
             default: {
@@ -666,6 +687,8 @@ const HERMES_OPTIONS = {
                 placement: LabelPlacement.Before,
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
             },
+            labelActive: { fillStyle: 'rgba(0, 0, 255, 1.0)' },
+            labelHover: { fillStyle: 'rgba(255, 0, 0, 1.0)' },
             layout: DimensionLayout.AxisEvenlySpaced,
         },
         padding: [32, 16, 64, 16],
@@ -678,7 +701,6 @@ const FILTER = {
     value1: Number.NaN,
 };
 const IX = {
-    action: ActionType.None,
     dimension: {
         axis: 0,
         bound: undefined,
@@ -690,10 +712,8 @@ const IX = {
         key: undefined,
     },
     shared: {
+        action: INVALID_ACTION,
         focus: undefined,
-        index: -1,
-        p0: { x: Number.NaN, y: Number.NaN },
-        p1: { x: Number.NaN, y: Number.NaN },
     },
 };
 
@@ -992,7 +1012,8 @@ const DIMENSION_SWAP_THRESHOLD = 30;
 const FILTER_REMOVE_THRESHOLD = 1;
 const FILTER_RESIZE_THRESHOLD = 3;
 const getDragBound = (index, ix, bound) => {
-    const isLabelDrag = ix.action === ActionType.LabelMove && ix.shared.index === index;
+    const action = ix.shared.action;
+    const isLabelDrag = action.type === ActionType.LabelMove && action.dimIndex === index;
     const dragBound = ix.dimension.bound || INVALID_RECT;
     const offset = ix.dimension.boundOffset || { x: 0, y: 0 };
     return isLabelDrag ? shiftRect(dragBound, offset) : bound;
@@ -1207,6 +1228,7 @@ class Hermes {
     calculate() {
         this.calculateScales();
         this.calculateLayout();
+        this.calculateStyles();
     }
     calculateScales() {
         this.dimensions.forEach(dimension => {
@@ -1481,37 +1503,107 @@ class Hermes {
         }
         this._ = _;
     }
+    calculateStyles() {
+        if (!this._)
+            return;
+        this._.styles = this._.styles || [];
+        const _os = this.options.style;
+        const _osa = _os.axes;
+        const _osd = _os.dimension;
+        const _dl = this._.dims.list;
+        const _s = this._.styles;
+        const _ixsa = this.ix.shared.action;
+        const _ixsf = this.ix.shared.focus;
+        const isActive = _ixsa.type !== ActionType.None;
+        for (let i = 0; i < _dl.length; i++) {
+            const key = this.dimensions[i].key;
+            const filters = this.filters[key] || [];
+            const isDimActive = _ixsa.type === ActionType.LabelMove && _ixsa.dimIndex === i;
+            const isDimFocused = (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionLabel && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
+            const isAxisActive = [
+                ActionType.FilterCreate,
+                ActionType.FilterMove,
+                ActionType.FilterResizeAfter,
+                ActionType.FilterResizeBefore,
+            ].includes(_ixsa.type) && _ixsa.dimIndex === i;
+            const isAxisFocused = (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionAxis && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
+            _s[i] = _s[i] || {};
+            _s[i].label = {
+                ..._osd.label,
+                ...(!isDimActive && isDimFocused && !isActive ? _osd.labelHover : {}),
+                ...(isDimActive ? _osd.labelActive : {}),
+            };
+            _s[i].axis = {
+                ..._osa.axis,
+                ...(!isAxisActive && isAxisFocused && !isActive ? _osa.axisHover : {}),
+                ...(isAxisActive ? _osa.axisActve : {}),
+            };
+            _s[i].tick = {
+                ..._osa.tick,
+                ...(!isAxisActive && isAxisFocused && !isActive ? _osa.tickHover : {}),
+                ...(isAxisActive ? _osa.tickActive : {}),
+            };
+            _s[i].tickLabel = {
+                ..._osa.label,
+                ...(!isAxisActive && isAxisFocused && !isActive ? _osa.labelHover : {}),
+                ...(isAxisActive ? _osa.labelActive : {}),
+            };
+            _s[i].filters = filters.map((filter, j) => {
+                const isFilterFocused = ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter &&
+                    (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i &&
+                    (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.filterIndex) === j);
+                const isFilterActive = _ixsa.dimIndex === i && _ixsa.filterIndex === j;
+                return {
+                    ..._osa.filter,
+                    ...(!isFilterActive && isFilterFocused && !isActive ? _osa.filterHover : {}),
+                    ...(isFilterActive ? _osa.filterActive : {}),
+                };
+            });
+        }
+    }
     getFocusByPoint(point) {
         if (!this._)
             return;
+        const isHorizontal = this.options.direction === Direction.Horizontal;
+        const vKey = isHorizontal ? 'y' : 'x';
+        const axisLength = this._.dims.shared.axes.length;
         for (let i = 0; i < this._.dims.list.length; i++) {
-            const dim = this._.dims.list[i];
+            const key = this.dimensions[i].key;
+            const layout = this._.dims.list[i].layout;
             // Check to see if a dimension label was targeted.
-            const labelBoundary = dim.layout.labelBoundary;
+            const labelBoundary = layout.labelBoundary;
             if (isPointInTriangle(point, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
                 isPointInTriangle(point, labelBoundary[2], labelBoundary[3], labelBoundary[0])) {
                 return { dimIndex: i, type: FocusType.DimensionLabel };
             }
             // Check to see if a dimension axis was targeted.
-            const axisBoundary = dim.layout.axisBoundary;
+            const axisBoundary = layout.axisBoundary;
             if (isPointInTriangle(point, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
                 isPointInTriangle(point, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
-                return { dimIndex: i, type: FocusType.DimensionAxis };
+                const filters = this.filters[key] || [];
+                const axisOffset = layout.bound[vKey] + layout.axisStart[vKey];
+                const p = (point[vKey] - axisOffset) / axisLength;
+                const filterIndex = filters.findIndex(filter => p >= filter.p0 && p <= filter.p1);
+                return {
+                    dimIndex: i,
+                    filterIndex,
+                    type: filterIndex !== -1 ? FocusType.Filter : FocusType.DimensionAxis,
+                };
             }
         }
     }
     updateActiveLabel() {
-        if (!this._ || this.ix.action !== ActionType.LabelMove)
+        if (!this._ || this.ix.shared.action.type !== ActionType.LabelMove)
             return;
         const _dl = this._.dims.list;
         const _ix = this.ix;
         const _ixd = _ix.dimension;
-        const _ixs = _ix.shared;
+        const _ixsa = _ix.shared.action;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const hKey = isHorizontal ? 'x' : 'y';
         _ixd.boundOffset = {
-            x: isHorizontal ? _ixs.p1.x - _ixs.p0.x : 0,
-            y: isHorizontal ? 0 : _ixs.p1.y - _ixs.p0.y,
+            x: isHorizontal ? _ixsa.p1.x - _ixsa.p0.x : 0,
+            y: isHorizontal ? 0 : _ixsa.p1.y - _ixsa.p0.y,
         };
         for (let i = 0; i < _dl.length; i++) {
             const layout = _dl[i].layout;
@@ -1524,13 +1616,13 @@ class Hermes {
              * 2. dimension being dragged isn't being the dimension getting compared to (i)
              * 3. dimension is within a distance threshold
              */
-            if (_ixs.index !== i && Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
+            if (_ixsa.dimIndex !== i && Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
                 // Swap dragging dimension with the dimension it intersects with.
-                const tempDim = this.dimensions[_ixs.index];
-                this.dimensions[_ixs.index] = this.dimensions[i];
+                const tempDim = this.dimensions[_ixsa.dimIndex];
+                this.dimensions[_ixsa.dimIndex] = this.dimensions[i];
                 this.dimensions[i] = tempDim;
                 // Update the drag dimension's index
-                _ixs.index = i;
+                _ixsa.dimIndex = i;
             }
         }
     }
@@ -1539,6 +1631,7 @@ class Hermes {
             return;
         const _filters = this.filters;
         const _ix = this.ix;
+        const _ixsa = _ix.shared.action;
         const _ixf = _ix.filters;
         const _dsa = this._.dims.shared.axes;
         // See if there is an existing matching filter based on % position.
@@ -1547,24 +1640,26 @@ class Hermes {
             _ixf.active = _filters[key][index];
             _ixf.active.startP0 = _ixf.active.p0;
             _ixf.active.startP1 = _ixf.active.p1;
+            _ixsa.filterIndex = index;
             if (pos >= _ixf.active.p0 &&
                 pos <= _ixf.active.p0 + (FILTER_RESIZE_THRESHOLD / _dsa.length)) {
-                _ix.action = ActionType.FilterResizeBefore;
+                _ixsa.type = ActionType.FilterResizeBefore;
             }
             else if (pos >= _ixf.active.p1 - (FILTER_RESIZE_THRESHOLD / _dsa.length) &&
                 pos <= _ixf.active.p1) {
-                _ix.action = ActionType.FilterResizeAfter;
+                _ixsa.type = ActionType.FilterResizeAfter;
             }
             else {
-                _ix.action = ActionType.FilterMove;
+                _ixsa.type = ActionType.FilterMove;
             }
         }
         else {
-            _ix.action = ActionType.FilterCreate;
+            _ixsa.type = ActionType.FilterCreate;
             _ixf.active = { p0: pos, p1: pos, value0: value, value1: value };
             // Store active filter into filter list.
             _filters[key] = _filters[key] || [];
             _filters[key].push(_ixf.active);
+            _ixsa.filterIndex = _filters[key].length - 1;
         }
     }
     updateActiveFilter(e) {
@@ -1574,9 +1669,11 @@ class Hermes {
         const _dl = this._.dims.list;
         const _dsa = this._.dims.shared.axes;
         const _ix = this.ix;
-        const _drs = _ix.shared;
-        const _drf = _ix.filters;
+        const _ixf = _ix.filters;
+        const _ixs = _ix.shared;
+        const _ixsa = _ixs.action;
         const _filters = this.filters;
+        const index = _ixsa.dimIndex;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const filterKey = isHorizontal ? 'y' : 'x';
         const isFilterAction = [
@@ -1584,43 +1681,43 @@ class Hermes {
             ActionType.FilterMove,
             ActionType.FilterResizeAfter,
             ActionType.FilterResizeBefore,
-        ].includes(_ix.action);
-        if (!isFilterAction || !_drf.key)
+        ].includes(_ixsa.type);
+        if (!isFilterAction || !_ixf.key)
             return;
-        const bound = _dl[_drs.index].layout.bound;
-        const axisStart = _dl[_drs.index].layout.axisStart[filterKey];
+        const bound = _dl[_ixsa.dimIndex].layout.bound;
+        const axisStart = _dl[_ixsa.dimIndex].layout.axisStart[filterKey];
         /**
          * If the active filter previously exists, we want to drag it,
          * otherwise we want to change the size of the new one based on event position.
          */
-        if (_ix.action === ActionType.FilterMove) {
-            const startP0 = (_a = _drf.active.startP0) !== null && _a !== void 0 ? _a : 0;
-            const startP1 = (_b = _drf.active.startP1) !== null && _b !== void 0 ? _b : 0;
+        if (_ixsa.type === ActionType.FilterMove) {
+            const startP0 = (_a = _ixf.active.startP0) !== null && _a !== void 0 ? _a : 0;
+            const startP1 = (_b = _ixf.active.startP1) !== null && _b !== void 0 ? _b : 0;
             const startLength = startP1 - startP0;
-            const shift = (_drs.p1[filterKey] - _drs.p0[filterKey]) / _dsa.length;
-            _drf.active.p0 = startP0 + shift;
-            _drf.active.p1 = startP1 + shift;
+            const shift = (_ixsa.p1[filterKey] - _ixsa.p0[filterKey]) / _dsa.length;
+            _ixf.active.p0 = startP0 + shift;
+            _ixf.active.p1 = startP1 + shift;
             // Cap the drag to the axis edges.
-            if (_drf.active.p0 < 0.0) {
-                _drf.active.p0 = 0;
-                _drf.active.p1 = startLength;
+            if (_ixf.active.p0 < 0.0) {
+                _ixf.active.p0 = 0;
+                _ixf.active.p1 = startLength;
             }
-            else if (_drf.active.p1 > 1.0) {
-                _drf.active.p0 = 1.0 - startLength;
-                _drf.active.p1 = 1.0;
+            else if (_ixf.active.p1 > 1.0) {
+                _ixf.active.p0 = 1.0 - startLength;
+                _ixf.active.p1 = 1.0;
             }
-            _drf.active.value0 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p0);
-            _drf.active.value1 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p1);
+            _ixf.active.value0 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p0);
+            _ixf.active.value1 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p1);
         }
-        else if (_ix.action === ActionType.FilterResizeBefore) {
-            _drf.active.p0 = (_drs.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
-            _drf.active.p0 = capDataRange(_drf.active.p0, [0.0, 1.0]);
-            _drf.active.value0 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p0);
+        else if (_ixsa.type === ActionType.FilterResizeBefore) {
+            _ixf.active.p0 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
+            _ixf.active.p0 = capDataRange(_ixf.active.p0, [0.0, 1.0]);
+            _ixf.active.value0 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p0);
         }
         else {
-            _drf.active.p1 = (_drs.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
-            _drf.active.p1 = capDataRange(_drf.active.p1, [0.0, 1.0]);
-            _drf.active.value1 = this.dimensions[_drs.index].axis.scale.percentToValue(_drf.active.p1);
+            _ixf.active.p1 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
+            _ixf.active.p1 = capDataRange(_ixf.active.p1, [0.0, 1.0]);
+            _ixf.active.value1 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p1);
         }
         // Whether or not to finalize active filter and removing reference to it.
         if (e.type !== 'mouseup')
@@ -1629,23 +1726,23 @@ class Hermes {
          * Check to see if the release event is near the starting event.
          * If so, remove the previously added filter and clear out the active filter.
          */
-        if (distance(_drs.p0, _drs.p1) < FILTER_REMOVE_THRESHOLD) {
+        if (distance(_ixsa.p0, _ixsa.p1) < FILTER_REMOVE_THRESHOLD) {
             // Remove matching filter based on event position value.
-            const filters = _filters[_drf.key] || [];
-            const pos = (_drf.active.p1 - _drf.active.p0) / 2 + _drf.active.p0;
+            const filters = _filters[_ixf.key] || [];
+            const pos = (_ixf.active.p1 - _ixf.active.p0) / 2 + _ixf.active.p0;
             const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
             if (removeIndex !== -1)
                 filters.splice(removeIndex, 1);
         }
         // Swap p0 and p1 if p1 is less than p0.
-        if (_drf.active.p1 < _drf.active.p0) {
-            const [tempP, tempValue] = [_drf.active.p1, _drf.active.value1];
-            [_drf.active.p1, _drf.active.value1] = [_drf.active.p0, _drf.active.value0];
-            [_drf.active.p0, _drf.active.value0] = [tempP, tempValue];
+        if (_ixf.active.p1 < _ixf.active.p0) {
+            const [tempP, tempValue] = [_ixf.active.p1, _ixf.active.value1];
+            [_ixf.active.p1, _ixf.active.value1] = [_ixf.active.p0, _ixf.active.value0];
+            [_ixf.active.p0, _ixf.active.value0] = [tempP, tempValue];
         }
         // Overwrite active filter to remove reference to filter in filters list.
-        _drf.active = { ...FILTER };
-        _drf.key = undefined;
+        _ixf.active = { ...FILTER };
+        _ixf.key = undefined;
         this.cleanUpFilters();
     }
     cleanUpFilters() {
@@ -1681,6 +1778,7 @@ class Hermes {
         const _dl = this._.dims.list;
         const _dsa = this._.dims.shared.axes;
         const _dsl = this._.dims.shared.label;
+        const _s = this._.styles;
         const _ix = this.ix;
         const _filters = this.filters;
         const isHorizontal = this.options.direction === Direction.Horizontal;
@@ -1738,25 +1836,26 @@ class Hermes {
             drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
         }
         // Draw dimension labels.
-        const dimTextStyle = dimStyle.label;
-        if (dimStyle.label.angle == null) {
-            dimTextStyle.textAlign = isHorizontal ? 'center' : undefined;
-            dimTextStyle.textBaseline = isHorizontal ? (isLabelBefore ? 'bottom' : 'top') : undefined;
-        }
+        const labelAdjust = dimStyle.label.angle == null && isHorizontal;
+        const dimTextStyle = {
+            textAlign: labelAdjust ? 'center' : undefined,
+            textBaseline: labelAdjust ? (isLabelBefore ? 'bottom' : 'top') : undefined,
+        };
         this.dimensions.forEach((dimension, i) => {
             var _a;
             const bound = getDragBound(i, _ix, _dl[i].layout.bound);
             const labelPoint = _dl[i].layout.labelPoint;
             const x = bound.x + labelPoint.x;
             const y = bound.y + labelPoint.y;
-            drawText(this.ctx, dimension.label, x, y, (_a = _dsl.rad) !== null && _a !== void 0 ? _a : 0, dimTextStyle);
+            const style = { ..._s[i].label, ...dimTextStyle };
+            drawText(this.ctx, dimension.label, x, y, (_a = _dsl.rad) !== null && _a !== void 0 ? _a : 0, style);
         });
         // Draw dimension axes.
-        const drawTickTextStyle = axesStyle.label;
-        if (axesStyle.label.angle == null) {
-            drawTickTextStyle.textAlign = isHorizontal ? undefined : 'center';
-            drawTickTextStyle.textBaseline = isHorizontal ? undefined : (isAxesBefore ? 'bottom' : 'top');
-        }
+        const tickAdjust = axesStyle.label.angle == null && isHorizontal;
+        const tickTextStyle = {
+            textAlign: tickAdjust ? undefined : 'center',
+            textBaseline: tickAdjust ? undefined : (isAxesBefore ? 'bottom' : 'top'),
+        };
         _dl.forEach((dim, i) => {
             const key = this.dimensions[i].key;
             const bound = getDragBound(i, _ix, dim.layout.bound);
@@ -1766,26 +1865,27 @@ class Hermes {
             const tickPos = dim.axes.tickPos;
             const tickLengthFactor = isAxesBefore ? -1 : 1;
             const filters = _filters[key] || [];
-            drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, axesStyle.axis);
-            for (let i = 0; i < tickLabels.length; i++) {
-                const xOffset = isHorizontal ? 0 : tickPos[i];
-                const yOffset = isHorizontal ? tickPos[i] : 0;
+            drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, _s[i].axis);
+            for (let j = 0; j < tickLabels.length; j++) {
+                const xOffset = isHorizontal ? 0 : tickPos[j];
+                const yOffset = isHorizontal ? tickPos[j] : 0;
                 const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
                 const yTickLength = isHorizontal ? 0 : tickLengthFactor * axesStyle.tick.length;
                 const x0 = bound.x + axisStart.x + xOffset;
                 const y0 = bound.y + axisStart.y + yOffset;
                 const x1 = bound.x + axisStart.x + xOffset + xTickLength;
                 const y1 = bound.y + axisStart.y + yOffset + yTickLength;
-                drawLine(this.ctx, x0, y0, x1, y1, axesStyle.tick);
+                drawLine(this.ctx, x0, y0, x1, y1, _s[i].tick);
                 const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
                 const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;
                 const rad = axesStyle.label.angle != null
                     ? axesStyle.label.angle
                     : (isHorizontal && isAxesBefore ? Math.PI : 0);
-                const tickLabel = tickLabels[i];
-                drawText(this.ctx, tickLabel, cx, cy, rad, drawTickTextStyle);
+                const tickLabel = tickLabels[j];
+                const style = { ..._s[i].tickLabel, ...tickTextStyle };
+                drawText(this.ctx, tickLabel, cx, cy, rad, style);
             }
-            filters.forEach(filter => {
+            filters.forEach((filter, j) => {
                 const p0 = filter.p0 * _dsa.length;
                 const p1 = filter.p1 * _dsa.length;
                 const halfWidth = axesStyle.filter.width / 2;
@@ -1793,7 +1893,7 @@ class Hermes {
                 const y = bound.y + axisStart.y + (isHorizontal ? p0 : -halfWidth);
                 const w = isHorizontal ? axesStyle.filter.width : p1 - p0;
                 const h = isHorizontal ? p1 - p0 : axesStyle.filter.width;
-                drawRect(this.ctx, x, y, w, h, axesStyle.filter);
+                drawRect(this.ctx, x, y, w, h, _s[i].filters[j]);
             });
         });
     }
@@ -1842,8 +1942,8 @@ class Hermes {
         var _a, _b;
         if (!this._)
             return;
-        const _ix = this.ix;
         const _ixs = this.ix.shared;
+        const _ixsa = this.ix.shared.action;
         const _ixd = this.ix.dimension;
         const _ixf = this.ix.filters;
         const _dsa = this._.dims.shared.axes;
@@ -1851,8 +1951,9 @@ class Hermes {
         const hKey = isHorizontal ? 'x' : 'y';
         const vKey = isHorizontal ? 'y' : 'x';
         const point = { x: e.clientX, y: e.clientY };
-        _ixs.p0 = point;
-        _ixs.p1 = point;
+        _ixsa.p0 = point;
+        _ixsa.p1 = point;
+        _ixsa.filterIndex = -1;
         _ixs.focus = this.getFocusByPoint(point);
         if (_ixs.focus) {
             const i = _ixs.focus.dimIndex;
@@ -1860,27 +1961,29 @@ class Hermes {
             const bound = layout.bound;
             const axisStart = layout.axisStart;
             if (((_a = _ixs.focus) === null || _a === void 0 ? void 0 : _a.type) === FocusType.DimensionLabel) {
-                _ix.action = ActionType.LabelMove;
+                _ixsa.type = ActionType.LabelMove;
+                _ixsa.dimIndex = i;
                 _ixd.axis = bound[hKey] + axisStart[hKey];
                 _ixd.bound = bound;
-                _ixs.index = i;
             }
-            else if (((_b = _ixs.focus) === null || _b === void 0 ? void 0 : _b.type) === FocusType.DimensionAxis) {
-                _ix.action = ActionType.FilterCreate;
-                _ixs.index = i;
+            else if ([FocusType.DimensionAxis, FocusType.Filter].includes((_b = _ixs.focus) === null || _b === void 0 ? void 0 : _b.type)) {
+                _ixsa.type = ActionType.FilterCreate;
+                _ixsa.dimIndex = i;
                 _ixf.key = this.dimensions[i].key;
-                const p0 = (_ixs.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
+                const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
                 const value0 = this.dimensions[i].axis.scale.percentToValue(p0);
                 this.setActiveFilter(_ixf.key, p0, value0);
             }
         }
+        this.calculate();
+        this.draw();
     }
     handleMouseMove(e) {
         if (!this._)
             return;
         const point = { x: e.clientX, y: e.clientY };
         const _ixs = this.ix.shared;
-        _ixs.p1 = point;
+        _ixs.action.p1 = point;
         _ixs.focus = this.getFocusByPoint(point);
         // Update dimension dragging via label.
         this.updateActiveLabel();
@@ -1890,11 +1993,11 @@ class Hermes {
         this.draw();
     }
     handleMouseUp(e) {
-        if (!this._ || this.ix.action === ActionType.None)
+        if (!this._ || this.ix.shared.action.type === ActionType.None)
             return;
         const point = { x: e.clientX, y: e.clientY };
         const _ixs = this.ix.shared;
-        _ixs.p1 = point;
+        _ixs.action.p1 = point;
         _ixs.focus = this.getFocusByPoint(point);
         this.updateActiveFilter(e);
         // Reset drag info.
