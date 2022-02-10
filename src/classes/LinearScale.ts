@@ -10,21 +10,21 @@ class LinearScale extends NiceScale {
   }
 
   public percentToValue(percent: number): number {
-    const min = this.ticks[0];
-    const max = this.ticks[this.ticks.length - 1];
+    const min = this.niceEdges ? this.min : this.minValue;
+    const max = this.niceEdges ? this.max : this.maxValue;
     return percent * (max - min) + min;
   }
 
   public posToValue(pos: number): number {
-    const min = this.ticks[0];
-    const max = this.ticks[this.ticks.length - 1];
+    const min = this.niceEdges ? this.min : this.minValue;
+    const max = this.niceEdges ? this.max : this.maxValue;
     return (pos / this.axisLength) * (max - min) + min;
   }
 
   public valueToPercent(value: Primitive): number {
     if (!isNumber(value)) return 0;
-    const min = this.ticks[0];
-    const max = this.ticks[this.ticks.length - 1];
+    const min = this.niceEdges ? this.min : this.minValue;
+    const max = this.niceEdges ? this.max : this.maxValue;
     return (value - min) / (max - min);
   }
 
@@ -44,17 +44,15 @@ class LinearScale extends NiceScale {
     this.ticks = [];
     this.tickLabels = [];
     for (let i = 0; i <= count; i++) {
-      const tick = i * this.tickSpacing + this.min;
+      let tick = i * this.tickSpacing + this.min;
+      if (!this.niceEdges && i === 0) tick = this.minValue;
+      if (!this.niceEdges && i === count) tick = this.maxValue;
       this.ticks.push(tick);
       this.tickLabels.push(readableTick(tick));
     }
 
     // Calculate tick positions based on axis length and ticks.
-    const offset = this.axisLength / (this.ticks.length - 1);
-    this.tickPos = [];
-    for (let i = 0; i < this.ticks.length; i++) {
-      this.tickPos.push(i * offset);
-    }
+    this.tickPos = this.ticks.map(tick => this.valueToPos(tick));
   }
 }
 

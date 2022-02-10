@@ -27,7 +27,7 @@ abstract class NiceScale {
    * @param maxValue the maximum data point on the axis
    * @param maxTicks the maximum number of tick marks for the axis
    */
-  constructor(protected minValue: number, protected maxValue: number) {
+  constructor(protected minValue: number, protected maxValue: number, protected niceEdges = true) {
     this.minValue = minValue;
     this.maxValue = maxValue;
     this.max = maxValue;
