@@ -448,7 +448,7 @@ class Hermes {
 
       _s[i].filters = filters.map((filter, j) => {
         const isFilterFocused = (
-          _ixsf?.type === t.FocusType.Filter &&
+          (_ixsf?.type === t.FocusType.Filter || _ixsf?.type === t.FocusType.FilterResize) &&
           _ixsf?.dimIndex === i &&
           _ixsf?.filterIndex === j
         );
@@ -465,6 +465,7 @@ class Hermes {
   private getFocusByPoint(point: t.Point): t.Focus | undefined {
     if (!this._) return;
 
+    const _dsa = this._.dims.shared.axes;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const vKey = isHorizontal ? 'y' : 'x';
     const axisLength = this._.dims.shared.axes.length;
@@ -491,11 +492,16 @@ class Hermes {
         const axisOffset = layout.bound[vKey] + layout.axisStart[vKey];
         const p = (point[vKey] - axisOffset) / axisLength;
         const filterIndex = filters.findIndex(filter => p >= filter.p0 && p <= filter.p1);
-        return {
-          dimIndex: i,
-          filterIndex,
-          type: filterIndex !== -1 ? t.FocusType.Filter : t.FocusType.DimensionAxis,
-        };
+
+        let type = t.FocusType.DimensionAxis;
+        if (filterIndex !== -1) {
+          const threshold = ix.FILTER_RESIZE_THRESHOLD / _dsa.length;
+          const filter = filters[filterIndex];
+          const isResize = p <= filter.p0 + threshold || p >= filter.p1 - threshold;
+          type = isResize ? t.FocusType.FilterResize : t.FocusType.Filter;
+        }
+
+        return { dimIndex: i, filterIndex, type };
       }
     }
   }
@@ -718,6 +724,8 @@ class Hermes {
         cursor = 'crosshair';
       } else if (_ixsf.type === t.FocusType.Filter) {
         cursor = 'grab';
+      } else if (_ixsf.type === t.FocusType.FilterResize) {
+        cursor = isHorizontal ? 'ns-resize' : 'ew-resize';
       }
     }
     this.canvas.style.cursor = cursor;
@@ -841,7 +849,8 @@ class Hermes {
         if (tickLabel[0] === '*') {
           if (_ixsf?.dimIndex === i && (
             _ixsf?.type === t.FocusType.DimensionAxis ||
-            _ixsf?.type === t.FocusType.Filter
+            _ixsf?.type === t.FocusType.Filter ||
+            _ixsf?.type === t.FocusType.FilterResize
           )) {
             tickLabel = tickLabel.substring(1);
           } else {
@@ -978,7 +987,11 @@ class Hermes {
         _ixsa.dimIndex = i;
         _ixd.axis = bound[hKey] + axisStart[hKey];
         _ixd.bound = bound;
-      } else if ([ t.FocusType.DimensionAxis, t.FocusType.Filter ].includes(_ixs.focus?.type)) {
+      } else if ([
+        t.FocusType.DimensionAxis,
+        t.FocusType.Filter,
+        t.FocusType.FilterResize,
+      ].includes(_ixs.focus?.type)) {
         _ixsa.type = t.ActionType.FilterCreate;
         _ixsa.dimIndex = i;
         _ixf.key = this.dimensions[i].key;

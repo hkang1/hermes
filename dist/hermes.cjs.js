@@ -604,6 +604,7 @@ var FocusType;
     FocusType["DimensionLabel"] = "dimension-label";
     FocusType["DimensionAxis"] = "dimension-axis";
     FocusType["Filter"] = "filter";
+    FocusType["FilterResize"] = "filter-resize";
 })(FocusType || (FocusType = {}));
 var LabelPlacement;
 (function (LabelPlacement) {
@@ -1580,7 +1581,7 @@ class Hermes {
                 ...(isAxisActive ? _osa.labelActive : {}),
             };
             _s[i].filters = filters.map((filter, j) => {
-                const isFilterFocused = ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter &&
+                const isFilterFocused = (((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter || (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.FilterResize) &&
                     (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i &&
                     (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.filterIndex) === j);
                 const isFilterActive = _ixsa.dimIndex === i && _ixsa.filterIndex === j;
@@ -1595,6 +1596,7 @@ class Hermes {
     getFocusByPoint(point) {
         if (!this._)
             return;
+        const _dsa = this._.dims.shared.axes;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const vKey = isHorizontal ? 'y' : 'x';
         const axisLength = this._.dims.shared.axes.length;
@@ -1615,11 +1617,14 @@ class Hermes {
                 const axisOffset = layout.bound[vKey] + layout.axisStart[vKey];
                 const p = (point[vKey] - axisOffset) / axisLength;
                 const filterIndex = filters.findIndex(filter => p >= filter.p0 && p <= filter.p1);
-                return {
-                    dimIndex: i,
-                    filterIndex,
-                    type: filterIndex !== -1 ? FocusType.Filter : FocusType.DimensionAxis,
-                };
+                let type = FocusType.DimensionAxis;
+                if (filterIndex !== -1) {
+                    const threshold = FILTER_RESIZE_THRESHOLD / _dsa.length;
+                    const filter = filters[filterIndex];
+                    const isResize = p <= filter.p0 + threshold || p >= filter.p1 - threshold;
+                    type = isResize ? FocusType.FilterResize : FocusType.Filter;
+                }
+                return { dimIndex: i, filterIndex, type };
             }
         }
     }
@@ -1831,6 +1836,9 @@ class Hermes {
             else if (_ixsf.type === FocusType.Filter) {
                 cursor = 'grab';
             }
+            else if (_ixsf.type === FocusType.FilterResize) {
+                cursor = isHorizontal ? 'ns-resize' : 'ew-resize';
+            }
         }
         this.canvas.style.cursor = cursor;
     }
@@ -1935,7 +1943,8 @@ class Hermes {
                 let tickLabel = tickLabels[j];
                 if (tickLabel[0] === '*') {
                     if ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i && ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionAxis ||
-                        (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter)) {
+                        (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter ||
+                        (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.FilterResize)) {
                         tickLabel = tickLabel.substring(1);
                     }
                     else {
@@ -2048,7 +2057,11 @@ class Hermes {
                 _ixd.axis = bound[hKey] + axisStart[hKey];
                 _ixd.bound = bound;
             }
-            else if ([FocusType.DimensionAxis, FocusType.Filter].includes((_b = _ixs.focus) === null || _b === void 0 ? void 0 : _b.type)) {
+            else if ([
+                FocusType.DimensionAxis,
+                FocusType.Filter,
+                FocusType.FilterResize,
+            ].includes((_b = _ixs.focus) === null || _b === void 0 ? void 0 : _b.type)) {
                 _ixsa.type = ActionType.FilterCreate;
                 _ixsa.dimIndex = i;
                 _ixf.key = this.dimensions[i].key;

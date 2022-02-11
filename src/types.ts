@@ -76,6 +76,7 @@ export enum FocusType {
   DimensionLabel = 'dimension-label',
   DimensionAxis = 'dimension-axis',
   Filter = 'filter',
+  FilterResize = 'filter-resize',
 }
 
 export enum LabelPlacement {
