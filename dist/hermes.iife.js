@@ -1821,7 +1821,6 @@ var Hermes = (function () {
               else if (_ixsa.type === ActionType.FilterCreate) {
                   cursor = 'crosshair';
               }
-              // this.canvas.style.cursor =
           }
           else if (_ixsf !== undefined) {
               if (_ixsf.type === FocusType.DimensionLabel) {
@@ -2084,13 +2083,12 @@ var Hermes = (function () {
           if (!this._ || this.ix.shared.action.type === ActionType.None)
               return;
           const point = { x: e.clientX, y: e.clientY };
-          const _ixs = this.ix.shared;
-          _ixs.action.p1 = point;
-          _ixs.focus = this.getFocusByPoint(point);
+          this.ix.shared.action.p1 = point;
           // Update active filter upon release event.
           this.updateActiveFilter(e);
-          // Reset drag info.
+          // Reset drag info but preserve focus.
           this.ix = clone(IX);
+          this.ix.shared.focus = this.getFocusByPoint(point);
           // Update cursor pointer based on type and position.
           this.updateCursor();
           this.calculate();
