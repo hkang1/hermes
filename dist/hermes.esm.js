@@ -297,6 +297,7 @@ const value2str = (value) => {
  *
  * https://stackoverflow.com/questions/8506881/nice-label-algorithm-for-charts-with-minimum-ticks
  */
+const DEFAULT_DATA_ON_EDGE = true;
 const MIN_TICK_DISTANCE = 50;
 class NiceScale {
     /**
@@ -306,14 +307,15 @@ class NiceScale {
      * @param maxValue the maximum data point on the axis
      * @param maxTicks the maximum number of tick marks for the axis
      */
-    constructor(minValue, maxValue, niceEdges = true) {
+    constructor(minValue, maxValue, dataOnEdge = DEFAULT_DATA_ON_EDGE) {
         this.minValue = minValue;
         this.maxValue = maxValue;
-        this.niceEdges = niceEdges;
+        this.dataOnEdge = dataOnEdge;
         this.range = 0;
         this.tickLabels = [];
         this.tickPos = [];
         this.ticks = [];
+        this.tickPadding = 0;
         this.tickSpacing = 0;
         this.axisLength = 1;
         this.maxTicks = 1;
@@ -370,9 +372,10 @@ class NiceScale {
 }
 
 class CategoricalScale extends NiceScale {
-    constructor(categories = []) {
-        super(0, 0);
+    constructor(categories = [], dataOnEdge = DEFAULT_DATA_ON_EDGE) {
+        super(0, 0, dataOnEdge);
         this.categories = categories;
+        this.dataOnEdge = dataOnEdge;
         this.tickLabels = this.categories.map(category => value2str(category));
     }
     percentToValue(percent) {
@@ -391,13 +394,6 @@ class CategoricalScale extends NiceScale {
         }
         return value;
     }
-    valueToPos(value) {
-        const stringValue = value2str(value);
-        const index = this.tickLabels.findIndex(label => label === stringValue);
-        if (index !== -1)
-            return this.tickPos[index];
-        return 0;
-    }
     valueToPercent(value) {
         const stringValue = value2str(value);
         const index = this.tickLabels.findIndex(label => label === stringValue);
@@ -405,14 +401,22 @@ class CategoricalScale extends NiceScale {
             return this.tickPos[index] / this.axisLength;
         return 0;
     }
+    valueToPos(value) {
+        const stringValue = value2str(value);
+        const index = this.tickLabels.findIndex(label => label === stringValue);
+        if (index !== -1)
+            return this.tickPos[index];
+        return 0;
+    }
     calculate() {
         // Calculate tick positions based on axis length and ticks.
+        const count = this.tickLabels.length;
         let traversed = 0;
-        this.tickSpacing = this.axisLength / this.tickLabels.length;
+        this.tickSpacing = this.axisLength / (this.dataOnEdge ? count - 1 : count);
         this.tickPos = [];
-        for (let i = 0; i < this.tickLabels.length; i++) {
-            if (i === 0 || i === this.tickLabels.length) {
-                traversed += this.tickSpacing / 2;
+        for (let i = 0; i < count; i++) {
+            if ([0, count].includes(i)) {
+                traversed += this.dataOnEdge ? 0 : this.tickSpacing / 2;
             }
             else {
                 traversed += this.tickSpacing;
@@ -432,25 +436,25 @@ class HermesError extends Error {
 }
 
 class LinearScale extends NiceScale {
-    valueToPos(value) {
-        return this.valueToPercent(value) * this.axisLength;
-    }
     percentToValue(percent) {
-        const min = this.niceEdges ? this.min : this.minValue;
-        const max = this.niceEdges ? this.max : this.maxValue;
+        const min = this.dataOnEdge ? this.minValue : this.min;
+        const max = this.dataOnEdge ? this.maxValue : this.max;
         return percent * (max - min) + min;
     }
     posToValue(pos) {
-        const min = this.niceEdges ? this.min : this.minValue;
-        const max = this.niceEdges ? this.max : this.maxValue;
+        const min = this.dataOnEdge ? this.minValue : this.min;
+        const max = this.dataOnEdge ? this.maxValue : this.max;
         return (pos / this.axisLength) * (max - min) + min;
     }
     valueToPercent(value) {
         if (!isNumber(value))
             return 0;
-        const min = this.niceEdges ? this.min : this.minValue;
-        const max = this.niceEdges ? this.max : this.maxValue;
+        const min = this.dataOnEdge ? this.minValue : this.min;
+        const max = this.dataOnEdge ? this.maxValue : this.max;
         return (value - min) / (max - min);
+    }
+    valueToPos(value) {
+        return this.valueToPercent(value) * this.axisLength;
     }
     calculate() {
         this.range = this.niceNum(this.maxValue - this.minValue, false);
@@ -468,12 +472,15 @@ class LinearScale extends NiceScale {
         this.tickLabels = [];
         for (let i = 0; i <= count; i++) {
             let tick = i * this.tickSpacing + this.min;
-            if (!this.niceEdges && i === 0)
+            if (this.dataOnEdge && i === 0)
                 tick = this.minValue;
-            if (!this.niceEdges && i === count)
+            if (this.dataOnEdge && i === count)
                 tick = this.maxValue;
             this.ticks.push(tick);
-            this.tickLabels.push(readableTick(tick));
+            let tickLabel = readableTick(tick);
+            if (this.dataOnEdge && [0, count].includes(i))
+                tickLabel = `*${tickLabel}`;
+            this.tickLabels.push(tickLabel);
         }
         // Calculate tick positions based on axis length and ticks.
         this.tickPos = this.ticks.map(tick => this.valueToPos(tick));
@@ -482,11 +489,16 @@ class LinearScale extends NiceScale {
 
 const DEFAULT_LOG_BASE = 10;
 class LogScale extends NiceScale {
-    constructor(minValue, maxValue, logBase = DEFAULT_LOG_BASE) {
-        super(minValue, maxValue);
+    constructor(minValue, maxValue, logBase = DEFAULT_LOG_BASE, dataOnEdge = DEFAULT_DATA_ON_EDGE) {
+        super(minValue, maxValue, dataOnEdge);
+        this.minValue = minValue;
+        this.maxValue = maxValue;
         this.logBase = logBase;
+        this.dataOnEdge = dataOnEdge;
         this.maxExp = Number.NaN;
+        this.maxExpExact = Number.NaN;
         this.minExp = Number.NaN;
+        this.minExpExact = Number.NaN;
         this.denominator = 1;
         this.log = Math.log;
         this.logBase = logBase;
@@ -498,11 +510,11 @@ class LogScale extends NiceScale {
         this.calculate();
     }
     percentToValue(percent) {
-        const exp = percent * (this.maxExp - this.minExp);
+        const exp = percent * this.rangeExp();
         return this.logBase ** exp;
     }
     posToValue(pos) {
-        const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
+        const exp = (pos / this.axisLength) * this.rangeExp();
         return this.logBase ** exp;
     }
     valueToPos(value) {
@@ -512,13 +524,20 @@ class LogScale extends NiceScale {
         if (!isNumber(value))
             return 0;
         const exp = this.log(value) / this.denominator;
+        if (this.dataOnEdge)
+            return (exp - this.minExpExact) / (this.maxExpExact - this.minExpExact);
         return (exp - this.minExp) / (this.maxExp - this.minExp);
+    }
+    rangeExp() {
+        return this.dataOnEdge ? this.maxExpExact - this.minExpExact : this.maxExp - this.minExp;
     }
     calculate() {
         this.log = this.logBase === 10 ? Math.log10 : this.logBase === 2 ? Math.log2 : Math.log;
         this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
-        this.minExp = Math.floor(this.log(this.minValue) / this.denominator);
-        this.maxExp = Math.ceil(this.log(this.maxValue) / this.denominator);
+        this.minExpExact = this.log(this.minValue) / this.denominator;
+        this.maxExpExact = this.log(this.maxValue) / this.denominator;
+        this.minExp = Math.floor(this.minExpExact);
+        this.maxExp = Math.ceil(this.maxExpExact);
         this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
         this.tickSpacing = 1;
         /**
@@ -533,16 +552,19 @@ class LogScale extends NiceScale {
         this.tickLabels = [];
         for (let i = 0; i <= count; i++) {
             const tickExp = i * this.tickSpacing + this.minExp;
-            const tickValue = this.logBase ** tickExp;
+            let tickValue = this.logBase ** tickExp;
+            if (this.dataOnEdge && i === 0)
+                tickValue = this.logBase ** this.minExpExact;
+            if (this.dataOnEdge && i === count)
+                tickValue = this.logBase ** this.maxExpExact;
             this.ticks.push(tickValue);
-            this.tickLabels.push(readableTick(tickValue));
+            let tickLabel = readableTick(tickValue);
+            if (this.dataOnEdge && [0, count].includes(i))
+                tickLabel = `*${tickLabel}`;
+            this.tickLabels.push(tickLabel);
         }
         // Calculate tick positions based on axis length and ticks.
-        const offset = this.axisLength / (this.ticks.length - 1);
-        this.tickPos = [];
-        for (let i = 0; i < this.ticks.length; i++) {
-            this.tickPos.push(i * offset);
-        }
+        this.tickPos = this.ticks.map(tick => this.valueToPos(tick));
     }
 }
 
@@ -1061,12 +1083,17 @@ const dimensionSamples = [
         label: 'Global Batch Size',
     },
     {
-        axis: { categories: [4, 8, 16, 32, 64], scale, type: AxisType.Categorical },
+        axis: {
+            categories: [4, 8, 16, 32, 64],
+            dataOnEdge: false,
+            scale,
+            type: AxisType.Categorical,
+        },
         key: 'layer-dense-size',
         label: 'Layer Dense Size',
     },
     {
-        axis: { categories: [true, false], scale, type: AxisType.Categorical },
+        axis: { categories: [true, false], dataOnEdge: false, scale, type: AxisType.Categorical },
         key: 'layer-inverse',
         label: 'Layer Inverse',
     },
@@ -1238,14 +1265,14 @@ class Hermes {
             if ([AxisType.Linear, AxisType.Logarithmic].includes(_da.type)) {
                 _da.range = getDataRange(data);
                 if (_da.type === AxisType.Linear) {
-                    _da.scale = new LinearScale(_da.range[0], _da.range[1]);
+                    _da.scale = new LinearScale(_da.range[0], _da.range[1], _da.dataOnEdge);
                 }
                 else if (_da.type === AxisType.Logarithmic) {
-                    _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase);
+                    _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase, _da.dataOnEdge);
                 }
             }
             else if (_da.type === AxisType.Categorical) {
-                _da.scale = new CategoricalScale(_da.categories);
+                _da.scale = new CategoricalScale(_da.categories, _da.dataOnEdge);
             }
         });
     }
@@ -1814,6 +1841,7 @@ class Hermes {
         const _dsl = this._.dims.shared.label;
         const _s = this._.styles;
         const _ix = this.ix;
+        const _ixsf = this.ix.shared.focus;
         const _filters = this.filters;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const axesStyle = this.options.style.axes;
@@ -1901,6 +1929,16 @@ class Hermes {
             const filters = _filters[key] || [];
             drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, _s[i].axis);
             for (let j = 0; j < tickLabels.length; j++) {
+                let tickLabel = tickLabels[j];
+                if (tickLabel[0] === '*') {
+                    if ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i && ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionAxis ||
+                        (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter)) {
+                        tickLabel = tickLabel.substring(1);
+                    }
+                    else {
+                        continue;
+                    }
+                }
                 const xOffset = isHorizontal ? 0 : tickPos[j];
                 const yOffset = isHorizontal ? tickPos[j] : 0;
                 const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
@@ -1915,7 +1953,6 @@ class Hermes {
                 const rad = axesStyle.label.angle != null
                     ? axesStyle.label.angle
                     : (isHorizontal && isAxesBefore ? Math.PI : 0);
-                const tickLabel = tickLabels[j];
                 const style = { ..._s[i].tickLabel, ...tickTextStyle };
                 drawText(this.ctx, tickLabel, cx, cy, rad, style);
             }

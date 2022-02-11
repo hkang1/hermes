@@ -16,12 +16,17 @@ const dimensionSamples: t.Dimension[] = [
     label: 'Global Batch Size',
   },
   {
-    axis: { categories: [ 4, 8, 16, 32, 64 ], scale, type: t.AxisType.Categorical },
+    axis: {
+      categories: [ 4, 8, 16, 32, 64 ],
+      dataOnEdge: false,
+      scale,
+      type: t.AxisType.Categorical,
+    },
     key: 'layer-dense-size',
     label: 'Layer Dense Size',
   },
   {
-    axis: { categories: [ true, false ], scale, type: t.AxisType.Categorical },
+    axis: { categories: [ true, false ], dataOnEdge: false, scale, type: t.AxisType.Categorical },
     key: 'layer-inverse',
     label: 'Layer Inverse',
   },

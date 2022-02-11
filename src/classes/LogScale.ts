@@ -2,7 +2,7 @@ import { Primitive } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 
-import NiceScale from './NiceScale';
+import NiceScale, { DEFAULT_DATA_ON_EDGE } from './NiceScale';
 
 export const DEFAULT_LOG_BASE = 10;
 
@@ -10,14 +10,17 @@ class LogScale extends NiceScale {
   protected denominator: number;
   protected log: (x: number) => number;
   protected maxExp: number = Number.NaN;
+  protected maxExpExact: number = Number.NaN;
   protected minExp: number = Number.NaN;
+  protected minExpExact: number = Number.NaN;
 
   constructor(
-    minValue: number,
-    maxValue: number,
+    protected minValue: number,
+    protected maxValue: number,
     protected logBase: number = DEFAULT_LOG_BASE,
+    protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
   ) {
-    super(minValue, maxValue);
+    super(minValue, maxValue, dataOnEdge);
     this.denominator = 1;
     this.log = Math.log;
     this.logBase = logBase;
@@ -35,12 +38,12 @@ class LogScale extends NiceScale {
   }
 
   public percentToValue(percent: number): number {
-    const exp = percent * (this.maxExp - this.minExp);
+    const exp = percent * this.rangeExp();
     return this.logBase ** exp;
   }
 
   public posToValue(pos: number): number {
-    const exp = (pos / this.axisLength) * (this.maxExp - this.minExp);
+    const exp = (pos / this.axisLength) * this.rangeExp();
     return this.logBase ** exp;
   }
 
@@ -51,15 +54,22 @@ class LogScale extends NiceScale {
   public valueToPercent(value: Primitive): number {
     if (!isNumber(value)) return 0;
     const exp = this.log(value) / this.denominator;
+    if (this.dataOnEdge) return (exp - this.minExpExact) / (this.maxExpExact - this.minExpExact);
     return (exp - this.minExp) / (this.maxExp - this.minExp);
+  }
+
+  protected rangeExp(): number {
+    return this.dataOnEdge ? this.maxExpExact - this.minExpExact : this.maxExp - this.minExp;
   }
 
   protected calculate(): void {
     this.log = this.logBase === 10 ? Math.log10 : this.logBase === 2 ? Math.log2 : Math.log;
     this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
 
-    this.minExp = Math.floor(this.log(this.minValue) / this.denominator);
-    this.maxExp = Math.ceil(this.log(this.maxValue) / this.denominator);
+    this.minExpExact = this.log(this.minValue) / this.denominator;
+    this.maxExpExact = this.log(this.maxValue) / this.denominator;
+    this.minExp = Math.floor(this.minExpExact);
+    this.maxExp = Math.ceil(this.maxExpExact);
     this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
     this.tickSpacing = 1;
 
@@ -75,17 +85,18 @@ class LogScale extends NiceScale {
     this.tickLabels = [];
     for (let i = 0; i <= count; i++) {
       const tickExp = i * this.tickSpacing + this.minExp;
-      const tickValue = this.logBase ** tickExp;
+      let tickValue = this.logBase ** tickExp;
+      if (this.dataOnEdge && i === 0) tickValue = this.logBase ** this.minExpExact;
+      if (this.dataOnEdge && i === count) tickValue = this.logBase ** this.maxExpExact;
       this.ticks.push(tickValue);
-      this.tickLabels.push(readableTick(tickValue));
+
+      let tickLabel = readableTick(tickValue);
+      if (this.dataOnEdge && [ 0, count ].includes(i)) tickLabel = `*${tickLabel}`;
+      this.tickLabels.push(tickLabel);
     }
 
     // Calculate tick positions based on axis length and ticks.
-    const offset = this.axisLength / (this.ticks.length - 1);
-    this.tickPos = [];
-    for (let i = 0; i < this.ticks.length; i++) {
-      this.tickPos.push(i * offset);
-    }
+    this.tickPos = this.ticks.map(tick => this.valueToPos(tick));
   }
 }
 

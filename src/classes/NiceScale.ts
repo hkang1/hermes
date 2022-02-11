@@ -7,6 +7,8 @@
 
 import { Primitive } from '../types';
 
+export const DEFAULT_DATA_ON_EDGE = true;
+
 const MIN_TICK_DISTANCE = 50;
 
 abstract class NiceScale {
@@ -16,6 +18,7 @@ abstract class NiceScale {
   public tickLabels: string[] = [];
   public tickPos: number[] = [];
   public ticks: number[] = [];
+  public tickPadding = 0;
   public tickSpacing = 0;
   protected axisLength = 1;
   protected maxTicks = 1;
@@ -27,7 +30,11 @@ abstract class NiceScale {
    * @param maxValue the maximum data point on the axis
    * @param maxTicks the maximum number of tick marks for the axis
    */
-  constructor(protected minValue: number, protected maxValue: number, protected niceEdges = true) {
+  constructor(
+    protected minValue: number,
+    protected maxValue: number,
+    protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
+  ) {
     this.minValue = minValue;
     this.maxValue = maxValue;
     this.max = maxValue;

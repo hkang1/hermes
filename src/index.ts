@@ -112,12 +112,12 @@ class Hermes {
       if ([ t.AxisType.Linear, t.AxisType.Logarithmic ].includes(_da.type)) {
         _da.range = getDataRange(data);
         if (_da.type === t.AxisType.Linear) {
-          _da.scale = new LinearScale(_da.range[0], _da.range[1]);
+          _da.scale = new LinearScale(_da.range[0], _da.range[1], _da.dataOnEdge);
         } else if (_da.type === t.AxisType.Logarithmic) {
-          _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase);
+          _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase, _da.dataOnEdge);
         }
       } else if (_da.type === t.AxisType.Categorical) {
-        _da.scale = new CategoricalScale(_da.categories);
+        _da.scale = new CategoricalScale(_da.categories, _da.dataOnEdge);
       }
     });
   }
@@ -730,6 +730,7 @@ class Hermes {
     const _dsl = this._.dims.shared.label;
     const _s = this._.styles;
     const _ix = this.ix;
+    const _ixsf = this.ix.shared.focus;
     const _filters = this.filters;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const axesStyle = this.options.style.axes;
@@ -834,6 +835,18 @@ class Hermes {
       );
 
       for (let j = 0; j < tickLabels.length; j++) {
+        let tickLabel = tickLabels[j];
+        if (tickLabel[0] === '*') {
+          if (_ixsf?.dimIndex === i && (
+            _ixsf?.type === t.FocusType.DimensionAxis ||
+            _ixsf?.type === t.FocusType.Filter
+          )) {
+            tickLabel = tickLabel.substring(1);
+          } else {
+            continue;
+          }
+        }
+
         const xOffset = isHorizontal ? 0 : tickPos[j];
         const yOffset = isHorizontal ? tickPos[j] : 0;
         const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
@@ -849,7 +862,6 @@ class Hermes {
         const rad = axesStyle.label.angle != null
           ? axesStyle.label.angle
           : (isHorizontal && isAxesBefore ? Math.PI : 0);
-        const tickLabel = tickLabels[j];
         const style = { ..._s[i].tickLabel, ...tickTextStyle };
         canvas.drawText(this.ctx, tickLabel, cx, cy, rad, style);
       }

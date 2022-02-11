@@ -5,27 +5,27 @@ import { readableTick } from '../utils/string';
 import NiceScale from './NiceScale';
 
 class LinearScale extends NiceScale {
-  public valueToPos(value: Primitive): number {
-    return this.valueToPercent(value) * this.axisLength;
-  }
-
   public percentToValue(percent: number): number {
-    const min = this.niceEdges ? this.min : this.minValue;
-    const max = this.niceEdges ? this.max : this.maxValue;
+    const min = this.dataOnEdge ? this.minValue : this.min;
+    const max = this.dataOnEdge ? this.maxValue : this.max;
     return percent * (max - min) + min;
   }
 
   public posToValue(pos: number): number {
-    const min = this.niceEdges ? this.min : this.minValue;
-    const max = this.niceEdges ? this.max : this.maxValue;
+    const min = this.dataOnEdge ? this.minValue : this.min;
+    const max = this.dataOnEdge ? this.maxValue : this.max;
     return (pos / this.axisLength) * (max - min) + min;
   }
 
   public valueToPercent(value: Primitive): number {
     if (!isNumber(value)) return 0;
-    const min = this.niceEdges ? this.min : this.minValue;
-    const max = this.niceEdges ? this.max : this.maxValue;
+    const min = this.dataOnEdge ? this.minValue : this.min;
+    const max = this.dataOnEdge ? this.maxValue : this.max;
     return (value - min) / (max - min);
+  }
+
+  public valueToPos(value: Primitive): number {
+    return this.valueToPercent(value) * this.axisLength;
   }
 
   protected calculate(): void {
@@ -45,10 +45,13 @@ class LinearScale extends NiceScale {
     this.tickLabels = [];
     for (let i = 0; i <= count; i++) {
       let tick = i * this.tickSpacing + this.min;
-      if (!this.niceEdges && i === 0) tick = this.minValue;
-      if (!this.niceEdges && i === count) tick = this.maxValue;
+      if (this.dataOnEdge && i === 0) tick = this.minValue;
+      if (this.dataOnEdge && i === count) tick = this.maxValue;
       this.ticks.push(tick);
-      this.tickLabels.push(readableTick(tick));
+
+      let tickLabel = readableTick(tick);
+      if (this.dataOnEdge && [ 0, count ].includes(i)) tickLabel = `*${tickLabel}`;
+      this.tickLabels.push(tickLabel);
     }
 
     // Calculate tick positions based on axis length and ticks.
