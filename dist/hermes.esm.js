@@ -654,17 +654,14 @@ const HERMES_OPTIONS = {
                 strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
             axisActve: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
-            axisHover: {
-                lineWidth: 1.5,
-                strokeStyle: 'rgba(82, 144, 244, 1.0)',
-            },
+            axisHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
             filter: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
                 width: 4,
             },
-            filterActive: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
-            filterHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
+            filterActive: { fillStyle: 'rgba(255, 100, 0, 1.0)' },
+            filterHover: { fillStyle: 'rgba(200, 50, 0, 1.0)' },
             label: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 font: 'normal 11px sans-serif',
