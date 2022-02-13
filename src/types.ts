@@ -29,6 +29,7 @@ export type Point = { x: number, y: number };
 export type Rect = Point & Size;
 export type Size = { h: number, w: number };
 export type StyleLine = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
+export type StyleRect = Partial<StyleShape & { cornerRadius: number }>;
 export type StyleShape = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
 export type StyleText = Partial<
   CanvasFillStrokeStyles &
@@ -146,7 +147,7 @@ export interface FilterActive extends Filter {
   startP1?: number;   // Initial p1 value before an existing filter is shifted via dragging.
 }
 
-export interface FilterOptions extends StyleShape {
+export interface FilterOptions extends StyleRect {
   width: number;
 }
 
@@ -182,8 +183,8 @@ export interface HermesOptions {
       axisActve: StyleLine;
       axisHover: StyleLine;
       filter: FilterOptions;
-      filterActive: StyleShape;
-      filterHover: StyleShape;
+      filterActive: FilterOptions;
+      filterHover: FilterOptions;
       label: LabelOptions;
       labelActive: StyleText;
       labelHover: StyleText;
@@ -280,7 +281,7 @@ export interface Internal {
   };
   styles: {
     axis: StyleLine;
-    filters: StyleShape[];
+    filters: FilterOptions[];
     label: StyleText;
     tick: StyleLine;
     tickLabel: StyleText;

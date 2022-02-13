@@ -41,15 +41,24 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         lineWidth: 1,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
-      axisActve: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
+      axisActve: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
       axisHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
       filter: {
+        cornerRadius: 2,
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
         width: 4,
       },
-      filterActive: { fillStyle: 'rgba(255, 100, 0, 1.0)' },
-      filterHover: { fillStyle: 'rgba(200, 50, 0, 1.0)' },
+      filterActive: {
+        cornerRadius: 3,
+        fillStyle: 'rgba(255, 100, 0, 1.0)',
+        width: 6,
+      },
+      filterHover: {
+        cornerRadius: 2,
+        fillStyle: 'rgba(200, 50, 0, 1.0)',
+        width: 4,
+      },
       label: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
         font: 'normal 11px sans-serif',
@@ -65,8 +74,8 @@ export const HERMES_OPTIONS: t.HermesOptions = {
         lineWidth: 1,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
-      tickActive: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
-      tickHover: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
+      tickActive: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
+      tickHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
     },
     data: {
       default: {

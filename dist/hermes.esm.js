@@ -653,15 +653,24 @@ const HERMES_OPTIONS = {
                 lineWidth: 1,
                 strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
-            axisActve: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
+            axisActve: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
             axisHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
             filter: {
+                cornerRadius: 2,
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
                 width: 4,
             },
-            filterActive: { fillStyle: 'rgba(255, 100, 0, 1.0)' },
-            filterHover: { fillStyle: 'rgba(200, 50, 0, 1.0)' },
+            filterActive: {
+                cornerRadius: 3,
+                fillStyle: 'rgba(255, 100, 0, 1.0)',
+                width: 6,
+            },
+            filterHover: {
+                cornerRadius: 2,
+                fillStyle: 'rgba(200, 50, 0, 1.0)',
+                width: 4,
+            },
             label: {
                 fillStyle: 'rgba(0, 0, 0, 1.0)',
                 font: 'normal 11px sans-serif',
@@ -677,8 +686,8 @@ const HERMES_OPTIONS = {
                 lineWidth: 1,
                 strokeStyle: 'rgba(147, 147, 147, 1.0)',
             },
-            tickActive: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
-            tickHover: { strokeStyle: 'rgba(82, 144, 244, 1.0)' },
+            tickActive: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
+            tickHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
         },
         data: {
             default: {
@@ -882,9 +891,16 @@ const drawRect = (ctx, x, y, w, h, style = {}) => {
     ctx.save();
     const rx = roundPixel(x);
     const ry = roundPixel(y);
+    const radius = style.cornerRadius || 0;
     if (style.fillStyle) {
         ctx.fillStyle = style.fillStyle || FILL_STYLE;
-        ctx.fillRect(rx, ry, w, h);
+        if (radius === 0) {
+            ctx.fillRect(rx, ry, w, h);
+        }
+        else {
+            drawRoundedRect(ctx, rx, ry, w, h, radius);
+            ctx.fill();
+        }
     }
     if (style.strokeStyle) {
         ctx.lineCap = style.lineCap || LINE_CAP;
@@ -893,9 +909,28 @@ const drawRect = (ctx, x, y, w, h, style = {}) => {
         ctx.lineWidth = style.lineWidth || LINE_WIDTH;
         ctx.miterLimit = style.miterLimit || MITER_LIMIT;
         ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
-        ctx.strokeRect(rx, ry, w, h);
+        if (radius === 0) {
+            ctx.strokeRect(rx, ry, w, h);
+        }
+        else {
+            drawRoundedRect(ctx, rx, ry, w, h, radius);
+            ctx.stroke();
+        }
     }
     ctx.restore();
+};
+const drawRoundedRect = (ctx, x, y, w, h, r) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
 };
 const drawText = (ctx, text, x, y, rad, style = {}) => {
     const normalizedRad = normalizeRad(rad);
@@ -1966,11 +2001,12 @@ class Hermes {
             filters.forEach((filter, j) => {
                 const p0 = filter.p0 * _dsa.length;
                 const p1 = filter.p1 * _dsa.length;
-                const halfWidth = axesStyle.filter.width / 2;
+                const width = _s[i].filters[j].width;
+                const halfWidth = width / 2;
                 const x = bound.x + axisStart.x + (isHorizontal ? -halfWidth : p0);
                 const y = bound.y + axisStart.y + (isHorizontal ? p0 : -halfWidth);
-                const w = isHorizontal ? axesStyle.filter.width : p1 - p0;
-                const h = isHorizontal ? p1 - p0 : axesStyle.filter.width;
+                const w = isHorizontal ? width : p1 - p0;
+                const h = isHorizontal ? p1 - p0 : width;
                 drawRect(this.ctx, x, y, w, h, _s[i].filters[j]);
             });
         });

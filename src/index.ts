@@ -880,11 +880,12 @@ class Hermes {
       filters.forEach((filter, j) => {
         const p0 = filter.p0 * _dsa.length;
         const p1 = filter.p1 * _dsa.length;
-        const halfWidth = axesStyle.filter.width / 2;
+        const width = _s[i].filters[j].width;
+        const halfWidth = width / 2;
         const x = bound.x + axisStart.x + (isHorizontal ? -halfWidth : p0);
         const y = bound.y + axisStart.y + (isHorizontal ? p0 : -halfWidth);
-        const w = isHorizontal ? axesStyle.filter.width : p1 - p0;
-        const h = isHorizontal ? p1 - p0 : axesStyle.filter.width;
+        const w = isHorizontal ? width : p1 - p0;
+        const h = isHorizontal ? p1 - p0 : width;
         canvas.drawRect(this.ctx, x, y, w, h, _s[i].filters[j]);
       });
     });

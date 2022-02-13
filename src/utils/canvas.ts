@@ -146,16 +146,22 @@ export const drawRect = (
   y: number,
   w: number,
   h: number,
-  style: t.StyleShape = {},
+  style: t.StyleRect = {},
 ): void => {
   ctx.save();
 
   const rx = roundPixel(x);
   const ry = roundPixel(y);
+  const radius = style.cornerRadius || 0;
 
   if (style.fillStyle) {
     ctx.fillStyle = style.fillStyle || DEFAULT.FILL_STYLE;
-    ctx.fillRect(rx, ry, w, h);
+    if (radius === 0) {
+      ctx.fillRect(rx, ry, w, h);
+    } else {
+      drawRoundedRect(ctx, rx, ry, w, h, radius);
+      ctx.fill();
+    }
   }
   if (style.strokeStyle) {
     ctx.lineCap = style.lineCap || DEFAULT.LINE_CAP;
@@ -164,10 +170,36 @@ export const drawRect = (
     ctx.lineWidth = style.lineWidth || DEFAULT.LINE_WIDTH;
     ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
     ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
-    ctx.strokeRect(rx, ry, w, h);
+    if (radius === 0) {
+      ctx.strokeRect(rx, ry, w, h);
+    } else {
+      drawRoundedRect(ctx, rx, ry, w, h, radius);
+      ctx.stroke();
+    }
   }
 
   ctx.restore();
+};
+
+export const drawRoundedRect = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,  // Radius
+): void => {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 };
 
 export const drawText = (
