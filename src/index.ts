@@ -23,6 +23,7 @@ class Hermes {
   private data: t.HermesData;
   private dataCount: number;
   private dimensions: t.Dimension[];
+  private dimensionsOriginal: t.Dimension[];
   private options: t.HermesOptions;
   private size: t.Size = { h: 0, w: 0 };
   private ix: t.IX = clone(DEFAULT.IX);
@@ -69,6 +70,7 @@ class Hermes {
 
     if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
     this.dimensions = dimensions;
+    this.dimensionsOriginal = clone(dimensions);
     this.options = deepmerge(DEFAULT.HERMES_OPTIONS, options) as t.HermesOptions;
 
     // Add resize observer to detect target element resizing.
@@ -76,6 +78,7 @@ class Hermes {
     this.resizeObserver.observe(this.element);
 
     // Add mouse event handlers.
+    this.element.addEventListener('dblclick', this.handleDoubleClick.bind(this));
     this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
     window.addEventListener('mousemove', this.handleMouseMove.bind(this));
     window.addEventListener('mouseup', this.handleMouseUp.bind(this));
@@ -934,6 +937,16 @@ class Hermes {
     if (w0 === w1 && h0 === h1) return;
 
     this.setSize(w1, h1);
+    this.calculate();
+    this.draw();
+  }
+
+  private handleDoubleClick(): void {
+    // Reset chart settings.
+    this.dimensions = clone(this.dimensionsOriginal);
+    this.filters = {};
+    this.ix = clone(DEFAULT.IX);
+
     this.calculate();
     this.draw();
   }

@@ -7,6 +7,7 @@ declare class Hermes {
     private data;
     private dataCount;
     private dimensions;
+    private dimensionsOriginal;
     private options;
     private size;
     private ix;
@@ -29,6 +30,7 @@ declare class Hermes {
     private draw;
     private drawDebugOutline;
     private handleResize;
+    private handleDoubleClick;
     private handleMouseDown;
     private handleMouseMove;
     private handleMouseUp;

@@ -1,7 +1,7 @@
 {
   "name": "hermes-parallel-coordinates",
-  "version": "1.0.0",
-  "description": "A lightweight canvas-based parallel coordinates chart library.",
+  "version": "0.1.0",
+  "description": "A lightweight and fast canvas-based parallel coordinates chart library.",
   "main": "./dist/hermes.cjs.js",
   "module": "./dist/hermes.esm.js",
   "typings": "./dist/hermes.d.ts",

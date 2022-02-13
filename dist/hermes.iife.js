@@ -1233,11 +1233,13 @@ var Hermes = (function () {
           if (dimensions.length === 0)
               throw new HermesError('Need at least one dimension defined.');
           this.dimensions = dimensions;
+          this.dimensionsOriginal = clone(dimensions);
           this.options = deepmerge(HERMES_OPTIONS, options);
           // Add resize observer to detect target element resizing.
           this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
           this.resizeObserver.observe(this.element);
           // Add mouse event handlers.
+          this.element.addEventListener('dblclick', this.handleDoubleClick.bind(this));
           this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
           window.addEventListener('mousemove', this.handleMouseMove.bind(this));
           window.addEventListener('mouseup', this.handleMouseUp.bind(this));
@@ -2009,6 +2011,14 @@ var Hermes = (function () {
           if (w0 === w1 && h0 === h1)
               return;
           this.setSize(w1, h1);
+          this.calculate();
+          this.draw();
+      }
+      handleDoubleClick() {
+          // Reset chart settings.
+          this.dimensions = clone(this.dimensionsOriginal);
+          this.filters = {};
+          this.ix = clone(IX);
           this.calculate();
           this.draw();
       }
