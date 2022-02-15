@@ -90,10 +90,10 @@ export const generateData = (dimensions: t.Dimension[], count: number): t.Hermes
         return axis.categories ? randomItem(axis.categories) : DEFAULT.INVALID_VALUE;
       } else if (axis.type === t.AxisType.Linear) {
         const range = dimensionRanges[dimension.key];
-        return axis.range ? randomNumber(range[1], range[0]) : DEFAULT.INVALID_VALUE;
+        return range ? randomNumber(range[1], range[0]) : DEFAULT.INVALID_VALUE;
       } else if (axis.type === t.AxisType.Logarithmic) {
         const range = dimensionRanges[dimension.key];
-        return axis.range && axis.logBase
+        return range && axis.logBase
           ? randomLogNumber(axis.logBase, range[1], range[0]) : DEFAULT.INVALID_VALUE;
       }
       return DEFAULT.INVALID_VALUE;

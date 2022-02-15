@@ -118,11 +118,11 @@ class Hermes {
       const key = dimension.key;
       const data = this.data[key] || [];
       if ([ t.AxisType.Linear, t.AxisType.Logarithmic ].includes(_da.type)) {
-        _da.range = getDataRange(data);
+        const range = getDataRange(data);
         if (_da.type === t.AxisType.Linear) {
-          _da.scale = new LinearScale(_da.range[0], _da.range[1], _da.dataOnEdge);
+          _da.scale = new LinearScale(range[0], range[1], _da.dataOnEdge);
         } else if (_da.type === t.AxisType.Logarithmic) {
-          _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase, _da.dataOnEdge);
+          _da.scale = new LogScale(range[0], range[1], _da.logBase, _da.dataOnEdge);
         }
       } else if (_da.type === t.AxisType.Categorical) {
         _da.scale = new CategoricalScale(_da.categories, _da.dataOnEdge);

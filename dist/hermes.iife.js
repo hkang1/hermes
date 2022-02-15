@@ -1183,11 +1183,11 @@ var Hermes = (function () {
               }
               else if (axis.type === AxisType.Linear) {
                   const range = dimensionRanges[dimension.key];
-                  return axis.range ? randomNumber(range[1], range[0]) : INVALID_VALUE;
+                  return range ? randomNumber(range[1], range[0]) : INVALID_VALUE;
               }
               else if (axis.type === AxisType.Logarithmic) {
                   const range = dimensionRanges[dimension.key];
-                  return axis.range && axis.logBase
+                  return range && axis.logBase
                       ? randomLogNumber(axis.logBase, range[1], range[0]) : INVALID_VALUE;
               }
               return INVALID_VALUE;
@@ -1307,12 +1307,12 @@ var Hermes = (function () {
               const key = dimension.key;
               const data = this.data[key] || [];
               if ([AxisType.Linear, AxisType.Logarithmic].includes(_da.type)) {
-                  _da.range = getDataRange(data);
+                  const range = getDataRange(data);
                   if (_da.type === AxisType.Linear) {
-                      _da.scale = new LinearScale(_da.range[0], _da.range[1], _da.dataOnEdge);
+                      _da.scale = new LinearScale(range[0], range[1], _da.dataOnEdge);
                   }
                   else if (_da.type === AxisType.Logarithmic) {
-                      _da.scale = new LogScale(_da.range[0], _da.range[1], _da.logBase, _da.dataOnEdge);
+                      _da.scale = new LogScale(range[0], range[1], _da.logBase, _da.dataOnEdge);
                   }
               }
               else if (_da.type === AxisType.Categorical) {
