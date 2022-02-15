@@ -10,9 +10,7 @@
       const tester = Hermes.getTester();
       const dimensions = tester.generateDimensions(10, false);
       const data = tester.generateData(dimensions, 50);
-      console.log('dims', dimensions);
-      console.log('data', data);
-      const options = {
+      const config = {
         direction: 'horizontal',
         style: {
           axes: {
@@ -58,7 +56,7 @@
           },
         },
       };
-      const hermes = new Hermes('#hermes', data, dimensions, options);
+      const hermes = new Hermes('#hermes', data, dimensions, config);
     </script>
   </body>
 </html>
