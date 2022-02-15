@@ -2,6 +2,23 @@
   "name": "hermes-parallel-coordinates",
   "version": "0.1.0",
   "description": "A lightweight and fast canvas-based parallel coordinates chart library.",
+  "keywords": [
+    "es6",
+    "parallel coordinates",
+    "parcoords",
+    "visualization",
+    "canvas"
+  ],
+  "author": "Caleb Kang <hoyoul@gmail.com>",
+  "homepage": "https://github.com/hkang1/hermes#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hkang1/hermes.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hkang1/hermes/issues"
+  },
+  "license": "ISC",
   "main": "./dist/hermes.cjs.js",
   "module": "./dist/hermes.esm.js",
   "typings": "./dist/hermes.d.ts",
@@ -12,19 +29,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "watch 'npm run build' src"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hkang1/hermes.git"
-  },
-  "keywords": [
-    "es6",
-    "parallel coordinates",
-    "parcoords",
-    "visualization",
-    "canvas"
-  ],
-  "author": "Caleb Kang <hoyoul@gmail.com>",
-  "license": "ISC",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-node-resolve": "^13.1.3",
