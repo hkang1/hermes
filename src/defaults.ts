@@ -106,7 +106,7 @@ export const HERMES_OPTIONS: t.HermesOptions = {
       labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },
-    padding: [ 32, 16, 64, 16 ],
+    padding: [ 32, 16, 32, 16 ],
   },
 };
 

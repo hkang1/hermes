@@ -115,14 +115,6 @@ const defaultOptions = {
     mergeOthers: leaf,
 };
 /**
- * Deeply merge objects.
- *
- * @param objects - The objects to merge.
- */
-function deepmerge(...objects) {
-    return deepmergeCustom({})(...objects);
-}
-/**
  * Deeply merge two or more objects using the given options.
  *
  * @param options - The options on how to customize the merge function.
@@ -720,7 +712,7 @@ const HERMES_OPTIONS = {
             labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
             layout: DimensionLayout.AxisEvenlySpaced,
         },
-        padding: [32, 16, 64, 16],
+        padding: [32, 16, 32, 16],
     },
 };
 const FILTER = {
@@ -1227,6 +1219,7 @@ var tester = /*#__PURE__*/Object.freeze({
   randomNumber: randomNumber
 });
 
+const customDeepmerge = deepmergeCustom({ mergeArrays: false });
 class Hermes {
     constructor(target, data, dimensions, options = {}) {
         this.size = { h: 0, w: 0 };
@@ -1266,7 +1259,7 @@ class Hermes {
             throw new HermesError('Need at least one dimension defined.');
         this.dimensions = dimensions;
         this.dimensionsOriginal = clone(dimensions);
-        this.options = deepmerge(HERMES_OPTIONS, options);
+        this.options = customDeepmerge(HERMES_OPTIONS, options);
         // Add resize observer to detect target element resizing.
         this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
         this.resizeObserver.observe(this.element);

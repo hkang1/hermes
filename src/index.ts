@@ -1,4 +1,5 @@
-import { deepmerge } from 'deepmerge-ts';
+import type { DeepMergeLeafURI } from 'deepmerge-ts';
+import { deepmergeCustom } from 'deepmerge-ts';
 
 import CategoricalScale from './classes/CategoricalScale';
 import HermesError from './classes/HermesError';
@@ -14,6 +15,10 @@ import { getElement } from './utils/dom';
 import * as ix from './utils/interaction';
 import { distance, isPointInTriangle } from './utils/math';
 import * as tester from './utils/test';
+
+const customDeepmerge = deepmergeCustom<{
+  DeepMergeArraysURI: DeepMergeLeafURI; // <-- Needed for correct output type.
+}>({ mergeArrays: false });
 
 class Hermes {
   private element: HTMLElement;
@@ -71,7 +76,7 @@ class Hermes {
     if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
     this.dimensions = dimensions;
     this.dimensionsOriginal = clone(dimensions);
-    this.options = deepmerge(DEFAULT.HERMES_OPTIONS, options) as t.HermesOptions;
+    this.options = customDeepmerge(DEFAULT.HERMES_OPTIONS, options) as t.HermesOptions;
 
     // Add resize observer to detect target element resizing.
     this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
