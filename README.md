@@ -4,6 +4,20 @@ A lightweight canvas-based parallel coordinates chart library.
 
 > [Parallel coordinates](https://en.wikipedia.org/wiki/Parallel_coordinates#:~:text=Parallel%20coordinates%20are%20a%20common,typically%20vertical%20and%20equally%20spaced.) are a common way of visualizing and analyzing high-dimensional datasets.
 
+Try out the [Live Demo](https://codepen.io/hoyoul/pen/yLPzoMe).
+
+# Screenshots
+
+Test
+![Standard](https://github.com/hkang1/hermes/blob/main/screenshots/standard.png?raw=true)
+
+Test2
+![Multi-Dimension Filtering](https://github.com/hkang1/hermes/blob/main/screenshots/filtered.png?raw=true)
+
+Test3
+![Bezier Curve Lines](https://github.com/hkang1/hermes/blob/main/screenshots/path-type-bezier-curve.png?raw=true)
+
+
 # Features
 
 - Drag-and-drop dimensions.
