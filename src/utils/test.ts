@@ -4,14 +4,26 @@ import * as t from '../types';
 
 const scale = new LinearScale(0, 100);
 
+const dimensionRanges: Record<t.RecordKey, t.Range> = {
+  'accuracy': [ 0.55, 0.99 ],
+  'dropout': [ 0.2, 0.8 ],
+  'global-batch-size': [ 5, 30 ],
+  'layer-split-factor': [ 1, 16 ],
+  'learning-rate': [ 0.0001, 0.1 ],
+  'learning-rate-decay': [ 0.000001, 0.001 ],
+  'loss': [ 1.7, 2.4 ],
+  'metrics-base': [ 0.5, 0.9 ],
+  'n-filters': [ 8, 64 ],
+};
+
 const dimensionSamples: t.Dimension[] = [
   {
-    axis: { range: [ 0.2, 0.8 ], scale, type: t.AxisType.Linear },
+    axis: { scale, type: t.AxisType.Linear },
     key: 'dropout',
     label: 'Dropout',
   },
   {
-    axis: { range: [ 5, 30 ], scale, type: t.AxisType.Linear },
+    axis: { scale, type: t.AxisType.Linear },
     key: 'global-batch-size',
     label: 'Global Batch Size',
   },
@@ -31,27 +43,27 @@ const dimensionSamples: t.Dimension[] = [
     label: 'Layer Inverse',
   },
   {
-    axis: { logBase: 10, range: [ 0.0001, 0.1 ], scale, type: t.AxisType.Logarithmic },
+    axis: { logBase: 10, scale, type: t.AxisType.Logarithmic },
     key: 'learning-rate',
     label: 'Learning Rate',
   },
   {
-    axis: { logBase: 10, range: [ 0.000001, 0.001 ], scale, type: t.AxisType.Logarithmic },
+    axis: { logBase: 10, scale, type: t.AxisType.Logarithmic },
     key: 'learning-rate-decay',
     label: 'Learning Rate Decay',
   },
   {
-    axis: { logBase: 2, range: [ 1, 16 ], scale, type: t.AxisType.Logarithmic },
+    axis: { logBase: 2, scale, type: t.AxisType.Logarithmic },
     key: 'layer-split-factor',
     label: 'Layer Split Factor',
   },
   {
-    axis: { range: [ 0.5, 0.9 ], scale, type: t.AxisType.Linear },
+    axis: { scale, type: t.AxisType.Linear },
     key: 'metrics-base',
     label: 'Metrics Base',
   },
   {
-    axis: { range: [ 8, 64 ], scale, type: t.AxisType.Linear },
+    axis: { scale, type: t.AxisType.Linear },
     key: 'n-filters',
     label: 'N Filters',
   },
@@ -59,12 +71,12 @@ const dimensionSamples: t.Dimension[] = [
 
 const metricDimensionSamples: t.Dimension[] = [
   {
-    axis: { range: [ 0.55, 0.99 ], scale, type: t.AxisType.Linear },
+    axis: { scale, type: t.AxisType.Linear },
     key: 'accuracy',
     label: 'Accuracy',
   },
   {
-    axis: { range: [ 1.7, 2.4 ], scale, type: t.AxisType.Linear },
+    axis: { scale, type: t.AxisType.Linear },
     key: 'loss',
     label: 'Loss',
   },
@@ -77,10 +89,12 @@ export const generateData = (dimensions: t.Dimension[], count: number): t.Hermes
       if (axis.type === t.AxisType.Categorical) {
         return axis.categories ? randomItem(axis.categories) : DEFAULT.INVALID_VALUE;
       } else if (axis.type === t.AxisType.Linear) {
-        return axis.range ? randomNumber(axis.range[1], axis.range[0]) : DEFAULT.INVALID_VALUE;
+        const range = dimensionRanges[dimension.key];
+        return axis.range ? randomNumber(range[1], range[0]) : DEFAULT.INVALID_VALUE;
       } else if (axis.type === t.AxisType.Logarithmic) {
+        const range = dimensionRanges[dimension.key];
         return axis.range && axis.logBase
-          ? randomLogNumber(axis.logBase, axis.range[1], axis.range[0]) : DEFAULT.INVALID_VALUE;
+          ? randomLogNumber(axis.logBase, range[1], range[0]) : DEFAULT.INVALID_VALUE;
       }
       return DEFAULT.INVALID_VALUE;
     });

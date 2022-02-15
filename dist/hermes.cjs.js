@@ -1098,14 +1098,25 @@ const mergeFilters = (filter0, filter1) => {
 };
 
 const scale = new LinearScale(0, 100);
+const dimensionRanges = {
+    'accuracy': [0.55, 0.99],
+    'dropout': [0.2, 0.8],
+    'global-batch-size': [5, 30],
+    'layer-split-factor': [1, 16],
+    'learning-rate': [0.0001, 0.1],
+    'learning-rate-decay': [0.000001, 0.001],
+    'loss': [1.7, 2.4],
+    'metrics-base': [0.5, 0.9],
+    'n-filters': [8, 64],
+};
 const dimensionSamples = [
     {
-        axis: { range: [0.2, 0.8], scale, type: AxisType.Linear },
+        axis: { scale, type: AxisType.Linear },
         key: 'dropout',
         label: 'Dropout',
     },
     {
-        axis: { range: [5, 30], scale, type: AxisType.Linear },
+        axis: { scale, type: AxisType.Linear },
         key: 'global-batch-size',
         label: 'Global Batch Size',
     },
@@ -1125,39 +1136,39 @@ const dimensionSamples = [
         label: 'Layer Inverse',
     },
     {
-        axis: { logBase: 10, range: [0.0001, 0.1], scale, type: AxisType.Logarithmic },
+        axis: { logBase: 10, scale, type: AxisType.Logarithmic },
         key: 'learning-rate',
         label: 'Learning Rate',
     },
     {
-        axis: { logBase: 10, range: [0.000001, 0.001], scale, type: AxisType.Logarithmic },
+        axis: { logBase: 10, scale, type: AxisType.Logarithmic },
         key: 'learning-rate-decay',
         label: 'Learning Rate Decay',
     },
     {
-        axis: { logBase: 2, range: [1, 16], scale, type: AxisType.Logarithmic },
+        axis: { logBase: 2, scale, type: AxisType.Logarithmic },
         key: 'layer-split-factor',
         label: 'Layer Split Factor',
     },
     {
-        axis: { range: [0.5, 0.9], scale, type: AxisType.Linear },
+        axis: { scale, type: AxisType.Linear },
         key: 'metrics-base',
         label: 'Metrics Base',
     },
     {
-        axis: { range: [8, 64], scale, type: AxisType.Linear },
+        axis: { scale, type: AxisType.Linear },
         key: 'n-filters',
         label: 'N Filters',
     },
 ];
 const metricDimensionSamples = [
     {
-        axis: { range: [0.55, 0.99], scale, type: AxisType.Linear },
+        axis: { scale, type: AxisType.Linear },
         key: 'accuracy',
         label: 'Accuracy',
     },
     {
-        axis: { range: [1.7, 2.4], scale, type: AxisType.Linear },
+        axis: { scale, type: AxisType.Linear },
         key: 'loss',
         label: 'Loss',
     },
@@ -1170,11 +1181,13 @@ const generateData = (dimensions, count) => {
                 return axis.categories ? randomItem(axis.categories) : INVALID_VALUE;
             }
             else if (axis.type === AxisType.Linear) {
-                return axis.range ? randomNumber(axis.range[1], axis.range[0]) : INVALID_VALUE;
+                const range = dimensionRanges[dimension.key];
+                return axis.range ? randomNumber(range[1], range[0]) : INVALID_VALUE;
             }
             else if (axis.type === AxisType.Logarithmic) {
+                const range = dimensionRanges[dimension.key];
                 return axis.range && axis.logBase
-                    ? randomLogNumber(axis.logBase, axis.range[1], axis.range[0]) : INVALID_VALUE;
+                    ? randomLogNumber(axis.logBase, range[1], range[0]) : INVALID_VALUE;
             }
             return INVALID_VALUE;
         });
