@@ -21,7 +21,7 @@
   "license": "ISC",
   "main": "./dist/hermes.cjs.js",
   "module": "./dist/hermes.esm.js",
-  "typings": "./dist/hermes.d.ts",
+  "types": "./dist/hermes.d.ts",
   "scripts": {
     "build": "tsc && rollup -c",
     "demos": "web-dev-server --open /demos/default.html",
