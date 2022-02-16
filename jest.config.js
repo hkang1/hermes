@@ -1,5 +1,6 @@
 /** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 module.exports = {
+  collectCoverageFrom: [ './src/**' ],
   coverageDirectory: 'test-results',
   preset: 'ts-jest',
   reporters: [
