@@ -2,6 +2,13 @@ import LinearScale from '../classes/LinearScale';
 import * as DEFAULT from '../defaults';
 import * as t from '../types';
 
+import { randomItem, randomLogNumber, randomNumber } from './data';
+
+export interface Tester {
+  generateData: (dimensions: t.Dimension[], count: number) => t.HermesData;
+  generateDimensions: (dimCount?: number, random?: boolean) => t.Dimension[];
+}
+
 const scale = new LinearScale(0, 100);
 
 const dimensionRanges: Record<t.RecordKey, t.Range> = {
@@ -113,24 +120,4 @@ export const generateDimensions = (dimCount = 10, random = true): t.Dimension[] 
   dims.push(randomItem(metricDimensionSamples));
 
   return dims;
-};
-
-export const randomInt = (max: number, min = 0): number => {
-  return Math.floor(Math.random() * (max - min)) + min;
-};
-
-export const randomItem = <T = unknown>(list: T[]): T => {
-  return list[randomInt(list.length)];
-};
-
-export const randomLogNumber = (base: number, max: number, min: number): number => {
-  const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
-  const denominator = log === Math.log ? Math.log(base) : 1;
-  const maxExp = log(max) / denominator;
-  const minExp = log(min) / denominator;
-  return base ** randomNumber(maxExp, minExp);
-};
-
-export const randomNumber = (max: number, min: number): number => {
-  return Math.random() * (max - min) + min;
 };

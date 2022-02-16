@@ -92,7 +92,7 @@ class Hermes {
     this.draw();
   }
 
-  static getTester(): any {
+  static getTester(): tester.Tester {
     return tester;
   }
 

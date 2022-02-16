@@ -257,6 +257,22 @@ const getDataRange = (data) => {
         return acc;
     }, [Infinity, -Infinity]);
 };
+const randomInt = (max, min = 0) => {
+    return Math.floor(Math.random() * (max - min)) + min;
+};
+const randomItem = (list) => {
+    return list[randomInt(list.length)];
+};
+const randomLogNumber = (base, max, min) => {
+    const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
+    const denominator = log === Math.log ? Math.log(base) : 1;
+    const maxExp = log(max) / denominator;
+    const minExp = log(min) / denominator;
+    return base ** randomNumber(maxExp, minExp);
+};
+const randomNumber = (max, min) => {
+    return Math.random() * (max - min) + min;
+};
 
 const readableNumber = (num, precision = 6) => {
     let readable = num.toString();
@@ -1205,31 +1221,11 @@ const generateDimensions = (dimCount = 10, random = true) => {
     dims.push(randomItem(metricDimensionSamples));
     return dims;
 };
-const randomInt = (max, min = 0) => {
-    return Math.floor(Math.random() * (max - min)) + min;
-};
-const randomItem = (list) => {
-    return list[randomInt(list.length)];
-};
-const randomLogNumber = (base, max, min) => {
-    const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
-    const denominator = log === Math.log ? Math.log(base) : 1;
-    const maxExp = log(max) / denominator;
-    const minExp = log(min) / denominator;
-    return base ** randomNumber(maxExp, minExp);
-};
-const randomNumber = (max, min) => {
-    return Math.random() * (max - min) + min;
-};
 
 var tester = /*#__PURE__*/Object.freeze({
   __proto__: null,
   generateData: generateData,
-  generateDimensions: generateDimensions,
-  randomInt: randomInt,
-  randomItem: randomItem,
-  randomLogNumber: randomLogNumber,
-  randomNumber: randomNumber
+  generateDimensions: generateDimensions
 });
 
 const customDeepmerge = deepmergeCustom({ mergeArrays: false });

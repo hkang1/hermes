@@ -1,11 +1,5 @@
-import fs from 'fs';
-
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
-
-fs.copyFileSync('./tsc-out/index.d.ts', './dist/hermes.d.ts');
-fs.copyFileSync('./tsc-out/types.d.ts', './dist/types.d.ts');
-fs.copyFileSync('./tsc-out/defaults.d.ts', './dist/defaults.d.ts');
 
 export default [
   {

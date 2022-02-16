@@ -29,3 +29,23 @@ export const getDataRange = (data: unknown[]): Range => {
     return acc;
   }, [ Infinity, -Infinity ]);
 };
+
+export const randomInt = (max: number, min = 0): number => {
+  return Math.floor(Math.random() * (max - min)) + min;
+};
+
+export const randomItem = <T = unknown>(list: T[]): T => {
+  return list[randomInt(list.length)];
+};
+
+export const randomLogNumber = (base: number, max: number, min: number): number => {
+  const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
+  const denominator = log === Math.log ? Math.log(base) : 1;
+  const maxExp = log(max) / denominator;
+  const minExp = log(min) / denominator;
+  return base ** randomNumber(maxExp, minExp);
+};
+
+export const randomNumber = (max: number, min: number): number => {
+  return Math.random() * (max - min) + min;
+};
