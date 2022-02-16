@@ -33,7 +33,7 @@ jobs:
       - run:
           name: Run build
           command: npm run build
-      - store_artifacts:
+      - store_test_results:
           path: ./test-results
       - save_cache:
           key: node-deps-v1-{{ .Branch }}-{{checksum "package-lock.json"}}
