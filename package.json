@@ -27,8 +27,8 @@
     "build:watch": "watch 'npm run build' src",
     "demos": "web-dev-server --open /demos/default.html",
     "lint": "eslint \"src/**/*.{js,ts}\"",
-    "test": "jest src",
-    "test:watch": "jest src --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "clean": "rm -rf ./tsc-out"
   },
   "devDependencies": {
@@ -43,6 +43,7 @@
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-sort-keys-fix": "^1.1.2",
     "jest": "^27.5.1",
+    "jest-junit": "^13.0.0",
     "rollup": "^2.64.0",
     "rollup-plugin-terser": "^7.0.2",
     "ts-jest": "^27.1.3",
