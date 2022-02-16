@@ -8,6 +8,7 @@
     "moduleResolution": "node",
     "noEmitOnError": true,
     "outDir": "./tsc-out",
+    "sourceMap": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "es2018"

@@ -2,6 +2,7 @@
 module.exports = {
   collectCoverageFrom: [ './src/**' ],
   coverageDirectory: 'test-results',
+  modulePathIgnorePatterns: [ './src/defaults.ts', './src/types.ts' ],
   preset: 'ts-jest',
   reporters: [
     'default',
