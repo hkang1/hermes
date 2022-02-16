@@ -2,7 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "declaration": true,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "node",
@@ -12,5 +12,6 @@
     "strict": true,
     "target": "es2018"
   },
-  "include": [ "./src/**/*.ts" ]
+  "include": [ "src/**/*.ts" ],
+  "exclude": [ "src/**/*.test.ts" ]
 }

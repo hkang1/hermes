@@ -1,6 +1,5 @@
 import { Range } from '../types';
 
-export const isBigInt = (data: unknown): data is bigint => typeof data === 'bigint';
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
 export const isNumber = (data: unknown): data is number => typeof data === 'number';

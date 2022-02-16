@@ -14,7 +14,7 @@ import { capDataRange, clone, getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
 import * as ix from './utils/interaction';
 import { distance, isPointInTriangle } from './utils/math';
-import * as tester from './utils/test';
+import * as tester from './utils/tester';
 
 const customDeepmerge = deepmergeCustom<{
   DeepMergeArraysURI: DeepMergeLeafURI; // <-- Needed for correct output type.
