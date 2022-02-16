@@ -24,10 +24,11 @@
   "types": "./dist/hermes.d.ts",
   "scripts": {
     "build": "tsc && rollup -c",
+    "build:watch": "watch 'npm run build' src",
     "demos": "web-dev-server --open /demos/default.html",
     "lint": "eslint \"src/**/*.{js,ts}\"",
-    "test": "jest ./src",
-    "watch": "watch 'npm run build' src",
+    "test": "jest src",
+    "test:watch": "jest src --watch",
     "clean": "rm -rf ./tsc-out"
   },
   "devDependencies": {
