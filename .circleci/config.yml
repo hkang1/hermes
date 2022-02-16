@@ -29,10 +29,13 @@ jobs:
       - run:
           name: Run tests
           command: |
-            npm test --ci
+            npm run test:coverage --ci
       - run:
           name: Run build
           command: npm run build
+      - store_artifacts:
+          path: ./test-results/lcov-report
+          destination: coverage
       - store_test_results:
           path: ./test-results
       - save_cache:
