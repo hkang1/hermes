@@ -7,3 +7,6 @@ package-lock.json
 rollup.config.js
 screenshots/
 src/
+test-results/
+tsc-out/
+tsconfig.json
