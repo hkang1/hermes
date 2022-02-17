@@ -578,52 +578,42 @@ class LogScale extends NiceScale {
     }
 }
 
-/**
- * ENUMERABLES
- */
-var ActionType;
-(function (ActionType) {
-    ActionType["FilterCreate"] = "filter-create";
-    ActionType["FilterMove"] = "filter-move";
-    ActionType["FilterResizeAfter"] = "filter-resize-after";
-    ActionType["FilterResizeBefore"] = "filter-resize-before";
-    ActionType["LabelMove"] = "label-move";
-    ActionType["None"] = "none";
-})(ActionType || (ActionType = {}));
-var DimensionLayout;
-(function (DimensionLayout) {
-    DimensionLayout["AxisEvenlySpaced"] = "axis-evenly-spaced";
-    DimensionLayout["Equidistant"] = "equidistant";
-    DimensionLayout["EvenlySpaced"] = "evenly-spaced";
-})(DimensionLayout || (DimensionLayout = {}));
-var DimensionType;
-(function (DimensionType) {
-    DimensionType["Categorical"] = "categorical";
-    DimensionType["Linear"] = "linear";
-    DimensionType["Logarithmic"] = "logarithmic";
-})(DimensionType || (DimensionType = {}));
-var Direction;
-(function (Direction) {
-    Direction["Horizontal"] = "horizontal";
-    Direction["Vertical"] = "vertical";
-})(Direction || (Direction = {}));
-var FocusType;
-(function (FocusType) {
-    FocusType["DimensionLabel"] = "dimension-label";
-    FocusType["DimensionAxis"] = "dimension-axis";
-    FocusType["Filter"] = "filter";
-    FocusType["FilterResize"] = "filter-resize";
-})(FocusType || (FocusType = {}));
-var LabelPlacement;
-(function (LabelPlacement) {
-    LabelPlacement["After"] = "after";
-    LabelPlacement["Before"] = "before";
-})(LabelPlacement || (LabelPlacement = {}));
-var PathType;
-(function (PathType) {
-    PathType["Bezier"] = "bezier";
-    PathType["Straight"] = "straight";
-})(PathType || (PathType = {}));
+const ActionType = {
+    FilterCreate: 'filter-create',
+    FilterMove: 'filter-move',
+    FilterResizeAfter: 'filter-resize-after',
+    FilterResizeBefore: 'filter-resize-before',
+    LabelMove: 'label-move',
+    None: 'none',
+};
+const DimensionLayout = {
+    AxisEvenlySpaced: 'axis-evenly-spaced',
+    Equidistant: 'equidistant',
+    EvenlySpaced: 'evenly-spaced',
+};
+const DimensionType = {
+    Categorical: 'categorical',
+    Linear: 'linear',
+    Logarithmic: 'logarithmic',
+};
+const Direction = {
+    Horizontal: 'horizontal',
+    Vertical: 'vertical',
+};
+const FocusType = {
+    DimensionAxis: 'dimension-axis',
+    DimensionLabel: 'dimension-label',
+    Filter: 'filter',
+    FilterResize: 'filter-resize',
+};
+const LabelPlacement = {
+    After: 'after',
+    Before: 'before',
+};
+const PathType = {
+    Bezier: 'bezier',
+    Straight: 'straight',
+};
 
 /**
  * Invalid defaults.
@@ -1300,7 +1290,8 @@ class Hermes {
                 range: undefined,
                 scale: new LinearScale(0, 100),
             };
-            if ([DimensionType.Linear, DimensionType.Logarithmic].includes(dimension.type)) {
+            if (dimension.type === DimensionType.Linear ||
+                dimension.type === DimensionType.Logarithmic) {
                 internal.range = getDataRange(data);
                 if (dimension.type === DimensionType.Linear) {
                     internal.scale = new LinearScale(internal.range[0], internal.range[1], dimension.dataOnEdge);
@@ -1590,12 +1581,10 @@ class Hermes {
             const filters = this.filters[key] || [];
             const isDimActive = _ixsa.type === ActionType.LabelMove && _ixsa.dimIndex === i;
             const isDimFocused = (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionLabel && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
-            const isAxisActive = [
-                ActionType.FilterCreate,
-                ActionType.FilterMove,
-                ActionType.FilterResizeAfter,
-                ActionType.FilterResizeBefore,
-            ].includes(_ixsa.type) && _ixsa.dimIndex === i;
+            const isAxisActive = (_ixsa.type === ActionType.FilterCreate ||
+                _ixsa.type === ActionType.FilterMove ||
+                _ixsa.type === ActionType.FilterResizeAfter ||
+                _ixsa.type === ActionType.FilterResizeBefore) && _ixsa.dimIndex === i;
             const isAxisFocused = (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionAxis && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
             _s[i] = _s[i] || {};
             _s[i].label = {
@@ -1750,12 +1739,10 @@ class Hermes {
         const index = _ixsa.dimIndex;
         const isHorizontal = this.options.direction === Direction.Horizontal;
         const filterKey = isHorizontal ? 'y' : 'x';
-        const isFilterAction = [
-            ActionType.FilterCreate,
-            ActionType.FilterMove,
-            ActionType.FilterResizeAfter,
-            ActionType.FilterResizeBefore,
-        ].includes(_ixsa.type);
+        const isFilterAction = (_ixsa.type === ActionType.FilterCreate ||
+            _ixsa.type === ActionType.FilterMove ||
+            _ixsa.type === ActionType.FilterResizeAfter ||
+            _ixsa.type === ActionType.FilterResizeBefore);
         if (!isFilterAction || !_ixf.key)
             return;
         const bound = _dl[_ixsa.dimIndex].layout.bound;
@@ -1851,13 +1838,11 @@ class Hermes {
         const isHorizontal = this.options.direction === Direction.Horizontal;
         let cursor = 'default';
         if (_ixsa.type !== ActionType.None) {
-            if ([ActionType.FilterMove, ActionType.LabelMove].includes(_ixsa.type)) {
+            if (_ixsa.type === ActionType.FilterMove || _ixsa.type === ActionType.LabelMove) {
                 cursor = 'grabbing';
             }
-            else if ([
-                ActionType.FilterResizeAfter,
-                ActionType.FilterResizeBefore,
-            ].includes(_ixsa.type)) {
+            else if (_ixsa.type === ActionType.FilterResizeAfter ||
+                _ixsa.type === ActionType.FilterResizeBefore) {
                 cursor = isHorizontal ? 'ns-resize' : 'ew-resize';
             }
             else if (_ixsa.type === ActionType.FilterCreate) {

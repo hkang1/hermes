@@ -21,10 +21,10 @@ export type Action = {
   filterIndex?: number,
   p0: Point,
   p1: Point,
-  type: ActionType,
+  type: EActionType,
 };
 export type Boundary = [ Point, Point, Point, Point ];
-export type Focus = { dimIndex: number, filterIndex?: number, type: FocusType };
+export type Focus = { dimIndex: number, filterIndex?: number, type: EFocusType };
 export type Point = { x: number, y: number };
 export type Rect = Point & Size;
 export type Size = { h: number, w: number };
@@ -47,48 +47,56 @@ export type DimensionKey = string;
  * ENUMERABLES
  */
 
-export enum ActionType {
-  FilterCreate = 'filter-create',
-  FilterMove = 'filter-move',
-  FilterResizeAfter = 'filter-resize-after',
-  FilterResizeBefore = 'filter-resize-before',
-  LabelMove = 'label-move',
-  None = 'none',
-}
+export type EActionType = typeof ActionType[keyof typeof ActionType];
+export type EDimensionLayout = typeof DimensionLayout[keyof typeof DimensionLayout];
+export type EDimensionType = typeof DimensionType[keyof typeof DimensionType];
+export type EDirection = typeof Direction[keyof typeof Direction];
+export type EFocusType = typeof FocusType[keyof typeof FocusType];
+export type ELabelPlacement = typeof LabelPlacement[keyof typeof LabelPlacement];
+export type EPathType = typeof PathType[keyof typeof PathType];
 
-export enum DimensionLayout {
-  AxisEvenlySpaced = 'axis-evenly-spaced',
-  Equidistant = 'equidistant',
-  EvenlySpaced = 'evenly-spaced',
-}
+export const ActionType = {
+  FilterCreate: 'filter-create',
+  FilterMove: 'filter-move',
+  FilterResizeAfter: 'filter-resize-after',
+  FilterResizeBefore: 'filter-resize-before',
+  LabelMove: 'label-move',
+  None: 'none',
+} as const;
 
-export enum DimensionType {
-  Categorical = 'categorical',
-  Linear = 'linear',
-  Logarithmic = 'logarithmic',
-}
+export const DimensionLayout = {
+  AxisEvenlySpaced: 'axis-evenly-spaced',
+  Equidistant: 'equidistant',
+  EvenlySpaced: 'evenly-spaced',
+} as const;
 
-export enum Direction {
-  Horizontal = 'horizontal',
-  Vertical = 'vertical',
-}
+export const DimensionType = {
+  Categorical: 'categorical',
+  Linear: 'linear',
+  Logarithmic: 'logarithmic',
+} as const;
 
-export enum FocusType {
-  DimensionLabel = 'dimension-label',
-  DimensionAxis = 'dimension-axis',
-  Filter = 'filter',
-  FilterResize = 'filter-resize',
-}
+export const Direction = {
+  Horizontal: 'horizontal',
+  Vertical: 'vertical',
+} as const;
 
-export enum LabelPlacement {
-  After = 'after',
-  Before = 'before',
-}
+export const FocusType = {
+  DimensionAxis: 'dimension-axis',
+  DimensionLabel: 'dimension-label',
+  Filter: 'filter',
+  FilterResize: 'filter-resize',
+} as const;
 
-export enum PathType {
-  Bezier = 'bezier',
-  Straight = 'straight',
-}
+export const LabelPlacement = {
+  After: 'after',
+  Before: 'before',
+} as const;
+
+export const PathType = {
+  Bezier: 'bezier',
+  Straight: 'straight',
+} as const;
 
 /**
  * INTERFACES
@@ -121,7 +129,7 @@ export interface Dimension {
   key: string;
   label: string;
   logBase?: number;
-  type: DimensionType;
+  type: EDimensionType;
 }
 
 export interface LabelMoveOptions extends LabelOptions {
@@ -147,14 +155,14 @@ export interface FilterOptions extends StyleRect {
 export interface LabelOptions extends StyleText {
   angle?: number;
   offset: number;
-  placement: LabelPlacement;
+  placement: ELabelPlacement;
 }
 
 export interface PathOptions {
   options: {
     bezierFactor?: number;
   };
-  type: PathType;
+  type: EPathType;
 }
 
 export interface TickOptions extends StyleLine {
@@ -168,7 +176,7 @@ export interface TickOptions extends StyleLine {
 export type HermesData = Record<DimensionKey, Primitive[]>;
 
 export interface HermesOptions {
-  direction: Direction;
+  direction: EDirection;
   //hooks: {},
   style: {
     axes: {
@@ -190,7 +198,7 @@ export interface HermesOptions {
       label: LabelMoveOptions;
       labelActive: StyleText;
       labelHover: StyleText;
-      layout: DimensionLayout;
+      layout: EDimensionLayout;
     };
     padding: Padding;
   };

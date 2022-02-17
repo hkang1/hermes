@@ -116,7 +116,10 @@ class Hermes {
         scale: new LinearScale(0, 100),
       };
 
-      if ([ t.DimensionType.Linear, t.DimensionType.Logarithmic ].includes(dimension.type)) {
+      if (
+        dimension.type === t.DimensionType.Linear ||
+        dimension.type === t.DimensionType.Logarithmic
+      ) {
         internal.range = getDataRange(data);
         if (dimension.type === t.DimensionType.Linear) {
           internal.scale = new LinearScale(
@@ -433,12 +436,12 @@ class Hermes {
       const filters = this.filters[key] || [];
       const isDimActive = _ixsa.type === t.ActionType.LabelMove && _ixsa.dimIndex === i;
       const isDimFocused = _ixsf?.type === t.FocusType.DimensionLabel && _ixsf?.dimIndex === i;
-      const isAxisActive = [
-        t.ActionType.FilterCreate,
-        t.ActionType.FilterMove,
-        t.ActionType.FilterResizeAfter,
-        t.ActionType.FilterResizeBefore,
-      ].includes(_ixsa.type) && _ixsa.dimIndex === i;
+      const isAxisActive = (
+        _ixsa.type === t.ActionType.FilterCreate ||
+        _ixsa.type === t.ActionType.FilterMove ||
+        _ixsa.type === t.ActionType.FilterResizeAfter ||
+        _ixsa.type === t.ActionType.FilterResizeBefore
+      ) && _ixsa.dimIndex === i;
       const isAxisFocused = _ixsf?.type === t.FocusType.DimensionAxis && _ixsf?.dimIndex === i;
 
       _s[i] = _s[i] || {};
@@ -513,7 +516,7 @@ class Hermes {
         const p = (point[vKey] - axisOffset) / axisLength;
         const filterIndex = filters.findIndex(filter => p >= filter.p0 && p <= filter.p1);
 
-        let type = t.FocusType.DimensionAxis;
+        let type: t.EFocusType = t.FocusType.DimensionAxis;
         if (filterIndex !== -1) {
           const threshold = ix.FILTER_RESIZE_THRESHOLD / _dsa.length;
           const filter = filters[filterIndex];
@@ -619,12 +622,12 @@ class Hermes {
     const index = _ixsa.dimIndex;
     const isHorizontal = this.options.direction === t.Direction.Horizontal;
     const filterKey = isHorizontal ? 'y' : 'x';
-    const isFilterAction = [
-      t.ActionType.FilterCreate,
-      t.ActionType.FilterMove,
-      t.ActionType.FilterResizeAfter,
-      t.ActionType.FilterResizeBefore,
-    ].includes(_ixsa.type);
+    const isFilterAction = (
+      _ixsa.type === t.ActionType.FilterCreate ||
+      _ixsa.type === t.ActionType.FilterMove ||
+      _ixsa.type === t.ActionType.FilterResizeAfter ||
+      _ixsa.type === t.ActionType.FilterResizeBefore
+    );
 
     if (!isFilterAction || !_ixf.key) return;
 
@@ -727,12 +730,12 @@ class Hermes {
 
     let cursor = 'default';
     if (_ixsa.type !== t.ActionType.None) {
-      if ([ t.ActionType.FilterMove, t.ActionType.LabelMove ].includes(_ixsa.type)) {
+      if (_ixsa.type === t.ActionType.FilterMove || _ixsa.type === t.ActionType.LabelMove) {
         cursor = 'grabbing';
-      } else if ([
-        t.ActionType.FilterResizeAfter,
-        t.ActionType.FilterResizeBefore,
-      ].includes(_ixsa.type)) {
+      } else if (
+        _ixsa.type === t.ActionType.FilterResizeAfter ||
+        _ixsa.type === t.ActionType.FilterResizeBefore
+      ) {
         cursor = isHorizontal ? 'ns-resize' : 'ew-resize';
       } else if (_ixsa.type === t.ActionType.FilterCreate) {
         cursor = 'crosshair';
