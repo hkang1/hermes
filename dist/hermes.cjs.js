@@ -1243,6 +1243,7 @@ class Hermes {
         this.element = element;
         // Set config early as setSize references it early.
         this.config = customDeepmerge(HERMES_CONFIG, config);
+        this.destroy();
         // Create a canvas and append it to the target element.
         this.canvas = document.createElement('canvas');
         this.element.appendChild(this.canvas);
@@ -1306,8 +1307,11 @@ class Hermes {
         this.draw();
     }
     destroy() {
-        this.resizeObserver.unobserve(this.element);
-        this.element.removeChild(this.canvas);
+        var _a;
+        (_a = this.resizeObserver) === null || _a === void 0 ? void 0 : _a.unobserve(this.element);
+        if (this.canvas && this.element.contains(this.canvas)) {
+            this.element.removeChild(this.canvas);
+        }
     }
     validateData(data) {
         let count = 0;

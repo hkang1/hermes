@@ -6,7 +6,6 @@ export default [
     input: './tsc-out/index.js',
     output: [
       {
-        exports: 'named',
         file: './dist/hermes.esm.js',
         format: 'es',
         name: 'Hermes',

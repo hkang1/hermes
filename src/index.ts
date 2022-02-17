@@ -53,6 +53,7 @@ class Hermes {
 
     // Set config early as setSize references it early.
     this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
+    this.destroy();
 
     // Create a canvas and append it to the target element.
     this.canvas = document.createElement('canvas');
@@ -133,8 +134,10 @@ class Hermes {
   }
 
   public destroy(): void {
-    this.resizeObserver.unobserve(this.element);
-    this.element.removeChild(this.canvas);
+    this.resizeObserver?.unobserve(this.element);
+    if (this.canvas && this.element.contains(this.canvas)) {
+      this.element.removeChild(this.canvas);
+    }
   }
 
   private validateData(data: t.Data): { count: number, valid: boolean } {
