@@ -1,4 +1,4 @@
-var Hermes = (function () {
+var Hermes = (function (exports) {
   'use strict';
 
   /*!
@@ -2177,6 +2177,15 @@ var Hermes = (function () {
       }
   }
 
-  return Hermes;
+  exports.ActionType = ActionType;
+  exports.DimensionLayout = DimensionLayout;
+  exports.DimensionType = DimensionType;
+  exports.Direction = Direction;
+  exports.FocusType = FocusType;
+  exports.LabelPlacement = LabelPlacement;
+  exports.PathType = PathType;
+  exports["default"] = Hermes;
 
-})();
+  return exports;
+
+})({});

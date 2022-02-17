@@ -17,6 +17,11 @@ import * as ix from './utils/interaction';
 import { distance, isPointInTriangle } from './utils/math';
 import * as tester from './utils/tester';
 
+export {
+  ActionType, DimensionLayout, DimensionType,
+  Direction, FocusType, LabelPlacement, PathType,
+} from './types';
+
 const customDeepmerge = deepmergeCustom<{
   DeepMergeArraysURI: DeepMergeLeafURI; // <-- Needed for correct output type.
 }>({ mergeArrays: false });

@@ -2174,4 +2174,4 @@ class Hermes {
     }
 }
 
-export { Hermes as default };
+export { ActionType, DimensionLayout, DimensionType, Direction, FocusType, LabelPlacement, PathType, Hermes as default };

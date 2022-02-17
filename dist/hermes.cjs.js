@@ -1,5 +1,7 @@
 'use strict';
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 /*!
  * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
  *
@@ -2176,4 +2178,11 @@ class Hermes {
     }
 }
 
-module.exports = Hermes;
+exports.ActionType = ActionType;
+exports.DimensionLayout = DimensionLayout;
+exports.DimensionType = DimensionType;
+exports.Direction = Direction;
+exports.FocusType = FocusType;
+exports.LabelPlacement = LabelPlacement;
+exports.PathType = PathType;
+exports["default"] = Hermes;
