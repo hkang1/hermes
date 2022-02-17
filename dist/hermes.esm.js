@@ -1239,7 +1239,6 @@ class Hermes {
         this.element = element;
         // Set config early as setSize references it early.
         this.config = customDeepmerge(HERMES_CONFIG, config);
-        this.destroy();
         // Create a canvas and append it to the target element.
         this.canvas = document.createElement('canvas');
         this.element.appendChild(this.canvas);
