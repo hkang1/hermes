@@ -58,7 +58,7 @@ The `container` can be an HTML element passed in directly or a query selector th
 
 ## Hermes Data Format
 
-The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L201), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
+The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L209), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
 
 ```
 type Data = Record<DimensionKey, Primitive[]>;
@@ -76,7 +76,7 @@ const data = {
 
 ## Hermes Dimensions Definition
 
-The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L146-L152), where it is defined as:
+The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L154-L161), where it is defined as:
 
 ```
 interface Dimension {
@@ -154,6 +154,71 @@ If the [dimension scale type](#type) is set to `logarithmic`, `logBase` can be s
 
 ## Hermes Config and Styles
 
-TODO: provide option structure and details.
+The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L211-L248) provides a more up-to-date definition of the config.
 
-For now take a look at [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L203-L230) to get an idea of what's customizable.
+```
+interface Config {
+  direction: EDirection;
+  hooks: {
+    onDimensionMove?: (dimension: Dimension, index0: number, index1: number) => void;
+    onFilterCreate?: (filter: Filter) => void,
+    onFilterMove?: (filter: Filter) => void,
+    onFilterRemove?: (filter: Filter) => void,
+    onFilterResize?: (filter: Filter) => void,
+    onReset?: () => void;
+    onResize?: (newSize: Size, oldSize: Size) => void;
+  },
+  resizeThrottleDelay: number;
+  style: {
+    axes: {
+      axis: AxisOptions,
+      axisActve: StyleLine;
+      axisHover: StyleLine;
+      filter: FilterOptions;
+      filterActive: FilterOptions;
+      filterHover: FilterOptions;
+      label: LabelOptions;
+      labelActive: StyleText;
+      labelHover: StyleText;
+      tick: TickOptions;
+      tickActive: StyleLine;
+      tickHover: StyleLine;
+    };
+    data: DataOptions;
+    dimension: {
+      label: LabelMoveOptions;
+      labelActive: StyleText;
+      labelHover: StyleText;
+      layout: EDimensionLayout;
+    };
+    padding: Padding;
+  };
+}
+```
+
+### General Config
+
+#### direction (default: 'horizontal')
+
+The direction the dimensions should be laid out. The direction can be set to `horizontal` or `vertical`. The `horizontal` direction will draw the dimensions across the canvas with vertical axes. The `vertical` direction will draw the dimensions top to bottom on the canvas with horizontal axes.
+
+#### resizeThrottleDelay (default: 0)
+
+The number of milliseconds to throttle the resizing. Resizing performs new calculations and redraws based on the new sizes. Depending on data and dimension count, this can slow the browser significantly. The default is set to `0` which means throttling is disabled.
+
+### Hooks
+
+#### onDimensionMove
+#### onFilterCreate
+#### onFilterMove
+#### onFilterRemove
+#### onFilterResize
+#### onReset
+#### onResize
+
+### Style Options
+
+#### axes
+#### data
+#### dimension
+#### padding
