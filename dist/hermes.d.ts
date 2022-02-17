@@ -18,9 +18,9 @@ declare class LogScale extends NiceScale {
 declare class Hermes {
   constructor(
     target: HTMLElement | string,
-    data: Hermes.HermesData,
+    data: Hermes.Data,
     dimensions: Hermes.Dimension[],
-    options?: Hermes.RecursivePartial<Hermes.HermesOptions>
+    options?: Hermes.RecursivePartial<Hermes.Config>
   );
   static getTester(): Hermes.Tester;
   setSize(w: number, h: number): void;
@@ -186,7 +186,7 @@ declare namespace Hermes {
   }
 
   export interface Tester {
-    generateData: (dimensions: Dimension[], count: number) => HermesData;
+    generateData: (dimensions: Dimension[], count: number) => Data;
     generateDimensions: (dimCount?: number, random?: boolean) => Dimension[];
   }
 
@@ -198,9 +198,9 @@ declare namespace Hermes {
    * PRIMARY INTERFACES AND TYPES
    */
 
-  export type HermesData = Record<DimensionKey, Primitive[]>;
+  export type Data = Record<DimensionKey, Primitive[]>;
 
-  export interface HermesOptions {
+  export interface Config {
     direction: Direction;
     //hooks: {},
     style: {

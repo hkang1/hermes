@@ -645,7 +645,7 @@ var Hermes = (function () {
   /**
    * Framework options defaults.
    */
-  const HERMES_OPTIONS = {
+  const HERMES_CONFIG = {
       direction: Direction.Horizontal,
       style: {
           axes: {
@@ -1221,7 +1221,7 @@ var Hermes = (function () {
 
   const customDeepmerge = deepmergeCustom({ mergeArrays: false });
   class Hermes {
-      constructor(target, data, dimensions, options = {}) {
+      constructor(target, data, dimensions, config = {}) {
           this.size = { h: 0, w: 0 };
           this.ix = clone(IX);
           this.filters = {};
@@ -1259,7 +1259,7 @@ var Hermes = (function () {
               throw new HermesError('Need at least one dimension defined.');
           this.dimensionsOriginal = clone(dimensions);
           this.dimensions = this.setDimensions(dimensions);
-          this.options = customDeepmerge(HERMES_OPTIONS, options);
+          this.config = customDeepmerge(HERMES_CONFIG, config);
           // Add resize observer to detect target element resizing.
           this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
           this.resizeObserver.observe(this.element);
@@ -1323,7 +1323,7 @@ var Hermes = (function () {
               },
               layout: {
                   drawRect: {},
-                  padding: normalizePadding(this.options.style.padding),
+                  padding: normalizePadding(this.config.style.padding),
               },
           };
           const { h, w } = this.size;
@@ -1332,12 +1332,12 @@ var Hermes = (function () {
           const _dsl = _.dims.shared.label;
           const _dsly = _.dims.shared.layout;
           const dimCount = this.dimensions.length;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
-          const dimLabelStyle = this.options.style.dimension.label;
-          const dimLabelBoundaryPadding = this.options.style.dimension.label.boundaryPadding;
-          const dimLayout = this.options.style.dimension.layout;
-          const axesLabelStyle = this.options.style.axes.label;
-          const axisBoundaryPadding = this.options.style.axes.axis.boundaryPadding;
+          const isHorizontal = this.config.direction === Direction.Horizontal;
+          const dimLabelStyle = this.config.style.dimension.label;
+          const dimLabelBoundaryPadding = this.config.style.dimension.label.boundaryPadding;
+          const dimLayout = this.config.style.dimension.layout;
+          const axesLabelStyle = this.config.style.axes.label;
+          const axisBoundaryPadding = this.config.style.axes.axis.boundaryPadding;
           const isLabelBefore = dimLabelStyle.placement === LabelPlacement.Before;
           const isLabelAngled = dimLabelStyle.angle != null;
           const isAxesBefore = axesLabelStyle.placement === LabelPlacement.Before;
@@ -1569,7 +1569,7 @@ var Hermes = (function () {
           if (!this._)
               return;
           this._.styles = this._.styles || [];
-          const _os = this.options.style;
+          const _os = this.config.style;
           const _osa = _os.axes;
           const _osd = _os.dimension;
           const _dl = this._.dims.list;
@@ -1625,7 +1625,7 @@ var Hermes = (function () {
           if (!this._)
               return;
           const _dsa = this._.dims.shared.axes;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
+          const isHorizontal = this.config.direction === Direction.Horizontal;
           const vKey = isHorizontal ? 'y' : 'x';
           const axisLength = this._.dims.shared.axes.length;
           for (let i = 0; i < this._.dims.list.length; i++) {
@@ -1663,7 +1663,7 @@ var Hermes = (function () {
           const _ix = this.ix;
           const _ixd = _ix.dimension;
           const _ixsa = _ix.shared.action;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
+          const isHorizontal = this.config.direction === Direction.Horizontal;
           const hKey = isHorizontal ? 'x' : 'y';
           _ixd.boundOffset = {
               x: isHorizontal ? _ixsa.p1.x - _ixsa.p0.x : 0,
@@ -1738,7 +1738,7 @@ var Hermes = (function () {
           const _ixsa = _ixs.action;
           const _filters = this.filters;
           const index = _ixsa.dimIndex;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
+          const isHorizontal = this.config.direction === Direction.Horizontal;
           const filterKey = isHorizontal ? 'y' : 'x';
           const isFilterAction = (_ixsa.type === ActionType.FilterCreate ||
               _ixsa.type === ActionType.FilterMove ||
@@ -1836,7 +1836,7 @@ var Hermes = (function () {
           const _ix = this.ix;
           const _ixsa = _ix.shared.action;
           const _ixsf = _ix.shared.focus;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
+          const isHorizontal = this.config.direction === Direction.Horizontal;
           let cursor = 'default';
           if (_ixsa.type !== ActionType.None) {
               if (_ixsa.type === ActionType.FilterMove || _ixsa.type === ActionType.LabelMove) {
@@ -1878,10 +1878,10 @@ var Hermes = (function () {
           const _ix = this.ix;
           const _ixsf = this.ix.shared.focus;
           const _filters = this.filters;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
-          const axesStyle = this.options.style.axes;
-          const dataStyle = this.options.style.data;
-          const dimStyle = this.options.style.dimension;
+          const isHorizontal = this.config.direction === Direction.Horizontal;
+          const axesStyle = this.config.style.axes;
+          const dataStyle = this.config.style.data;
+          const dimStyle = this.config.style.dimension;
           const isLabelBefore = dimStyle.label.placement === LabelPlacement.Before;
           const isAxesBefore = axesStyle.label.placement === LabelPlacement.Before;
           // Clear previous canvas drawings.
@@ -2012,7 +2012,7 @@ var Hermes = (function () {
           const _l = this._.layout;
           const _dl = this._.dims.list;
           const _dsly = this._.dims.shared.layout;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
+          const isHorizontal = this.config.direction === Direction.Horizontal;
           // Draw the drawing area by outlining paddings.
           const paddingStyle = { strokeStyle: '#dddddd' };
           drawLine(this.ctx, 0, _l.padding[0], w, _l.padding[0], paddingStyle);
@@ -2063,7 +2063,7 @@ var Hermes = (function () {
           const _ixd = this.ix.dimension;
           const _ixf = this.ix.filters;
           const _dsa = this._.dims.shared.axes;
-          const isHorizontal = this.options.direction === Direction.Horizontal;
+          const isHorizontal = this.config.direction === Direction.Horizontal;
           const hKey = isHorizontal ? 'x' : 'y';
           const vKey = isHorizontal ? 'y' : 'x';
           const point = { x: e.clientX, y: e.clientY };

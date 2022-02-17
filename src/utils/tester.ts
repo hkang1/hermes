@@ -4,7 +4,7 @@ import * as t from '../types';
 import { randomItem, randomLogNumber, randomNumber } from './data';
 
 export interface Tester {
-  generateData: (dimensions: t.Dimension[], count: number) => t.HermesData;
+  generateData: (dimensions: t.Dimension[], count: number) => t.Data;
   generateDimensions: (dimCount?: number, random?: boolean) => t.Dimension[];
 }
 
@@ -88,7 +88,7 @@ const metricDimensionSamples: t.Dimension[] = [
   },
 ];
 
-export const generateData = (dimensions: t.Dimension[], count: number): t.HermesData => {
+export const generateData = (dimensions: t.Dimension[], count: number): t.Data => {
   return dimensions.reduce((acc, dimension) => {
     acc[dimension.key] = new Array(count).fill(null).map(() => {
       if (dimension.type === t.DimensionType.Categorical) {
@@ -104,7 +104,7 @@ export const generateData = (dimensions: t.Dimension[], count: number): t.Hermes
       return DEFAULT.INVALID_VALUE;
     });
     return acc;
-  }, {} as t.HermesData);
+  }, {} as t.Data);
 };
 
 export const generateDimensions = (dimCount = 10, random = true): t.Dimension[] => {

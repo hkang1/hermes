@@ -173,9 +173,9 @@ export interface TickOptions extends StyleLine {
  * PRIMARY INTERFACES AND TYPES
  */
 
-export type HermesData = Record<DimensionKey, Primitive[]>;
+export type Data = Record<DimensionKey, Primitive[]>;
 
-export interface HermesOptions {
+export interface Config {
   direction: EDirection;
   //hooks: {},
   style: {

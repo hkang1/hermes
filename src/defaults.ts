@@ -32,7 +32,7 @@ export const TEXT_BASELINE = 'middle';
 /**
  * Framework options defaults.
  */
-export const HERMES_OPTIONS: t.HermesOptions = {
+export const HERMES_CONFIG: t.Config = {
   direction: t.Direction.Horizontal,
   style: {
     axes: {
