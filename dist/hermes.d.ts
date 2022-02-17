@@ -210,6 +210,7 @@ declare namespace Hermes {
 
   export interface Config {
     direction: EDirection;
+    resizeThrottleDelay: number;
     //hooks: {},
     style: {
       axes: {

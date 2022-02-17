@@ -12,6 +12,7 @@ import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
 import { capDataRange, clone, getDataRange } from './utils/data';
 import { getElement } from './utils/dom';
+import { throttle } from './utils/event';
 import * as ix from './utils/interaction';
 import { distance, isPointInTriangle } from './utils/math';
 import * as tester from './utils/tester';
@@ -79,7 +80,14 @@ class Hermes {
     this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
     // Add resize observer to detect target element resizing.
-    this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
+    this.resizeObserver = new ResizeObserver(
+      this.config.resizeThrottleDelay === 0
+        ? this.handleResize.bind(this)
+        : throttle(
+          entries => this.handleResize.bind(this)(entries as ResizeObserverEntry[]),
+          this.config.resizeThrottleDelay,
+        ),
+    );
     this.resizeObserver.observe(this.element);
 
     // Add mouse event handlers.

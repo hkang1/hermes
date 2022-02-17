@@ -34,6 +34,7 @@ export const TEXT_BASELINE = 'middle';
  */
 export const HERMES_CONFIG: t.Config = {
   direction: t.Direction.Horizontal,
+  resizeThrottleDelay: 0,
   style: {
     axes: {
       axis: {

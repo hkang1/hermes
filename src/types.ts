@@ -177,6 +177,7 @@ export type Data = Record<DimensionKey, Primitive[]>;
 
 export interface Config {
   direction: EDirection;
+  resizeThrottleDelay: number;
   //hooks: {},
   style: {
     axes: {

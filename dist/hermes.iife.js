@@ -647,6 +647,7 @@ var Hermes = (function () {
    */
   const HERMES_CONFIG = {
       direction: Direction.Horizontal,
+      resizeThrottleDelay: 0,
       style: {
           axes: {
               axis: {
@@ -1064,6 +1065,14 @@ var Hermes = (function () {
       return document.querySelector(target);
   };
 
+  const throttle = (fn, delay) => {
+      let timer;
+      return (...args) => {
+          clearTimeout(timer);
+          timer = setTimeout(() => fn(...args), delay);
+      };
+  };
+
   const DIMENSION_SWAP_THRESHOLD = 30;
   const FILTER_REMOVE_THRESHOLD = 1;
   const FILTER_RESIZE_THRESHOLD = 3;
@@ -1261,7 +1270,9 @@ var Hermes = (function () {
           this.dimensions = this.setDimensions(dimensions);
           this.config = customDeepmerge(HERMES_CONFIG, config);
           // Add resize observer to detect target element resizing.
-          this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
+          this.resizeObserver = new ResizeObserver(this.config.resizeThrottleDelay === 0
+              ? this.handleResize.bind(this)
+              : throttle(entries => this.handleResize.bind(this)(entries), this.config.resizeThrottleDelay));
           this.resizeObserver.observe(this.element);
           // Add mouse event handlers.
           this.element.addEventListener('dblclick', this.handleDoubleClick.bind(this));
