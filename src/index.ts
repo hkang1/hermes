@@ -27,7 +27,7 @@ class Hermes {
   private resizeObserver: ResizeObserver;
   private data: t.HermesData;
   private dataCount: number;
-  private dimensions: t.Dimension[];
+  private dimensions: t.InternalDimension[];
   private dimensionsOriginal: t.Dimension[];
   private options: t.HermesOptions;
   private size: t.Size = { h: 0, w: 0 };
@@ -74,8 +74,8 @@ class Hermes {
     this.data = data;
 
     if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
-    this.dimensions = dimensions;
     this.dimensionsOriginal = clone(dimensions);
+    this.dimensions = this.setDimensions(dimensions);
     this.options = customDeepmerge(DEFAULT.HERMES_OPTIONS, options) as t.HermesOptions;
 
     // Add resize observer to detect target element resizing.
@@ -106,28 +106,43 @@ class Hermes {
     this.size = { h, w };
   }
 
-  private calculate(): void {
-    this.calculateScales();
-    this.calculateLayout();
-    this.calculateStyles();
-  }
-
-  private calculateScales(): void {
-    this.dimensions.forEach(dimension => {
-      const _da = dimension.axis;
+  private setDimensions(dimensions: t.Dimension[]): t.InternalDimension[] {
+    return clone(dimensions).map(dimension => {
       const key = dimension.key;
       const data = this.data[key] || [];
-      if ([ t.AxisType.Linear, t.AxisType.Logarithmic ].includes(_da.type)) {
-        const range = getDataRange(data);
-        if (_da.type === t.AxisType.Linear) {
-          _da.scale = new LinearScale(range[0], range[1], _da.dataOnEdge);
-        } else if (_da.type === t.AxisType.Logarithmic) {
-          _da.scale = new LogScale(range[0], range[1], _da.logBase, _da.dataOnEdge);
+      const internal: t.InternalDimension = {
+        ...dimension,
+        range: undefined,
+        scale: new LinearScale(0, 100),
+      };
+
+      if ([ t.DimensionType.Linear, t.DimensionType.Logarithmic ].includes(dimension.type)) {
+        internal.range = getDataRange(data);
+        if (dimension.type === t.DimensionType.Linear) {
+          internal.scale = new LinearScale(
+            internal.range[0],
+            internal.range[1],
+            dimension.dataOnEdge,
+          );
+        } else if (dimension.type === t.DimensionType.Logarithmic) {
+          internal.scale = new LogScale(
+            internal.range[0],
+            internal.range[1],
+            dimension.logBase,
+            dimension.dataOnEdge,
+          );
         }
-      } else if (_da.type === t.AxisType.Categorical) {
-        _da.scale = new CategoricalScale(_da.categories, _da.dataOnEdge);
+      } else if (dimension.type === t.DimensionType.Categorical) {
+        internal.scale = new CategoricalScale(dimension.categories, dimension.dataOnEdge);
       }
+
+      return internal;
     });
+  }
+
+  private calculate(): void {
+    this.calculateLayout();
+    this.calculateStyles();
   }
 
   private calculateLayout(): void {
@@ -234,7 +249,7 @@ class Hermes {
       const _dlia = _.dims.list[i].axes;
       const _dlil = _.dims.list[i].label;
       const _dlily = _.dims.list[i].layout;
-      const scale: NiceScale | undefined = dimension.axis.scale;
+      const scale: NiceScale | undefined = dimension.scale;
 
       /**
        * Update the scale info based on ticks and find the longest tick label.
@@ -638,16 +653,16 @@ class Hermes {
         _ixf.active.p1 = 1.0;
       }
 
-      _ixf.active.value0 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p0);
-      _ixf.active.value1 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p1);
+      _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
+      _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
     } else if (_ixsa.type === t.ActionType.FilterResizeBefore) {
       _ixf.active.p0 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
       _ixf.active.p0 = capDataRange(_ixf.active.p0, [ 0.0, 1.0 ]);
-      _ixf.active.value0 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p0);
+      _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
     } else {
       _ixf.active.p1 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
       _ixf.active.p1 = capDataRange(_ixf.active.p1, [ 0.0, 1.0 ]);
-      _ixf.active.value1 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p1);
+      _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
     }
 
     // Whether or not to finalize active filter and removing reference to it.
@@ -769,13 +784,13 @@ class Hermes {
         const layout = _dl[i].layout;
         const bound = ix.getDragBound(i, _ix, layout.bound);
         const value = this.data[key][k];
-        const pos = dimension.axis.scale?.valueToPos(value) ?? 0;
-        const percent = dimension.axis.scale?.valueToPercent(value) ?? 0;
+        const pos = dimension.scale?.valueToPos(value) ?? 0;
+        const percent = dimension.scale?.valueToPercent(value) ?? 0;
         const x = bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
         const y = bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
 
         if (dimColorKey === key) {
-          const percent = dimension.axis.scale?.valueToPercent(value) ?? 0;
+          const percent = dimension.scale?.valueToPercent(value) ?? 0;
           const scaleColor = scale2rgba(dataStyle.colorScale?.colors || [], percent);
           dataDefaultStyle.strokeStyle = scaleColor;
         }
@@ -957,7 +972,7 @@ class Hermes {
 
   private handleDoubleClick(): void {
     // Reset chart settings.
-    this.dimensions = clone(this.dimensionsOriginal);
+    this.dimensions = this.setDimensions(this.dimensionsOriginal);
     this.filters = {};
     this.ix = clone(DEFAULT.IX);
 
@@ -1003,7 +1018,7 @@ class Hermes {
         _ixf.key = this.dimensions[i].key;
 
         const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
-        const value0 = this.dimensions[i].axis.scale.percentToValue(p0);
+        const value0 = this.dimensions[i].scale.percentToValue(p0);
 
         this.setActiveFilter(_ixf.key, p0, value0);
       }

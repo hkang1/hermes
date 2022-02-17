@@ -588,18 +588,18 @@ var ActionType;
     ActionType["LabelMove"] = "label-move";
     ActionType["None"] = "none";
 })(ActionType || (ActionType = {}));
-var AxisType;
-(function (AxisType) {
-    AxisType["Categorical"] = "categorical";
-    AxisType["Linear"] = "linear";
-    AxisType["Logarithmic"] = "logarithmic";
-})(AxisType || (AxisType = {}));
 var DimensionLayout;
 (function (DimensionLayout) {
     DimensionLayout["AxisEvenlySpaced"] = "axis-evenly-spaced";
     DimensionLayout["Equidistant"] = "equidistant";
     DimensionLayout["EvenlySpaced"] = "evenly-spaced";
 })(DimensionLayout || (DimensionLayout = {}));
+var DimensionType;
+(function (DimensionType) {
+    DimensionType["Categorical"] = "categorical";
+    DimensionType["Linear"] = "linear";
+    DimensionType["Logarithmic"] = "logarithmic";
+})(DimensionType || (DimensionType = {}));
 var Direction;
 (function (Direction) {
     Direction["Horizontal"] = "horizontal";
@@ -1111,7 +1111,6 @@ const mergeFilters = (filter0, filter1) => {
     return newFilter;
 };
 
-const scale = new LinearScale(0, 100);
 const dimensionRanges = {
     'accuracy': [0.55, 0.99],
     'dropout': [0.2, 0.8],
@@ -1125,83 +1124,84 @@ const dimensionRanges = {
 };
 const dimensionSamples = [
     {
-        axis: { scale, type: AxisType.Linear },
         key: 'dropout',
         label: 'Dropout',
+        type: DimensionType.Linear,
     },
     {
-        axis: { scale, type: AxisType.Linear },
         key: 'global-batch-size',
         label: 'Global Batch Size',
+        type: DimensionType.Linear,
     },
     {
-        axis: {
-            categories: [4, 8, 16, 32, 64],
-            dataOnEdge: false,
-            scale,
-            type: AxisType.Categorical,
-        },
+        categories: [4, 8, 16, 32, 64],
+        dataOnEdge: false,
         key: 'layer-dense-size',
         label: 'Layer Dense Size',
+        type: DimensionType.Categorical,
     },
     {
-        axis: { categories: [true, false], dataOnEdge: false, scale, type: AxisType.Categorical },
+        categories: [true, false],
+        dataOnEdge: false,
         key: 'layer-inverse',
         label: 'Layer Inverse',
+        type: DimensionType.Categorical,
     },
     {
-        axis: { logBase: 10, scale, type: AxisType.Logarithmic },
         key: 'learning-rate',
         label: 'Learning Rate',
+        logBase: 10,
+        type: DimensionType.Logarithmic,
     },
     {
-        axis: { logBase: 10, scale, type: AxisType.Logarithmic },
         key: 'learning-rate-decay',
         label: 'Learning Rate Decay',
+        logBase: 10,
+        type: DimensionType.Logarithmic,
     },
     {
-        axis: { logBase: 2, scale, type: AxisType.Logarithmic },
         key: 'layer-split-factor',
         label: 'Layer Split Factor',
+        logBase: 2,
+        type: DimensionType.Logarithmic,
     },
     {
-        axis: { scale, type: AxisType.Linear },
         key: 'metrics-base',
         label: 'Metrics Base',
+        type: DimensionType.Linear,
     },
     {
-        axis: { scale, type: AxisType.Linear },
         key: 'n-filters',
         label: 'N Filters',
+        type: DimensionType.Linear,
     },
 ];
 const metricDimensionSamples = [
     {
-        axis: { scale, type: AxisType.Linear },
         key: 'accuracy',
         label: 'Accuracy',
+        type: DimensionType.Linear,
     },
     {
-        axis: { scale, type: AxisType.Linear },
         key: 'loss',
         label: 'Loss',
+        type: DimensionType.Linear,
     },
 ];
 const generateData = (dimensions, count) => {
     return dimensions.reduce((acc, dimension) => {
-        const axis = dimension.axis;
         acc[dimension.key] = new Array(count).fill(null).map(() => {
-            if (axis.type === AxisType.Categorical) {
-                return axis.categories ? randomItem(axis.categories) : INVALID_VALUE;
+            if (dimension.type === DimensionType.Categorical) {
+                return dimension.categories ? randomItem(dimension.categories) : INVALID_VALUE;
             }
-            else if (axis.type === AxisType.Linear) {
+            else if (dimension.type === DimensionType.Linear) {
                 const range = dimensionRanges[dimension.key];
                 return range ? randomNumber(range[1], range[0]) : INVALID_VALUE;
             }
-            else if (axis.type === AxisType.Logarithmic) {
+            else if (dimension.type === DimensionType.Logarithmic) {
                 const range = dimensionRanges[dimension.key];
-                return range && axis.logBase
-                    ? randomLogNumber(axis.logBase, range[1], range[0]) : INVALID_VALUE;
+                return range && dimension.logBase
+                    ? randomLogNumber(dimension.logBase, range[1], range[0]) : INVALID_VALUE;
             }
             return INVALID_VALUE;
         });
@@ -1264,8 +1264,8 @@ class Hermes {
         this.data = data;
         if (dimensions.length === 0)
             throw new HermesError('Need at least one dimension defined.');
-        this.dimensions = dimensions;
         this.dimensionsOriginal = clone(dimensions);
+        this.dimensions = this.setDimensions(dimensions);
         this.options = customDeepmerge(HERMES_OPTIONS, options);
         // Add resize observer to detect target element resizing.
         this.resizeObserver = new ResizeObserver(this.handleResize.bind(this));
@@ -1289,29 +1289,33 @@ class Hermes {
         this.canvas.height = h;
         this.size = { h, w };
     }
-    calculate() {
-        this.calculateScales();
-        this.calculateLayout();
-        this.calculateStyles();
-    }
-    calculateScales() {
-        this.dimensions.forEach(dimension => {
-            const _da = dimension.axis;
+    setDimensions(dimensions) {
+        return clone(dimensions).map(dimension => {
             const key = dimension.key;
             const data = this.data[key] || [];
-            if ([AxisType.Linear, AxisType.Logarithmic].includes(_da.type)) {
-                const range = getDataRange(data);
-                if (_da.type === AxisType.Linear) {
-                    _da.scale = new LinearScale(range[0], range[1], _da.dataOnEdge);
+            const internal = {
+                ...dimension,
+                range: undefined,
+                scale: new LinearScale(0, 100),
+            };
+            if ([DimensionType.Linear, DimensionType.Logarithmic].includes(dimension.type)) {
+                internal.range = getDataRange(data);
+                if (dimension.type === DimensionType.Linear) {
+                    internal.scale = new LinearScale(internal.range[0], internal.range[1], dimension.dataOnEdge);
                 }
-                else if (_da.type === AxisType.Logarithmic) {
-                    _da.scale = new LogScale(range[0], range[1], _da.logBase, _da.dataOnEdge);
+                else if (dimension.type === DimensionType.Logarithmic) {
+                    internal.scale = new LogScale(internal.range[0], internal.range[1], dimension.logBase, dimension.dataOnEdge);
                 }
             }
-            else if (_da.type === AxisType.Categorical) {
-                _da.scale = new CategoricalScale(_da.categories, _da.dataOnEdge);
+            else if (dimension.type === DimensionType.Categorical) {
+                internal.scale = new CategoricalScale(dimension.categories, dimension.dataOnEdge);
             }
+            return internal;
         });
+    }
+    calculate() {
+        this.calculateLayout();
+        this.calculateStyles();
     }
     calculateLayout() {
         var _a, _b;
@@ -1414,7 +1418,7 @@ class Hermes {
             const _dlia = _.dims.list[i].axes;
             const _dlil = _.dims.list[i].label;
             const _dlily = _.dims.list[i].layout;
-            const scale = dimension.axis.scale;
+            const scale = dimension.scale;
             /**
              * Update the scale info based on ticks and find the longest tick label.
              */
@@ -1774,18 +1778,18 @@ class Hermes {
                 _ixf.active.p0 = 1.0 - startLength;
                 _ixf.active.p1 = 1.0;
             }
-            _ixf.active.value0 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p0);
-            _ixf.active.value1 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p1);
+            _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
+            _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
         }
         else if (_ixsa.type === ActionType.FilterResizeBefore) {
             _ixf.active.p0 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
             _ixf.active.p0 = capDataRange(_ixf.active.p0, [0.0, 1.0]);
-            _ixf.active.value0 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p0);
+            _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
         }
         else {
             _ixf.active.p1 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
             _ixf.active.p1 = capDataRange(_ixf.active.p1, [0.0, 1.0]);
-            _ixf.active.value1 = this.dimensions[index].axis.scale.percentToValue(_ixf.active.p1);
+            _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
         }
         // Whether or not to finalize active filter and removing reference to it.
         if (e.type !== 'mouseup')
@@ -1906,12 +1910,12 @@ class Hermes {
                 const layout = _dl[i].layout;
                 const bound = getDragBound(i, _ix, layout.bound);
                 const value = this.data[key][k];
-                const pos = (_b = (_a = dimension.axis.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) !== null && _b !== void 0 ? _b : 0;
-                const percent = (_d = (_c = dimension.axis.scale) === null || _c === void 0 ? void 0 : _c.valueToPercent(value)) !== null && _d !== void 0 ? _d : 0;
+                const pos = (_b = (_a = dimension.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) !== null && _b !== void 0 ? _b : 0;
+                const percent = (_d = (_c = dimension.scale) === null || _c === void 0 ? void 0 : _c.valueToPercent(value)) !== null && _d !== void 0 ? _d : 0;
                 const x = bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
                 const y = bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
                 if (dimColorKey === key) {
-                    const percent = (_f = (_e = dimension.axis.scale) === null || _e === void 0 ? void 0 : _e.valueToPercent(value)) !== null && _f !== void 0 ? _f : 0;
+                    const percent = (_f = (_e = dimension.scale) === null || _e === void 0 ? void 0 : _e.valueToPercent(value)) !== null && _f !== void 0 ? _f : 0;
                     const scaleColor = scale2rgba(((_g = dataStyle.colorScale) === null || _g === void 0 ? void 0 : _g.colors) || [], percent);
                     dataDefaultStyle.strokeStyle = scaleColor;
                 }
@@ -2056,7 +2060,7 @@ class Hermes {
     }
     handleDoubleClick() {
         // Reset chart settings.
-        this.dimensions = clone(this.dimensionsOriginal);
+        this.dimensions = this.setDimensions(this.dimensionsOriginal);
         this.filters = {};
         this.ix = clone(IX);
         this.calculate();
@@ -2099,7 +2103,7 @@ class Hermes {
                 _ixsa.dimIndex = i;
                 _ixf.key = this.dimensions[i].key;
                 const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
-                const value0 = this.dimensions[i].axis.scale.percentToValue(p0);
+                const value0 = this.dimensions[i].scale.percentToValue(p0);
                 this.setActiveFilter(_ixf.key, p0, value0);
             }
         }

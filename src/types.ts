@@ -56,16 +56,16 @@ export enum ActionType {
   None = 'none',
 }
 
-export enum AxisType {
-  Categorical = 'categorical',
-  Linear = 'linear',
-  Logarithmic = 'logarithmic',
-}
-
 export enum DimensionLayout {
   AxisEvenlySpaced = 'axis-evenly-spaced',
   Equidistant = 'equidistant',
   EvenlySpaced = 'evenly-spaced',
+}
+
+export enum DimensionType {
+  Categorical = 'categorical',
+  Linear = 'linear',
+  Logarithmic = 'logarithmic',
 }
 
 export enum Direction {
@@ -94,14 +94,6 @@ export enum PathType {
  * INTERFACES
  */
 
-export interface Axis {
-  categories?: Primitive[];
-  dataOnEdge?: boolean;
-  logBase?: number;
-  scale: CategoricalScale | LinearScale | LogScale;
-  type: AxisType;
-}
-
 export interface AxisOptions extends StyleLine {
   boundaryPadding: number;
 }
@@ -124,9 +116,12 @@ export interface DataOptions {
 }
 
 export interface Dimension {
-  axis: Axis;
+  categories?: Primitive[];
+  dataOnEdge?: boolean;
   key: string;
   label: string;
+  logBase?: number;
+  type: DimensionType;
 }
 
 export interface LabelMoveOptions extends LabelOptions {
@@ -221,6 +216,13 @@ export interface IX {
 export interface Filters {
   [key: DimensionKey]: Filter[];
 }
+
+export interface InternalDimension extends Dimension {
+  range?: Range;
+  scale: CategoricalScale | LinearScale | LogScale;
+}
+
+export type InternalDimensions = Record<DimensionKey, InternalDimension>;
 
 export interface Internal {
   dims: {

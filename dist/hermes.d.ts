@@ -22,7 +22,7 @@ declare class Hermes {
     dimensions: Hermes.Dimension[],
     options?: Hermes.RecursivePartial<Hermes.HermesOptions>
   );
-  static getTester(): any;
+  static getTester(): Hermes.Tester;
   setSize(w: number, h: number): void;
   destroy(): void;
 }
@@ -84,16 +84,16 @@ declare namespace Hermes {
     None = 'none',
   }
 
-  export enum AxisType {
-    Categorical = 'categorical',
-    Linear = 'linear',
-    Logarithmic = 'logarithmic',
-  }
-
   export enum DimensionLayout {
     AxisEvenlySpaced = 'axis-evenly-spaced',
     Equidistant = 'equidistant',
     EvenlySpaced = 'evenly-spaced',
+  }
+
+  export enum DimensionType {
+    Categorical = 'categorical',
+    Linear = 'linear',
+    Logarithmic = 'logarithmic',
   }
 
   export enum Direction {
@@ -122,14 +122,6 @@ declare namespace Hermes {
    * INTERFACES
    */
 
-  export interface Axis {
-    categories?: Primitive[];
-    dataOnEdge?: boolean;
-    logBase?: number;
-    scale: CategoricalScale | LinearScale | LogScale;
-    type: AxisType;
-  }
-
   export interface AxisOptions extends StyleLine {
     boundaryPadding: number;
   }
@@ -152,9 +144,12 @@ declare namespace Hermes {
   }
 
   export interface Dimension {
-    axis: Axis;
+    categories?: Primitive[];
+    dataOnEdge?: boolean;
     key: string;
     label: string;
+    logBase?: number;
+    type: DimensionType;
   }
 
   export interface LabelMoveOptions extends LabelOptions {
@@ -253,70 +248,6 @@ declare namespace Hermes {
 
   export interface Filters {
     [key: DimensionKey]: Filter[];
-  }
-
-  export interface Internal {
-    dims: {
-      list: {
-        axes: {
-          maxLength: number;
-          tickLabels: string[];
-          tickPos: number[];
-          ticks: number[];
-        };
-        label: {
-          h: number;
-          lengthCos: number;
-          lengthSin: number;
-          w: number;
-        };
-        layout: {
-          axisBoundary: Boundary;   // Coordinates for axis boundary after transformation.
-          axisStart: Point;         // Respective to bound (x, y)
-          axisStop: Point;          // Respective to bound (x, y)
-          bound: Rect;              // Bounding rect for the dimension label and axis.
-          boundOffset: Point;       // Offset for the bounding rect from dragging.
-          labelBoundary: Boundary;  // Coordinates for label boundary after transformation.
-          labelPoint: Point;        // Respective to bound (x, y)
-          spaceAfter: number;       // Space after the axis line.
-          spaceBefore: number;      // Space before the axis line.
-        };
-      }[];
-      shared: {
-        axes: {
-          labelFactor: number;
-          length: number;
-          maxTicks: number;
-          start: number;
-          stop: number;
-        };
-        dataCount: number;
-        label: {
-          cos?: number;
-          maxLengthCos?: number;
-          maxLengthSin?: number;
-          rad?: number;
-          sin?: number;
-        };
-        layout: {
-          gap: number;
-          offset: number;
-          space: number;
-          totalBoundSpace: number;
-        };
-      };
-    };
-    layout: {
-      drawRect: Rect;
-      padding: [ number, number, number, number ];
-    };
-    styles: {
-      axis: StyleLine;
-      filters: FilterOptions[];
-      label: StyleText;
-      tick: StyleLine;
-      tickLabel: StyleText;
-    }[];
   }
 }
 
