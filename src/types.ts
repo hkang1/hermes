@@ -177,8 +177,16 @@ export type Data = Record<DimensionKey, Primitive[]>;
 
 export interface Config {
   direction: EDirection;
+  hooks: {
+    onDimensionMove?: (dimension: Dimension, index0: number, index1: number) => void;
+    onFilterCreate?: (filter: Filter) => void,
+    onFilterMove?: (filter: Filter) => void,
+    onFilterRemove?: (filter: Filter) => void,
+    onFilterResize?: (filter: Filter) => void,
+    onReset?: () => void;
+    onResize?: (newSize: Size, oldSize: Size) => void;
+  },
   resizeThrottleDelay: number;
-  //hooks: {},
   style: {
     axes: {
       axis: AxisOptions,

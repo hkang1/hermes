@@ -46,6 +46,9 @@ class Hermes {
     if (!element) throw new HermesError('Target element selector did not match anything.');
     this.element = element;
 
+    // Set config early as setSize references it early.
+    this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
+
     // Create a canvas and append it to the target element.
     this.canvas = document.createElement('canvas');
     this.element.appendChild(this.canvas);
@@ -77,7 +80,6 @@ class Hermes {
     if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
     this.dimensionsOriginal = clone(dimensions);
     this.dimensions = this.setDimensions(dimensions);
-    this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
     // Add resize observer to detect target element resizing.
     this.resizeObserver = new ResizeObserver(
@@ -109,9 +111,13 @@ class Hermes {
   }
 
   public setSize(w: number, h: number): void {
+    const oldSize = { h: this.size.h, w: this.size.w };
     this.canvas.width = w;
     this.canvas.height = h;
     this.size = { h, w };
+
+    // Make hook callback.
+    this.config.hooks.onResize?.({ h, w }, oldSize);
   }
 
   private setDimensions(dimensions: t.Dimension[]): t.InternalDimension[] {
@@ -566,12 +572,17 @@ class Hermes {
        */
       if (_ixsa.dimIndex !== i && Math.abs(axisDistance) < ix.DIMENSION_SWAP_THRESHOLD) {
         // Swap dragging dimension with the dimension it intersects with.
-        const tempDim = this.dimensions[_ixsa.dimIndex];
-        this.dimensions[_ixsa.dimIndex] = this.dimensions[i];
-        this.dimensions[i] = tempDim;
+        const oldIndex = _ixsa.dimIndex;
+        const newIndex = i;
+        const tempDim = this.dimensions[oldIndex];
+        this.dimensions[oldIndex] = this.dimensions[newIndex];
+        this.dimensions[newIndex] = tempDim;
 
         // Update the drag dimension's index
-        _ixsa.dimIndex = i;
+        _ixsa.dimIndex = newIndex;
+
+        // Make hook callback.
+        this.config.hooks.onDimensionMove?.(tempDim, oldIndex, newIndex);
       }
     }
   }
@@ -688,14 +699,34 @@ class Hermes {
       const filters = _filters[_ixf.key] || [];
       const pos = (_ixf.active.p1 - _ixf.active.p0) / 2 + _ixf.active.p0;
       const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
-      if (removeIndex !== -1) filters.splice(removeIndex, 1);
-    }
+      if (removeIndex !== -1) {
+        // Make hook callback.
+        this.config.hooks.onFilterRemove?.(filters[removeIndex]);
 
-    // Swap p0 and p1 if p1 is less than p0.
-    if (_ixf.active.p1 < _ixf.active.p0) {
-      const [ tempP, tempValue ] = [ _ixf.active.p1, _ixf.active.value1 ];
-      [ _ixf.active.p1, _ixf.active.value1 ] = [ _ixf.active.p0, _ixf.active.value0 ];
-      [ _ixf.active.p0, _ixf.active.value0 ] = [ tempP, tempValue ];
+        // Remove filter.
+        filters.splice(removeIndex, 1);
+      }
+    } else {
+      // Swap p0 and p1 if p1 is less than p0.
+      if (_ixf.active.p1 < _ixf.active.p0) {
+        const [ tempP, tempValue ] = [ _ixf.active.p1, _ixf.active.value1 ];
+        [ _ixf.active.p1, _ixf.active.value1 ] = [ _ixf.active.p0, _ixf.active.value0 ];
+        [ _ixf.active.p0, _ixf.active.value0 ] = [ tempP, tempValue ];
+      }
+
+      // Make corresponding filter hook callback.
+      switch (_ixsa.type) {
+        case t.ActionType.FilterCreate:
+          this.config.hooks.onFilterCreate?.(_ixf.active);
+          break;
+        case t.ActionType.FilterMove:
+          this.config.hooks.onFilterMove?.(_ixf.active);
+          break;
+        case t.ActionType.FilterResizeAfter:
+        case t.ActionType.FilterResizeBefore:
+          this.config.hooks.onFilterResize?.(_ixf.active);
+          break;
+      }
     }
 
     // Overwrite active filter to remove reference to filter in filters list.
@@ -989,6 +1020,9 @@ class Hermes {
 
     this.calculate();
     this.draw();
+
+    // Make hook callback.
+    this.config.hooks.onReset?.();
   }
 
   private handleMouseDown(e: MouseEvent): void {

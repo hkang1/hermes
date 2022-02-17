@@ -647,6 +647,7 @@ var Hermes = (function () {
    */
   const HERMES_CONFIG = {
       direction: Direction.Horizontal,
+      hooks: {},
       resizeThrottleDelay: 0,
       style: {
           axes: {
@@ -1239,6 +1240,8 @@ var Hermes = (function () {
           if (!element)
               throw new HermesError('Target element selector did not match anything.');
           this.element = element;
+          // Set config early as setSize references it early.
+          this.config = customDeepmerge(HERMES_CONFIG, config);
           // Create a canvas and append it to the target element.
           this.canvas = document.createElement('canvas');
           this.element.appendChild(this.canvas);
@@ -1268,7 +1271,6 @@ var Hermes = (function () {
               throw new HermesError('Need at least one dimension defined.');
           this.dimensionsOriginal = clone(dimensions);
           this.dimensions = this.setDimensions(dimensions);
-          this.config = customDeepmerge(HERMES_CONFIG, config);
           // Add resize observer to detect target element resizing.
           this.resizeObserver = new ResizeObserver(this.config.resizeThrottleDelay === 0
               ? this.handleResize.bind(this)
@@ -1289,9 +1291,13 @@ var Hermes = (function () {
           this.resizeObserver.unobserve(this.element);
       }
       setSize(w, h) {
+          var _a, _b;
+          const oldSize = { h: this.size.h, w: this.size.w };
           this.canvas.width = w;
           this.canvas.height = h;
           this.size = { h, w };
+          // Make hook callback.
+          (_b = (_a = this.config.hooks).onResize) === null || _b === void 0 ? void 0 : _b.call(_a, { h, w }, oldSize);
       }
       setDimensions(dimensions) {
           return clone(dimensions).map(dimension => {
@@ -1668,6 +1674,7 @@ var Hermes = (function () {
           }
       }
       updateActiveLabel() {
+          var _a, _b;
           if (!this._ || this.ix.shared.action.type !== ActionType.LabelMove)
               return;
           const _dl = this._.dims.list;
@@ -1693,11 +1700,15 @@ var Hermes = (function () {
                */
               if (_ixsa.dimIndex !== i && Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
                   // Swap dragging dimension with the dimension it intersects with.
-                  const tempDim = this.dimensions[_ixsa.dimIndex];
-                  this.dimensions[_ixsa.dimIndex] = this.dimensions[i];
-                  this.dimensions[i] = tempDim;
+                  const oldIndex = _ixsa.dimIndex;
+                  const newIndex = i;
+                  const tempDim = this.dimensions[oldIndex];
+                  this.dimensions[oldIndex] = this.dimensions[newIndex];
+                  this.dimensions[newIndex] = tempDim;
                   // Update the drag dimension's index
-                  _ixsa.dimIndex = i;
+                  _ixsa.dimIndex = newIndex;
+                  // Make hook callback.
+                  (_b = (_a = this.config.hooks).onDimensionMove) === null || _b === void 0 ? void 0 : _b.call(_a, tempDim, oldIndex, newIndex);
               }
           }
       }
@@ -1738,7 +1749,7 @@ var Hermes = (function () {
           }
       }
       updateActiveFilter(e) {
-          var _a, _b;
+          var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
           if (!this._)
               return;
           const _dl = this._.dims.list;
@@ -1804,14 +1815,33 @@ var Hermes = (function () {
               const filters = _filters[_ixf.key] || [];
               const pos = (_ixf.active.p1 - _ixf.active.p0) / 2 + _ixf.active.p0;
               const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
-              if (removeIndex !== -1)
+              if (removeIndex !== -1) {
+                  // Make hook callback.
+                  (_d = (_c = this.config.hooks).onFilterRemove) === null || _d === void 0 ? void 0 : _d.call(_c, filters[removeIndex]);
+                  // Remove filter.
                   filters.splice(removeIndex, 1);
+              }
           }
-          // Swap p0 and p1 if p1 is less than p0.
-          if (_ixf.active.p1 < _ixf.active.p0) {
-              const [tempP, tempValue] = [_ixf.active.p1, _ixf.active.value1];
-              [_ixf.active.p1, _ixf.active.value1] = [_ixf.active.p0, _ixf.active.value0];
-              [_ixf.active.p0, _ixf.active.value0] = [tempP, tempValue];
+          else {
+              // Swap p0 and p1 if p1 is less than p0.
+              if (_ixf.active.p1 < _ixf.active.p0) {
+                  const [tempP, tempValue] = [_ixf.active.p1, _ixf.active.value1];
+                  [_ixf.active.p1, _ixf.active.value1] = [_ixf.active.p0, _ixf.active.value0];
+                  [_ixf.active.p0, _ixf.active.value0] = [tempP, tempValue];
+              }
+              // Make corresponding filter hook callback.
+              switch (_ixsa.type) {
+                  case ActionType.FilterCreate:
+                      (_f = (_e = this.config.hooks).onFilterCreate) === null || _f === void 0 ? void 0 : _f.call(_e, _ixf.active);
+                      break;
+                  case ActionType.FilterMove:
+                      (_h = (_g = this.config.hooks).onFilterMove) === null || _h === void 0 ? void 0 : _h.call(_g, _ixf.active);
+                      break;
+                  case ActionType.FilterResizeAfter:
+                  case ActionType.FilterResizeBefore:
+                      (_k = (_j = this.config.hooks).onFilterResize) === null || _k === void 0 ? void 0 : _k.call(_j, _ixf.active);
+                      break;
+              }
           }
           // Overwrite active filter to remove reference to filter in filters list.
           _ixf.active = { ...FILTER };
@@ -2058,12 +2088,15 @@ var Hermes = (function () {
           this.draw();
       }
       handleDoubleClick() {
+          var _a, _b;
           // Reset chart settings.
           this.dimensions = this.setDimensions(this.dimensionsOriginal);
           this.filters = {};
           this.ix = clone(IX);
           this.calculate();
           this.draw();
+          // Make hook callback.
+          (_b = (_a = this.config.hooks).onReset) === null || _b === void 0 ? void 0 : _b.call(_a);
       }
       handleMouseDown(e) {
           var _a, _b;
