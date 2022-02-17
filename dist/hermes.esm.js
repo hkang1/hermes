@@ -1314,7 +1314,7 @@ class Hermes {
             if (i === 0) {
                 count = value.length;
             }
-            else {
+            else if (value.length !== count) {
                 return { count, valid: false };
             }
         }
