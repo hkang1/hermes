@@ -6,18 +6,20 @@ export default [
     input: './tsc-out/index.js',
     output: [
       {
+        exports: 'named',
         file: './dist/hermes.esm.js',
         format: 'es',
         name: 'Hermes',
       },
       {
-        exports: 'auto',
+        exports: 'named',
         file: './dist/hermes.cjs.js',
         format: 'cjs',
         name: 'Hermes',
       },
       {
         esModule: false,
+        exports: 'named',
         file: './dist/hermes.iife.js',
         format: 'iife',
         name: 'Hermes',

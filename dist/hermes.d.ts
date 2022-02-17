@@ -23,7 +23,9 @@ declare class Hermes {
     options?: Hermes.RecursivePartial<Hermes.Config>
   );
   static getTester(): Hermes.Tester;
+  setData(data: Hermes.Data, redraw?: boolean): void;
   setSize(w: number, h: number): void;
+  redraw(): void;
   destroy(): void;
 }
 

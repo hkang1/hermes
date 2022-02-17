@@ -72,14 +72,9 @@ class Hermes {
       throw new HermesError('Need at least one dimension data record.');
 
     // All the dimension data should be equal in size.
-    this.dataCount = 0;
-    Object.values(data).forEach((dimData, i) => {
-      if (i === 0) {
-        this.dataCount = dimData.length;
-      } else if (this.dataCount !== dimData.length) {
-        throw new HermesError('The dimension data are not all identical in size.');
-      }
-    });
+    const { count, valid } = this.validateData(data);
+    if (!valid) throw new HermesError('The dimension data are not all identical in size.');
+    this.dataCount = count;
     this.data = data;
 
     if (dimensions.length === 0) throw new HermesError('Need at least one dimension defined.');
@@ -103,16 +98,23 @@ class Hermes {
     window.addEventListener('mousemove', this.handleMouseMove.bind(this));
     window.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
-    this.calculate();
-    this.draw();
+    this.redraw();
   }
 
   static getTester(): tester.Tester {
     return tester;
   }
 
-  public destroy(): void {
-    this.resizeObserver.unobserve(this.element);
+  public setData(data: t.Data, redraw = true): void {
+    const { count, valid } = this.validateData(data);
+
+    if (!valid) return;
+
+    this.data = data;
+    this.dataCount = count;
+    this.dimensions = this.setDimensions(this.dimensionsOriginal);
+
+    if (redraw) this.redraw();
   }
 
   public setSize(w: number, h: number): void {
@@ -123,6 +125,33 @@ class Hermes {
 
     // Make hook callback.
     this.config.hooks.onResize?.({ h, w }, oldSize);
+  }
+
+  public redraw(): void {
+    this.calculate();
+    this.draw();
+  }
+
+  public destroy(): void {
+    this.resizeObserver.unobserve(this.element);
+    this.element.removeChild(this.canvas);
+  }
+
+  private validateData(data: t.Data): { count: number, valid: boolean } {
+    let count = 0;
+    const values = Object.values(data);
+
+    // All the dimension data should be equal in size.
+    for (let i = 0; i < values.length; i++) {
+      const value = values[i];
+      if (i === 0) {
+        count = value.length;
+      } else {
+        return { count, valid: false };
+      }
+    }
+
+    return { count, valid: true };
   }
 
   private setDimensions(dimensions: t.Dimension[]): t.InternalDimension[] {
@@ -1013,8 +1042,7 @@ class Hermes {
     if (w0 === w1 && h0 === h1) return;
 
     this.setSize(w1, h1);
-    this.calculate();
-    this.draw();
+    this.redraw();
   }
 
   private handleDoubleClick(): void {
@@ -1023,8 +1051,7 @@ class Hermes {
     this.filters = {};
     this.ix = clone(DEFAULT.IX);
 
-    this.calculate();
-    this.draw();
+    this.redraw();
 
     // Make hook callback.
     this.config.hooks.onReset?.();
@@ -1077,8 +1104,7 @@ class Hermes {
     // Update cursor pointer based on type and position.
     this.updateCursor();
 
-    this.calculate();
-    this.draw();
+    this.redraw();
   }
 
   private handleMouseMove(e: MouseEvent): void {
@@ -1098,8 +1124,7 @@ class Hermes {
     // Update cursor pointer based on type and position.
     this.updateCursor();
 
-    this.calculate();
-    this.draw();
+    this.redraw();
   }
 
   private handleMouseUp(e: MouseEvent): void {
@@ -1118,8 +1143,7 @@ class Hermes {
     // Update cursor pointer based on type and position.
     this.updateCursor();
 
-    this.calculate();
-    this.draw();
+    this.redraw();
   }
 }
 

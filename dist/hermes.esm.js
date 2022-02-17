@@ -1254,15 +1254,10 @@ class Hermes {
         if (Object.keys(data).length === 0)
             throw new HermesError('Need at least one dimension data record.');
         // All the dimension data should be equal in size.
-        this.dataCount = 0;
-        Object.values(data).forEach((dimData, i) => {
-            if (i === 0) {
-                this.dataCount = dimData.length;
-            }
-            else if (this.dataCount !== dimData.length) {
-                throw new HermesError('The dimension data are not all identical in size.');
-            }
-        });
+        const { count, valid } = this.validateData(data);
+        if (!valid)
+            throw new HermesError('The dimension data are not all identical in size.');
+        this.dataCount = count;
         this.data = data;
         if (dimensions.length === 0)
             throw new HermesError('Need at least one dimension defined.');
@@ -1278,14 +1273,20 @@ class Hermes {
         this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
         window.addEventListener('mousemove', this.handleMouseMove.bind(this));
         window.addEventListener('mouseup', this.handleMouseUp.bind(this));
-        this.calculate();
-        this.draw();
+        this.redraw();
     }
     static getTester() {
         return tester;
     }
-    destroy() {
-        this.resizeObserver.unobserve(this.element);
+    setData(data, redraw = true) {
+        const { count, valid } = this.validateData(data);
+        if (!valid)
+            return;
+        this.data = data;
+        this.dataCount = count;
+        this.dimensions = this.setDimensions(this.dimensionsOriginal);
+        if (redraw)
+            this.redraw();
     }
     setSize(w, h) {
         var _a, _b;
@@ -1295,6 +1296,29 @@ class Hermes {
         this.size = { h, w };
         // Make hook callback.
         (_b = (_a = this.config.hooks).onResize) === null || _b === void 0 ? void 0 : _b.call(_a, { h, w }, oldSize);
+    }
+    redraw() {
+        this.calculate();
+        this.draw();
+    }
+    destroy() {
+        this.resizeObserver.unobserve(this.element);
+        this.element.removeChild(this.canvas);
+    }
+    validateData(data) {
+        let count = 0;
+        const values = Object.values(data);
+        // All the dimension data should be equal in size.
+        for (let i = 0; i < values.length; i++) {
+            const value = values[i];
+            if (i === 0) {
+                count = value.length;
+            }
+            else {
+                return { count, valid: false };
+            }
+        }
+        return { count, valid: true };
     }
     setDimensions(dimensions) {
         return clone(dimensions).map(dimension => {
@@ -2081,8 +2105,7 @@ class Hermes {
         if (w0 === w1 && h0 === h1)
             return;
         this.setSize(w1, h1);
-        this.calculate();
-        this.draw();
+        this.redraw();
     }
     handleDoubleClick() {
         var _a, _b;
@@ -2090,8 +2113,7 @@ class Hermes {
         this.dimensions = this.setDimensions(this.dimensionsOriginal);
         this.filters = {};
         this.ix = clone(IX);
-        this.calculate();
-        this.draw();
+        this.redraw();
         // Make hook callback.
         (_b = (_a = this.config.hooks).onReset) === null || _b === void 0 ? void 0 : _b.call(_a);
     }
@@ -2138,8 +2160,7 @@ class Hermes {
         }
         // Update cursor pointer based on type and position.
         this.updateCursor();
-        this.calculate();
-        this.draw();
+        this.redraw();
     }
     handleMouseMove(e) {
         if (!this._)
@@ -2154,8 +2175,7 @@ class Hermes {
         this.updateActiveFilter(e);
         // Update cursor pointer based on type and position.
         this.updateCursor();
-        this.calculate();
-        this.draw();
+        this.redraw();
     }
     handleMouseUp(e) {
         if (!this._ || this.ix.shared.action.type === ActionType.None)
@@ -2169,8 +2189,7 @@ class Hermes {
         this.ix.shared.focus = this.getFocusByPoint(point);
         // Update cursor pointer based on type and position.
         this.updateCursor();
-        this.calculate();
-        this.draw();
+        this.redraw();
     }
 }
 
