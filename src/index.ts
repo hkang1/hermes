@@ -130,6 +130,7 @@ class Hermes {
   public redraw(): void {
     this.calculate();
     this.draw();
+    if (this.config.debug) this.drawDebugOutline();
   }
 
   public destroy(): void {
