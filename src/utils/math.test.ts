@@ -1,7 +1,7 @@
 import { Point } from '../types';
 
 import * as utils from './math';
-import { isCloseEnough } from './test';
+import { CLOSE_PRECISION } from './test';
 
 const degrads = [
   { deg: 0, rad: 0 },
@@ -49,8 +49,8 @@ describe('math utilities', () => {
       ];
       tests.forEach(test => {
         const point = utils.rotatePoint.apply(null, test.inputs);
-        expect(isCloseEnough(point.x, test.output.x)).toBe(true);
-        expect(isCloseEnough(point.y, test.output.y)).toBe(true);
+        expect(point.x).toBeCloseTo(test.output.x, CLOSE_PRECISION);
+        expect(point.y).toBeCloseTo(test.output.y, CLOSE_PRECISION);
       });
     });
   });
