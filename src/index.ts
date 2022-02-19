@@ -11,7 +11,7 @@ import * as t from './types';
 import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
 import { capDataRange, clone, getDataRange } from './utils/data';
-import { getElement } from './utils/dom';
+import { getElement, getMousePoint } from './utils/dom';
 import { throttle } from './utils/event';
 import * as ix from './utils/interaction';
 import { distance, isPointInTriangle } from './utils/math';
@@ -130,6 +130,7 @@ class Hermes {
   public redraw(): void {
     this.calculate();
     this.draw();
+    if (this.config.debug) this.drawDebugOutline();
   }
 
   public destroy(): void {
@@ -1071,7 +1072,7 @@ class Hermes {
     const hKey = isHorizontal ? 'x' : 'y';
     const vKey = isHorizontal ? 'y' : 'x';
 
-    const point = { x: e.clientX, y: e.clientY };
+    const point = getMousePoint(e, this.element);
     _ixsa.p0 = point;
     _ixsa.p1 = point;
     _ixsa.filterIndex = -1;
@@ -1112,7 +1113,7 @@ class Hermes {
   private handleMouseMove(e: MouseEvent): void {
     if (!this._) return;
 
-    const point = { x: e.clientX, y: e.clientY };
+    const point = getMousePoint(e, this.element);
     const _ixs = this.ix.shared;
     _ixs.action.p1 = point;
     _ixs.focus = this.getFocusByPoint(point);
@@ -1132,7 +1133,7 @@ class Hermes {
   private handleMouseUp(e: MouseEvent): void {
     if (!this._ || this.ix.shared.action.type === t.ActionType.None) return;
 
-    const point = { x: e.clientX, y: e.clientY };
+    const point = getMousePoint(e, this.element);
     this.ix.shared.action.p1 = point;
 
     // Update active filter upon release event.

@@ -176,6 +176,7 @@ export interface TickOptions extends StyleLine {
 export type Data = Record<DimensionKey, Primitive[]>;
 
 export interface Config {
+  debug: boolean;
   direction: EDirection;
   hooks: {
     onDimensionMove?: (dimension: Dimension, index0: number, index1: number) => void;

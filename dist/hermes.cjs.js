@@ -647,6 +647,7 @@ const TEXT_BASELINE = 'middle';
  * Framework options defaults.
  */
 const HERMES_CONFIG = {
+    debug: false,
     direction: Direction.Horizontal,
     hooks: {},
     resizeThrottleDelay: 0,
@@ -1065,6 +1066,13 @@ const getElement = (target) => {
     if (!isString(target))
         return target;
     return document.querySelector(target);
+};
+/*
+ * Get mouse position relative to an element position.
+ */
+const getMousePoint = (e, element) => {
+    const rect = element.getBoundingClientRect();
+    return { x: e.clientX - rect.x, y: e.clientY - rect.y };
 };
 
 const throttle = (fn, delay) => {
@@ -2136,7 +2144,7 @@ class Hermes {
         const isHorizontal = this.config.direction === Direction.Horizontal;
         const hKey = isHorizontal ? 'x' : 'y';
         const vKey = isHorizontal ? 'y' : 'x';
-        const point = { x: e.clientX, y: e.clientY };
+        const point = getMousePoint(e, this.element);
         _ixsa.p0 = point;
         _ixsa.p1 = point;
         _ixsa.filterIndex = -1;
@@ -2172,7 +2180,7 @@ class Hermes {
     handleMouseMove(e) {
         if (!this._)
             return;
-        const point = { x: e.clientX, y: e.clientY };
+        const point = getMousePoint(e, this.element);
         const _ixs = this.ix.shared;
         _ixs.action.p1 = point;
         _ixs.focus = this.getFocusByPoint(point);
@@ -2187,7 +2195,7 @@ class Hermes {
     handleMouseUp(e) {
         if (!this._ || this.ix.shared.action.type === ActionType.None)
             return;
-        const point = { x: e.clientX, y: e.clientY };
+        const point = getMousePoint(e, this.element);
         this.ix.shared.action.p1 = point;
         // Update active filter upon release event.
         this.updateActiveFilter(e);
