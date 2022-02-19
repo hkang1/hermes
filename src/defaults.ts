@@ -33,6 +33,7 @@ export const TEXT_BASELINE = 'middle';
  * Framework options defaults.
  */
 export const HERMES_CONFIG: t.Config = {
+  debug: false,
   direction: t.Direction.Horizontal,
   hooks: {},
   resizeThrottleDelay: 0,
