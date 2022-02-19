@@ -1,7 +1,7 @@
 import { isError, isString } from '../utils/data';
 
-const MESSAGE_PREFIX = '[Hermes]';
-const DEFAULT_MESSAGE = 'Critical error encountered!';
+export const MESSAGE_PREFIX = '[Hermes]';
+export const DEFAULT_MESSAGE = 'Critical error encountered!';
 
 class HermesError extends Error {
   constructor(e?: unknown) {
