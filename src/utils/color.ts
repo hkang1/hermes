@@ -3,7 +3,7 @@
  * s - saturation between 0.0 and 1.0
  * l - lightness between 0.0 and 1.0
  */
-interface HslColor {
+export interface HslColor {
   h: number;
   l: number;
   s: number;
@@ -15,7 +15,7 @@ interface HslColor {
  * b - blue between 0 and 255
  * a - alpha between 0.0 and 1.0
  */
-interface RgbaColor {
+export interface RgbaColor {
   a?: number;
   b: number;
   g: number;
@@ -98,7 +98,7 @@ export const scale2rgba = (colors: string[], percent: number): string => {
   const count = colors.length;
   if (count < 1) return '#000000';
   if (count === 1) return colors[0];
-  
+
   const index = percent * (count - 1);
   const i0 = Math.floor(index);
   const i1 = Math.ceil(index);
@@ -118,7 +118,7 @@ export const str2rgba = (str: string): RgbaColor => {
     rgba.r = parseInt(result[1]);
     rgba.g = parseInt(result[2]);
     rgba.b = parseInt(result[3]);
-    if (result.length > 5) rgba.a = parseFloat(result[5]);
+    if (result.length > 5 && result[5] !== undefined) rgba.a = parseFloat(result[5]);
     return rgba;
   }
 

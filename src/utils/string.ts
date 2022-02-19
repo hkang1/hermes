@@ -31,6 +31,7 @@ export const readableTick = (num: number): string => {
 export const str2value = (str: string): Primitive => {
   if (str === 'true') return true;
   if (str === 'false') return false;
+  if (str === 'NaN') return Number.NaN;
 
   const parsed = parseFloat(str);
   if (!isNaN(parsed)) return parsed;
