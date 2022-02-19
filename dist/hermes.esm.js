@@ -1051,7 +1051,7 @@ const str2rgba = (str) => {
         rgba.r = parseInt(result[1]);
         rgba.g = parseInt(result[2]);
         rgba.b = parseInt(result[3]);
-        if (result.length > 5)
+        if (result.length > 5 && result[5] !== undefined)
             rgba.a = parseFloat(result[5]);
         return rgba;
     }
@@ -1308,6 +1308,8 @@ class Hermes {
     redraw() {
         this.calculate();
         this.draw();
+        if (this.config.debug)
+            this.drawDebugOutline();
     }
     destroy() {
         var _a;
