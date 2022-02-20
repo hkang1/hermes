@@ -8,7 +8,7 @@ module.exports = {
     'default',
     [ 'jest-junit', { outputDirectory: 'test-results', outputName: 'junit.xml' } ],
   ],
-  setupFilesAfterEnv: [ './testSetup.js' ],
-  testEnvironment: 'node',
+  setupFiles: [ './testSetup.js' ],
+  testEnvironment: 'jsdom',
   testMatch: [ '**/*.test.ts' ],
 };
