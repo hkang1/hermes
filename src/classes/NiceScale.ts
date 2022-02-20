@@ -9,7 +9,7 @@ import { Primitive } from '../types';
 
 export const DEFAULT_DATA_ON_EDGE = true;
 
-const MIN_TICK_DISTANCE = 50;
+export const MIN_TICK_DISTANCE = 50;
 
 abstract class NiceScale {
   public max: number;
@@ -93,14 +93,14 @@ abstract class NiceScale {
   public abstract posToValue(pos: number): Primitive;
 
   /**
-   * Convert value into a position on the axis based on the axis length.
-   */
-  public abstract valueToPos(value: number): number;
-
-  /**
     * Convert value into a percent of the min / max range.
     */
   public abstract valueToPercent(value: number): number;
+
+  /**
+   * Convert value into a position on the axis based on the axis length.
+   */
+  public abstract valueToPos(value: number): number;
 
   /**
    * Calculate and update values for tick spacing and nice

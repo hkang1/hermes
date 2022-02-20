@@ -522,11 +522,13 @@ class LogScale extends NiceScale {
         this.calculate();
     }
     percentToValue(percent) {
-        const exp = percent * this.rangeExp();
+        const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
+        const exp = percent * this.rangeExp() + minExp;
         return this.logBase ** exp;
     }
     posToValue(pos) {
-        const exp = (pos / this.axisLength) * this.rangeExp();
+        const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
+        const exp = (pos / this.axisLength) * this.rangeExp() + minExp;
         return this.logBase ** exp;
     }
     valueToPos(value) {
@@ -1096,6 +1098,7 @@ const getDragBound = (index, ix, bound) => {
 const isFilterEmpty = (filter) => {
     return isNaN(filter.p0) && isNaN(filter.p1);
 };
+// TODO: possibly invalid logic
 const isFilterInvalid = (filter) => {
     return filter.p0 >= filter.p1;
 };
