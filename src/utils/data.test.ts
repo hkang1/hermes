@@ -13,6 +13,8 @@ enum Type {
   Undefined = 'undefined',
 }
 
+const RANDOM_TEST_COUNT = 20;
+
 const mapPopulated = new Map();
 mapPopulated.set('Caleb', true);
 mapPopulated.set('Kimi', true);
@@ -78,5 +80,91 @@ describe('data utilities', () => {
 
   describe('isSymbol', () => {
     it('should detect symbols', () => testType(Type.Symbol, utils.isSymbol));
+  });
+
+  describe('clone', () => {
+    it('should clone objects', () => {
+      const original = { x: 1, y: 2e2, z: { a: 'a', b: true, c: null } };
+      expect(utils.clone(original)).toStrictEqual(original);
+    });
+
+    it('should clone arrays', () => {
+      const original = [ 1, 2e2, 'abc', true, null ];
+      expect(utils.clone(original)).toStrictEqual(original);
+    });
+  });
+
+  describe('getDataRange', () => {
+    it('should get a range from a list of data', () => {
+      const data = [ -123, 123, 0, 48 ];
+      expect(utils.getDataRange(data)).toStrictEqual([ -123, 123 ]);
+    });
+
+    it('should ignore non-numbers when getting a range', () => {
+      const data = [ null, undefined, -123, 123, 0, Infinity, NaN ];
+      expect(utils.getDataRange(data)).toStrictEqual([ -123, Infinity ]);
+    });
+  });
+
+  describe('randomInt', () => {
+    const MIN = 20;
+    const MAX = 100;
+
+    it('should generate a random integer', () => {
+      for (let i = 0; i < RANDOM_TEST_COUNT; i++) {
+        const value = utils.randomInt(MAX);
+        expect(value).toBeGreaterThanOrEqual(0);
+        expect(value).toBeLessThan(MAX);
+        expect(Number.isInteger(value)).toBe(true);
+      }
+    });
+
+    it('should generate a random integer within range', () => {
+      for (let i = 0; i < RANDOM_TEST_COUNT; i++) {
+        const value = utils.randomInt(MAX, MIN);
+        expect(value).toBeGreaterThanOrEqual(MIN);
+        expect(value).toBeLessThan(MAX);
+        expect(Number.isInteger(value)).toBe(true);
+      }
+    });
+  });
+
+  describe('randomItem', () => {
+    const list = [ 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vw', 'xyz' ];
+
+    it('should randomly select an item from the list', () => {
+      for (let i = 0; i < RANDOM_TEST_COUNT; i++) {
+        const value = utils.randomItem(list);
+        expect(list.includes(value)).toBe(true);
+      }
+    });
+  });
+
+  describe('randomLogNumber', () => {
+    const LOG_BASE = 2;
+    const MIN = 2;
+    const MAX = 64;
+
+    it('should generate a random log number', () => {
+      for (let i = 0; i < RANDOM_TEST_COUNT; i++) {
+        const value = utils.randomLogNumber(LOG_BASE, MAX, MIN);
+        expect(value).toBeGreaterThanOrEqual(MIN);
+        expect(value).toBeLessThan(MAX);
+      }
+    });
+  });
+
+  describe('randomNumber', () => {
+    const MIN = 0.2;
+    const MAX = 1;
+
+    it('should generate a random number', () => {
+      for (let i = 0; i < RANDOM_TEST_COUNT; i++) {
+        const value = utils.randomNumber(MAX, MIN);
+        expect(value).toBeGreaterThanOrEqual(MIN);
+        expect(value).toBeLessThan(MAX);
+        expect(Number.isInteger(value)).toBe(false);
+      }
+    });
   });
 });
