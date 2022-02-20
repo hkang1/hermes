@@ -20,6 +20,7 @@ export const isFilterEmpty = (filter: t.Filter): boolean => {
   return isNaN(filter.p0) && isNaN(filter.p1);
 };
 
+// TODO: possibly invalid logic
 export const isFilterInvalid = (filter: t.Filter): boolean => {
   return filter.p0 >= filter.p1;
 };
