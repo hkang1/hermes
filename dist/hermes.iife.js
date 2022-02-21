@@ -635,7 +635,6 @@ var Hermes = (function (exports) {
    */
   const BEZIER_FACTOR = 0.3;
   const DIRECTION = 'inherit';
-  const FILL_STYLE = 'black';
   const FONT = 'normal 12px san-serif';
   const LINE_CAP = 'butt';
   const LINE_DASH_OFFSET = 0.0;
@@ -794,8 +793,8 @@ var Hermes = (function (exports) {
 
   const drawBoundary = (ctx, boundary, style = {}) => {
       ctx.save();
-      if (ctx.fillStyle) {
-          ctx.fillStyle = (style === null || style === void 0 ? void 0 : style.fillStyle) || '';
+      if (style.fillStyle) {
+          ctx.fillStyle = style.fillStyle;
           ctx.beginPath();
           ctx.moveTo(boundary[0].x, boundary[0].y);
           for (let i = 1; i < boundary.length; i++) {
@@ -804,13 +803,13 @@ var Hermes = (function (exports) {
           ctx.closePath();
           ctx.fill();
       }
-      if (ctx.strokeStyle) {
+      if (style.strokeStyle) {
           ctx.lineCap = style.lineCap || LINE_CAP;
           ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
           ctx.lineJoin = style.lineJoin || LINE_JOIN;
           ctx.lineWidth = style.lineWidth || LINE_WIDTH;
           ctx.miterLimit = style.miterLimit || MITER_LIMIT;
-          ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
+          ctx.strokeStyle = style.strokeStyle;
           ctx.beginPath();
           ctx.moveTo(boundary[0].x, boundary[0].y);
           for (let i = 1; i < boundary.length; i++) {
@@ -823,20 +822,20 @@ var Hermes = (function (exports) {
   };
   const drawCircle = (ctx, x, y, radius, style = {}) => {
       ctx.save();
-      if (ctx.fillStyle) {
-          ctx.fillStyle = (style === null || style === void 0 ? void 0 : style.fillStyle) || '';
+      if (style.fillStyle) {
+          ctx.fillStyle = style === null || style === void 0 ? void 0 : style.fillStyle;
           ctx.moveTo(x + radius, y);
           ctx.beginPath();
           ctx.arc(x, y, radius, 0, 2 * Math.PI);
           ctx.fill();
       }
-      if (ctx.strokeStyle) {
+      if (style.strokeStyle) {
           ctx.lineCap = style.lineCap || LINE_CAP;
           ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
           ctx.lineJoin = style.lineJoin || LINE_JOIN;
           ctx.lineWidth = style.lineWidth || LINE_WIDTH;
           ctx.miterLimit = style.miterLimit || MITER_LIMIT;
-          ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
+          ctx.strokeStyle = style.strokeStyle;
           ctx.moveTo(x + radius, y);
           ctx.beginPath();
           ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -899,7 +898,7 @@ var Hermes = (function (exports) {
       const ry = roundPixel(y);
       const radius = style.cornerRadius || 0;
       if (style.fillStyle) {
-          ctx.fillStyle = style.fillStyle || FILL_STYLE;
+          ctx.fillStyle = style.fillStyle;
           if (radius === 0) {
               ctx.fillRect(rx, ry, w, h);
           }
@@ -914,7 +913,7 @@ var Hermes = (function (exports) {
           ctx.lineJoin = style.lineJoin || LINE_JOIN;
           ctx.lineWidth = style.lineWidth || LINE_WIDTH;
           ctx.miterLimit = style.miterLimit || MITER_LIMIT;
-          ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
+          ctx.strokeStyle = style.strokeStyle;
           if (radius === 0) {
               ctx.strokeRect(rx, ry, w, h);
           }
@@ -941,25 +940,28 @@ var Hermes = (function (exports) {
   const drawText = (ctx, text, x, y, rad, style = {}) => {
       const normalizedRad = normalizeRad(rad);
       const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
+      const rotate = -rad - (inwards ? Math.PI : 0);
       ctx.save();
       ctx.direction = style.direction || DIRECTION;
       ctx.font = style.font || FONT;
       ctx.textAlign = style.textAlign || (inwards ? 'right' : 'left');
       ctx.textBaseline = style.textBaseline || TEXT_BASELINE;
-      ctx.translate(x, y);
-      ctx.rotate(-rad - (inwards ? Math.PI : 0));
-      ctx.translate(-x, -y);
+      if (rotate % 2 * Math.PI !== 0) {
+          ctx.translate(x, y);
+          ctx.rotate(rotate);
+          ctx.translate(-x, -y);
+      }
       if (style.strokeStyle) {
           ctx.lineCap = style.lineCap || LINE_CAP;
           ctx.lineDashOffset = style.lineDashOffset || LINE_DASH_OFFSET;
           ctx.lineJoin = style.lineJoin || LINE_JOIN;
           ctx.lineWidth = style.lineWidth || LINE_WIDTH;
           ctx.miterLimit = style.miterLimit || MITER_LIMIT;
-          ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
+          ctx.strokeStyle = style.strokeStyle;
           ctx.strokeText(text, x, y);
       }
       if (style.fillStyle) {
-          ctx.fillStyle = style.fillStyle || FILL_STYLE;
+          ctx.fillStyle = style.fillStyle;
           ctx.fillText(text, x, y);
       }
       ctx.restore();
