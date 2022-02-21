@@ -10,8 +10,8 @@ export const drawBoundary = (
 ): void => {
   ctx.save();
 
-  if (ctx.fillStyle) {
-    ctx.fillStyle = style?.fillStyle || '';
+  if (style.fillStyle) {
+    ctx.fillStyle = style.fillStyle;
     ctx.beginPath();
     ctx.moveTo(boundary[0].x, boundary[0].y);
     for (let i = 1; i < boundary.length; i++) {
@@ -20,13 +20,13 @@ export const drawBoundary = (
     ctx.closePath();
     ctx.fill();
   }
-  if (ctx.strokeStyle) {
+  if (style.strokeStyle) {
     ctx.lineCap = style.lineCap || DEFAULT.LINE_CAP;
     ctx.lineDashOffset = style.lineDashOffset || DEFAULT.LINE_DASH_OFFSET;
     ctx.lineJoin = style.lineJoin || DEFAULT.LINE_JOIN;
     ctx.lineWidth = style.lineWidth || DEFAULT.LINE_WIDTH;
     ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
-    ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
+    ctx.strokeStyle = style.strokeStyle;
     ctx.beginPath();
     ctx.moveTo(boundary[0].x, boundary[0].y);
     for (let i = 1; i < boundary.length; i++) {
@@ -48,20 +48,20 @@ export const drawCircle = (
 ): void => {
   ctx.save();
 
-  if (ctx.fillStyle) {
-    ctx.fillStyle = style?.fillStyle || '';
+  if (style.fillStyle) {
+    ctx.fillStyle = style?.fillStyle;
     ctx.moveTo(x + radius, y);
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.fill();
   }
-  if (ctx.strokeStyle) {
+  if (style.strokeStyle) {
     ctx.lineCap = style.lineCap || DEFAULT.LINE_CAP;
     ctx.lineDashOffset = style.lineDashOffset || DEFAULT.LINE_DASH_OFFSET;
     ctx.lineJoin = style.lineJoin || DEFAULT.LINE_JOIN;
     ctx.lineWidth = style.lineWidth || DEFAULT.LINE_WIDTH;
     ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
-    ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
+    ctx.strokeStyle = style.strokeStyle;
     ctx.moveTo(x + radius, y);
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -155,7 +155,7 @@ export const drawRect = (
   const radius = style.cornerRadius || 0;
 
   if (style.fillStyle) {
-    ctx.fillStyle = style.fillStyle || DEFAULT.FILL_STYLE;
+    ctx.fillStyle = style.fillStyle;
     if (radius === 0) {
       ctx.fillRect(rx, ry, w, h);
     } else {
@@ -169,7 +169,7 @@ export const drawRect = (
     ctx.lineJoin = style.lineJoin || DEFAULT.LINE_JOIN;
     ctx.lineWidth = style.lineWidth || DEFAULT.LINE_WIDTH;
     ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
-    ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
+    ctx.strokeStyle = style.strokeStyle;
     if (radius === 0) {
       ctx.strokeRect(rx, ry, w, h);
     } else {
@@ -212,6 +212,7 @@ export const drawText = (
 ): void => {
   const normalizedRad = normalizeRad(rad);
   const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
+  const rotate = -rad - (inwards ? Math.PI : 0);
 
   ctx.save();
 
@@ -220,9 +221,11 @@ export const drawText = (
   ctx.textAlign = style.textAlign || (inwards ? 'right' : 'left');
   ctx.textBaseline = style.textBaseline || DEFAULT.TEXT_BASELINE;
 
-  ctx.translate(x, y);
-  ctx.rotate(-rad - (inwards ? Math.PI : 0));
-  ctx.translate(-x, -y);
+  if (rotate % 2 * Math.PI !== 0) {
+    ctx.translate(x, y);
+    ctx.rotate(rotate);
+    ctx.translate(-x, -y);
+  }
 
   if (style.strokeStyle) {
     ctx.lineCap = style.lineCap || DEFAULT.LINE_CAP;
@@ -230,11 +233,11 @@ export const drawText = (
     ctx.lineJoin = style.lineJoin || DEFAULT.LINE_JOIN;
     ctx.lineWidth = style.lineWidth || DEFAULT.LINE_WIDTH;
     ctx.miterLimit = style.miterLimit || DEFAULT.MITER_LIMIT;
-    ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
+    ctx.strokeStyle = style.strokeStyle;
     ctx.strokeText(text, x, y);
   }
   if (style.fillStyle) {
-    ctx.fillStyle = style.fillStyle || DEFAULT.FILL_STYLE;
+    ctx.fillStyle = style.fillStyle;
     ctx.fillText(text, x, y);
   }
 
