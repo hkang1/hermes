@@ -1261,7 +1261,7 @@ var tester = /*#__PURE__*/Object.freeze({
 
 const customDeepmerge = deepmergeCustom({ mergeArrays: false });
 class Hermes {
-    constructor(target, data, dimensions, config = {}) {
+    constructor(target, dimensions, config = {}, data = {}) {
         this.size = { h: 0, w: 0 };
         this.ix = clone(IX);
         this.filters = {};
