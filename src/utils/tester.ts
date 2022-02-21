@@ -8,7 +8,9 @@ export interface Tester {
   generateDimensions: (dimCount?: number, random?: boolean) => t.Dimension[];
 }
 
-const dimensionRanges: Record<t.RecordKey, t.Range> = {
+export const DEFAULT_DIMENSION_COUNT = 10;
+
+export const dimensionRanges: Record<t.RecordKey, t.Range> = {
   'accuracy': [ 0.55, 0.99 ],
   'dropout': [ 0.2, 0.8 ],
   'global-batch-size': [ 5, 30 ],
@@ -20,7 +22,7 @@ const dimensionRanges: Record<t.RecordKey, t.Range> = {
   'n-filters': [ 8, 64 ],
 };
 
-const dimensionSamples: t.Dimension[] = [
+export const dimensionSamples: t.Dimension[] = [
   {
     key: 'dropout',
     label: 'Dropout',
@@ -75,7 +77,7 @@ const dimensionSamples: t.Dimension[] = [
   },
 ];
 
-const metricDimensionSamples: t.Dimension[] = [
+export const metricDimensionSamples: t.Dimension[] = [
   {
     key: 'accuracy',
     label: 'Accuracy',
@@ -107,7 +109,10 @@ export const generateData = (dimensions: t.Dimension[], count: number): t.Data =
   }, {} as t.Data);
 };
 
-export const generateDimensions = (dimCount = 10, random = true): t.Dimension[] => {
+export const generateDimensions = (
+  dimCount = DEFAULT_DIMENSION_COUNT,
+  random = true,
+): t.Dimension[] => {
   // Generate the dimensions based on config.
   const dims = new Array(dimCount - 1).fill(null).map((_, index) => {
     if (random) return randomItem(dimensionSamples);
@@ -115,7 +120,8 @@ export const generateDimensions = (dimCount = 10, random = true): t.Dimension[] 
   });
 
   // Add a metric dimension to the end.
-  dims.push(randomItem(metricDimensionSamples));
+  const metricDimension = random ? randomItem(metricDimensionSamples) : metricDimensionSamples[0];
+  dims.push(metricDimension);
 
   return dims;
 };
