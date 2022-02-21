@@ -70,6 +70,21 @@ describe('NiceScale class', () => {
     expect(scale.max).toBe(MAX_VALUE);
   });
 
+  it('should handle 0 scale range', () => {
+    const tests = [
+      { input: 0.05, output: { max: 0.075, min: 0.025 } },
+      { input: 0.5, output: { max: 0.75, min: 0.25 } },
+      { input: 5, output: { max: 7.5, min: 2.5 } },
+      { input: 50, output: { max: 75, min: 25 } },
+      { input: 500, output: { max: 750, min: 250 } },
+    ];
+    tests.forEach(test => {
+      const zeroScale = new NaughtyScale(test.input, test.input);
+      expect(zeroScale.min).toBeCloseTo(test.output.min);
+      expect(zeroScale.max).toBeCloseTo(test.output.max);
+    });
+  });
+
   it('should set axis length', () => {
     const { axisLength, maxTicks } = scale.testSetAxisLength(100);
     expect(axisLength).toBe(100);

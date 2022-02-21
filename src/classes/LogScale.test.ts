@@ -7,6 +7,10 @@ class TestScale extends LogScale {
     super(minValue, maxValue, logBase, dataOnEdge);
   }
 
+  public getLogBase() {
+    return this.logBase;
+  }
+
   public testCalculate() {
     this.calculate();
   }
@@ -30,6 +34,13 @@ describe('LogScale class', () => {
     beforeAll(() => {
       scale = new TestScale(MIN_VALUE, MAX_VALUE, 2, true);
       scale.setAxisLength(AXIS_LENGTH);
+    });
+
+    it('should set log base', () => {
+      scale.setLogBase(10);
+      expect(scale.getLogBase()).toBe(10);
+      scale.setLogBase(2);
+      expect(scale.getLogBase()).toBe(2);
     });
 
     it('should convert percent to value', () => {

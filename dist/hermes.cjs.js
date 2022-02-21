@@ -331,20 +331,32 @@ class NiceScale {
         this.tickSpacing = 0;
         this.axisLength = 1;
         this.maxTicks = 1;
-        this.minValue = minValue;
-        this.maxValue = maxValue;
         this.max = maxValue;
         this.min = minValue;
+        this.setMinMaxValues(minValue, maxValue, false);
     }
     setAxisLength(axisLength) {
         this.axisLength = axisLength;
         this.maxTicks = axisLength / MIN_TICK_DISTANCE;
         this.calculate();
     }
-    setMinMaxValues(minValue, maxValue) {
+    setMinMaxValues(minValue, maxValue, calculate = true) {
+        /*
+         * Handle the 0 range scale by padding each end of the common min/max value,
+         * based on the log base 2 of the min/max value.
+         */
+        if (minValue === maxValue) {
+            const value = minValue;
+            const exp = Math.log2(value);
+            minValue = 2 ** (exp - 1);
+            maxValue = value + (value - minValue);
+        }
         this.minValue = minValue;
         this.maxValue = maxValue;
-        this.calculate();
+        this.max = maxValue;
+        this.min = minValue;
+        if (calculate)
+            this.calculate();
     }
     /**
      * Returns a "nice" number approximately equal to range.
@@ -515,9 +527,7 @@ class LogScale extends NiceScale {
         this.log = Math.log;
         this.logBase = logBase;
     }
-    setMinMaxValues(minValue, maxValue, logBase = DEFAULT_LOG_BASE) {
-        this.minValue = minValue;
-        this.maxValue = maxValue;
+    setLogBase(logBase = DEFAULT_LOG_BASE) {
         this.logBase = logBase;
         this.calculate();
     }
@@ -1128,6 +1138,7 @@ const mergeFilters = (filter0, filter1) => {
     return newFilter;
 };
 
+const DEFAULT_DIMENSION_COUNT = 10;
 const dimensionRanges = {
     'accuracy': [0.55, 0.99],
     'dropout': [0.2, 0.8],
@@ -1225,7 +1236,7 @@ const generateData = (dimensions, count) => {
         return acc;
     }, {});
 };
-const generateDimensions = (dimCount = 10, random = true) => {
+const generateDimensions = (dimCount = DEFAULT_DIMENSION_COUNT, random = true) => {
     // Generate the dimensions based on config.
     const dims = new Array(dimCount - 1).fill(null).map((_, index) => {
         if (random)
@@ -1233,12 +1244,17 @@ const generateDimensions = (dimCount = 10, random = true) => {
         return dimensionSamples[index % dimensionSamples.length];
     });
     // Add a metric dimension to the end.
-    dims.push(randomItem(metricDimensionSamples));
+    const metricDimension = random ? randomItem(metricDimensionSamples) : metricDimensionSamples[0];
+    dims.push(metricDimension);
     return dims;
 };
 
 var tester = /*#__PURE__*/Object.freeze({
   __proto__: null,
+  DEFAULT_DIMENSION_COUNT: DEFAULT_DIMENSION_COUNT,
+  dimensionRanges: dimensionRanges,
+  dimensionSamples: dimensionSamples,
+  metricDimensionSamples: metricDimensionSamples,
   generateData: generateData,
   generateDimensions: generateDimensions
 });

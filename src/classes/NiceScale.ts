@@ -35,10 +35,9 @@ abstract class NiceScale {
     protected maxValue: number,
     protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
   ) {
-    this.minValue = minValue;
-    this.maxValue = maxValue;
     this.max = maxValue;
     this.min = minValue;
+    this.setMinMaxValues(minValue, maxValue, false);
   }
 
   public setAxisLength(axisLength: number): void {
@@ -47,10 +46,24 @@ abstract class NiceScale {
     this.calculate();
   }
 
-  public setMinMaxValues(minValue: number, maxValue: number): void {
+  public setMinMaxValues(minValue: number, maxValue: number, calculate = true): void {
+    /*
+     * Handle the 0 range scale by padding each end of the common min/max value,
+     * based on the log base 2 of the min/max value.
+     */
+    if (minValue === maxValue) {
+      const value = minValue;
+      const exp = Math.log2(value);
+      minValue = 2 ** (exp - 1);
+      maxValue = value + (value - minValue);
+    }
+
     this.minValue = minValue;
     this.maxValue = maxValue;
-    this.calculate();
+    this.max = maxValue;
+    this.min = minValue;
+
+    if (calculate) this.calculate();
   }
 
   /**
