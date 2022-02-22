@@ -1279,9 +1279,6 @@ class Hermes {
         if (!ctx)
             throw new HermesError('Unable to get context from target element.');
         this.ctx = ctx;
-        // Must have at least one dimension data available.
-        if (Object.keys(data).length === 0)
-            throw new HermesError('Need at least one dimension data record.');
         // All the dimension data should be equal in size.
         const { count, valid } = this.validateData(data);
         if (!valid)
