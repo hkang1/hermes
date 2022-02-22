@@ -13,14 +13,15 @@ declare class LinearScale extends NiceScale {}
 
 declare class LogScale extends NiceScale {
   constructor(minValue: number, maxValue: number, logBase: number, dataOnEdge?: boolean);
+  public setLogBase(logBase?: number): void;
 }
 
 declare class Hermes {
   constructor(
     target: HTMLElement | string,
-    data: Hermes.Data,
     dimensions: Hermes.Dimension[],
-    options?: Hermes.RecursivePartial<Hermes.Config>
+    options?: Hermes.RecursivePartial<Hermes.Config>,
+    data?: Hermes.Data,
   );
   static getTester(): Hermes.Tester;
   setData(data: Hermes.Data, redraw?: boolean): void;
