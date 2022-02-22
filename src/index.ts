@@ -43,9 +43,9 @@ class Hermes {
 
   constructor(
     target: HTMLElement | string,
-    data: t.Data,
     dimensions: t.Dimension[],
     config: t.RecursivePartial<t.Config> = {},
+    data: t.Data = {},
   ) {
     const element = getElement(target);
     if (!element) throw new HermesError('Target element selector did not match anything.');
