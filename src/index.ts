@@ -27,19 +27,19 @@ const customDeepmerge = deepmergeCustom<{
 }>({ mergeArrays: false });
 
 class Hermes {
-  private element: HTMLElement;
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-  private resizeObserver: ResizeObserver;
-  private data: t.Data;
-  private dataCount: number;
-  private dimensions: t.InternalDimension[];
-  private dimensionsOriginal: t.Dimension[];
-  private config: t.Config;
-  private size: t.Size = { h: 0, w: 0 };
-  private ix: t.IX = clone(DEFAULT.IX);
-  private filters: t.Filters = {};
-  private _?: t.Internal = undefined;
+  protected element: HTMLElement;
+  protected canvas: HTMLCanvasElement;
+  protected ctx: CanvasRenderingContext2D;
+  protected resizeObserver: ResizeObserver;
+  protected data: t.Data;
+  protected dataCount: number;
+  protected dimensions: t.InternalDimension[];
+  protected dimensionsOriginal: t.Dimension[];
+  protected config: t.Config;
+  protected size: t.Size = { h: 0, w: 0 };
+  protected ix: t.IX = clone(DEFAULT.IX);
+  protected filters: t.Filters = {};
+  protected _?: t.Internal = undefined;
 
   constructor(
     target: HTMLElement | string,
@@ -136,7 +136,7 @@ class Hermes {
     }
   }
 
-  private validateData(data: t.Data): { count: number, valid: boolean } {
+  protected validateData(data: t.Data): { count: number, valid: boolean } {
     let count = 0;
     const values = Object.values(data);
 
@@ -153,7 +153,7 @@ class Hermes {
     return { count, valid: true };
   }
 
-  private setDimensions(dimensions: t.Dimension[]): t.InternalDimension[] {
+  protected setDimensions(dimensions: t.Dimension[]): t.InternalDimension[] {
     return clone(dimensions).map(dimension => {
       const key = dimension.key;
       const data = this.data[key] || [];
@@ -190,12 +190,12 @@ class Hermes {
     });
   }
 
-  private calculate(): void {
+  protected calculate(): void {
     this.calculateLayout();
     this.calculateStyles();
   }
 
-  private calculateLayout(): void {
+  protected calculateLayout(): void {
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const _: any = {
       dims: {
@@ -464,7 +464,7 @@ class Hermes {
     this._ = _;
   }
 
-  private calculateStyles(): void {
+  protected calculateStyles(): void {
     if (!this._) return;
 
     this._.styles = this._.styles || [];
@@ -532,7 +532,7 @@ class Hermes {
     }
   }
 
-  private getFocusByPoint(point: t.Point): t.Focus | undefined {
+  protected getFocusByPoint(point: t.Point): t.Focus | undefined {
     if (!this._) return;
 
     const _dsa = this._.dims.shared.axes;
@@ -576,7 +576,7 @@ class Hermes {
     }
   }
 
-  private updateActiveLabel(): void {
+  protected updateActiveLabel(): void {
     if (!this._ || this.ix.shared.action.type !== t.ActionType.LabelMove) return;
 
     const _dl = this._.dims.list;
@@ -620,7 +620,7 @@ class Hermes {
     }
   }
 
-  private setActiveFilter(key: string, pos: number, value: t.Primitive): void {
+  protected setActiveFilter(key: string, pos: number, value: t.Primitive): void {
     if (!this._) return;
 
     const _filters = this.filters;
@@ -661,7 +661,7 @@ class Hermes {
     }
   }
 
-  private updateActiveFilter(e: MouseEvent): void {
+  protected updateActiveFilter(e: MouseEvent): void {
     if (!this._) return;
 
     const _dl = this._.dims.list;
@@ -769,7 +769,7 @@ class Hermes {
     this.cleanUpFilters();
   }
 
-  private cleanUpFilters(): void {
+  protected cleanUpFilters(): void {
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
       for (let i = 0; i < filters.length; i++) {
@@ -794,7 +794,7 @@ class Hermes {
     });
   }
 
-  private updateCursor(): void {
+  protected updateCursor(): void {
     const _ix = this.ix;
     const _ixsa = _ix.shared.action;
     const _ixsf = _ix.shared.focus;
@@ -826,7 +826,7 @@ class Hermes {
     this.canvas.style.cursor = cursor;
   }
 
-  private draw(): void {
+  protected draw(): void {
     if (!this._) return;
 
     const { h, w } = this.size;
@@ -986,7 +986,7 @@ class Hermes {
     });
   }
 
-  private drawDebugOutline(): void {
+  protected drawDebugOutline(): void {
     if (!this._) return;
 
     const { h, w } = this.size;
@@ -1035,7 +1035,7 @@ class Hermes {
     });
   }
 
-  private handleResize(entries: ResizeObserverEntry[]) {
+  protected handleResize(entries: ResizeObserverEntry[]) {
     const { width: w1, height: h1 } = entries[0].contentRect;
     const { w: w0, h: h0 } = this.size;
     if (w0 === w1 && h0 === h1) return;
@@ -1044,7 +1044,7 @@ class Hermes {
     this.redraw();
   }
 
-  private handleDoubleClick(): void {
+  protected handleDoubleClick(): void {
     // Reset chart settings.
     this.dimensions = this.setDimensions(this.dimensionsOriginal);
     this.filters = {};
@@ -1056,7 +1056,7 @@ class Hermes {
     this.config.hooks.onReset?.();
   }
 
-  private handleMouseDown(e: MouseEvent): void {
+  protected handleMouseDown(e: MouseEvent): void {
     if (!this._) return;
 
     const _ixs = this.ix.shared;
@@ -1106,7 +1106,7 @@ class Hermes {
     this.redraw();
   }
 
-  private handleMouseMove(e: MouseEvent): void {
+  protected handleMouseMove(e: MouseEvent): void {
     if (!this._) return;
 
     const point = getMousePoint(e, this.element);
@@ -1126,7 +1126,7 @@ class Hermes {
     this.redraw();
   }
 
-  private handleMouseUp(e: MouseEvent): void {
+  protected handleMouseUp(e: MouseEvent): void {
     if (!this._ || this.ix.shared.action.type === t.ActionType.None) return;
 
     const point = getMousePoint(e, this.element);

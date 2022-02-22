@@ -1,4 +1,5 @@
 import HermesError from './classes/HermesError';
+import { HERMES_CONFIG } from './defaults';
 import * as t from './types';
 import { clone } from './utils/data';
 import * as tester from './utils/tester';
@@ -9,7 +10,10 @@ const ELEMENT_ID = 'chart';
 const DIMENSION_COUNT = 4;
 const DATA_COUNT = 50;
 
-class HermesTester extends Hermes {}
+class HermesTester extends Hermes {
+  public getData(): t.Data { return this.data; }
+  public getDataCount(): number { return this.dataCount; }
+}
 
 const tryHermes = (
   target: HTMLElement | string,
@@ -17,7 +21,7 @@ const tryHermes = (
   config: t.RecursivePartial<t.Config> = {},
   data: t.Data = {},
 ): { error?: HermesError, hermes?: HermesTester } => {
-  let hermes: Hermes | undefined;
+  let hermes: HermesTester | undefined;
   let error: HermesError | undefined;
   try {
     hermes = new HermesTester(target, dimensions, config, data);
@@ -32,13 +36,17 @@ describe('Hermes class', () => {
   let dimensions: t.Dimension[];
   let data: t.Data;
 
-  beforeAll(() => {
+  beforeEach(() => {
     element = document.createElement('div');
     element.id = ELEMENT_ID;
     document.body.appendChild(element);
 
     dimensions = tester.generateDimensions(DIMENSION_COUNT);
     data = tester.generateData(dimensions, DATA_COUNT);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(element);
   });
 
   describe('constructor', () => {
@@ -107,6 +115,58 @@ describe('Hermes class', () => {
       const tester = HermesTester.getTester();
       expect(tester.generateData).toBeDefined();
       expect(tester.generateDimensions).toBeDefined();
+    });
+  });
+
+  describe('setData', () => {
+    let hermes: HermesTester | undefined;
+    let newData: t.Data;
+    let spyRedraw: jest.SpyInstance<void, []>;
+
+    beforeEach(() => {
+      hermes = tryHermes(element, dimensions, {}, data).hermes;
+      newData = clone(data);
+
+      // Add copy and add the first few data points back into the dimension data.
+      Object.keys(data).forEach(key => {
+        const dimData = data[key];
+        dimData.push(dimData[0], dimData[1], dimData[2]);
+      });
+
+      if (hermes) {
+        spyRedraw = jest.spyOn(hermes, 'redraw');
+      }
+    });
+
+    it('should set data', () => {
+      if (!hermes) throw new Error('Hermes not initialized.');
+      hermes?.setData(newData);
+      expect(hermes.getData()).toStrictEqual(newData);
+      expect(spyRedraw).toHaveBeenCalled();
+    });
+
+    it('should set data and not redraw', () => {
+      if (!hermes) throw new Error('Hermes not initialized.');
+      hermes?.setData(newData, false);
+      expect(hermes.getData()).toStrictEqual(newData);
+      expect(spyRedraw).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('destroy', () => {
+    it('should clean up during destroy', () => {
+      const { hermes } = tryHermes(element, dimensions, {}, data);
+      if (!hermes) throw new Error('Hermes not initialized.');
+
+      // Should contain a canvas element.
+      const children = [].slice.call(element.children) as HTMLElement[];
+      expect(children.length).toBe(1);
+      expect(children[0] instanceof HTMLCanvasElement).toBe(true);
+
+      hermes.destroy();
+
+      // Children list should be empty after `destroy`.
+      expect([].slice.call(element.children).length).toBe(0);
     });
   });
 });
