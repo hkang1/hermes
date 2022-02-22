@@ -1169,6 +1169,12 @@ const dimensionSamples = [
         type: DimensionType.Categorical,
     },
     {
+        key: 'layer-free-decay',
+        label: 'Layer Free Decay',
+        logBase: 10,
+        type: DimensionType.Logarithmic,
+    },
+    {
         categories: [true, false],
         dataOnEdge: false,
         key: 'layer-inverse',
@@ -1286,7 +1292,7 @@ class Hermes {
         // All the dimension data should be equal in size.
         const { count, valid } = this.validateData(data);
         if (!valid)
-            throw new HermesError('The dimension data are not all identical in size.');
+            throw new HermesError('The dimension data are not uniform in size.');
         this.dataCount = count;
         this.data = data;
         if (dimensions.length === 0)
@@ -1329,9 +1335,9 @@ class Hermes {
     }
     redraw() {
         this.calculate();
-        this.draw();
         if (this.config.debug)
             this.drawDebugOutline();
+        this.draw();
     }
     destroy() {
         var _a;
@@ -2119,9 +2125,9 @@ class Hermes {
         // Draw each dimension rough outline with bounding box.
         const dimStyle = { strokeStyle: '#999999' };
         const boundStyle = { strokeStyle: '#dddddd' };
-        const axisBoundaryStyle = { fillStyle: '#eeeeee' };
-        const labelPointStyle = { fillStyle: '#00ccff', strokeStyle: '#0099cc' };
-        const labelBoundaryStyle = { fillStyle: '#ffcc00' };
+        const axisBoundaryStyle = { strokeStyle: '#eeeeee' };
+        const labelPointStyle = { strokeStyle: '#0099cc' };
+        const labelBoundaryStyle = { strokeStyle: '#ffcc00' };
         _dl.forEach((dim, i) => {
             const bound = dim.layout.bound;
             const axisBoundary = dim.layout.axisBoundary;
