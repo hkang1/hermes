@@ -2,9 +2,10 @@
 module.exports = {
   collectCoverageFrom: [ './src/**' ],
   coverageDirectory: 'test-results',
-  globals: { 'ts-jest': { tsconfig: 'tsconfig.json' } },
+  globals: { 'ts-jest': { tsconfig: 'tsconfig.test.json' } },
   moduleDirectories: [ 'node_modules', 'src' ],
   moduleFileExtensions: [ 'js', 'jsx', 'ts', 'tsx' ],
+  moduleNameMapper: { 'test/(.*)': '<rootDir>/test/$1' },
   modulePathIgnorePatterns: [ './src/defaults.ts', './src/types.ts' ],
   preset: 'ts-jest',
   reporters: [

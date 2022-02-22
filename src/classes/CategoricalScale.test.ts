@@ -1,5 +1,6 @@
+import { CLOSE_PRECISION } from 'test/utils';
+
 import { Primitive } from '../types';
-import { CLOSE_PRECISION } from '../utils/test';
 
 import CategoricalScale from './CategoricalScale';
 

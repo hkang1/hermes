@@ -1,7 +1,8 @@
+import { CLOSE_PRECISION } from 'test/utils';
+
 import { Point } from '../types';
 
 import * as utils from './math';
-import { CLOSE_PRECISION } from './test';
 
 const degrads = [
   { deg: 0, rad: 0 },
