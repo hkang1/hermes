@@ -1,3 +1,7 @@
+import { INVALID_VALUE } from '../defaults';
+import { EDimensionType } from '../types';
+
+import { clone } from './data';
 import * as utils from './tester';
 
 describe('library testing utility functions', () => {
@@ -13,6 +17,17 @@ describe('library testing utility functions', () => {
       Object.values(data).forEach(dimData => {
         expect(dimData.length).toBe(dataCount);
       });
+    });
+
+    it('should generate data with invalid value with an unknown dimension type', () => {
+      const dimensionsWithInvalidType = clone(dimensions);
+      const dimIndex = 0;
+      const dimKey = dimensionsWithInvalidType[dimIndex].key;
+      dimensionsWithInvalidType[dimIndex].type = 'invalid' as EDimensionType;
+
+      const data = utils.generateData(dimensionsWithInvalidType, dataCount);
+      const expectedData = new Array(dataCount).fill(INVALID_VALUE);
+      expect(data[dimKey]).toStrictEqual(expectedData);
     });
   });
 

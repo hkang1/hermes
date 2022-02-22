@@ -41,6 +41,12 @@ export const dimensionSamples: t.Dimension[] = [
     type: t.DimensionType.Categorical,
   },
   {
+    key: 'layer-free-decay',
+    label: 'Layer Free Decay',
+    logBase: 10,
+    type: t.DimensionType.Logarithmic,
+  },
+  {
     categories: [ true, false ],
     dataOnEdge: false,
     key: 'layer-inverse',
