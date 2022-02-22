@@ -8,6 +8,7 @@
 		"search.exclude": {
 			"**/dist": true,
 			"**/tsc-out": true
-		}
+		},
+		"typescript.tsdk": "./node_modules/typescript/lib"
 	}
 }

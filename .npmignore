@@ -10,3 +10,6 @@ src/
 test-results/
 tsc-out/
 tsconfig.json
+tsconfig.base.json
+tsconfig.build.json
+tsconfig.test.json

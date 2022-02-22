@@ -1,22 +1,11 @@
+import { getContext } from 'test/utils';
+
 import * as DEFAULT from '../defaults';
 import * as t from '../types';
 
 import * as utils from './canvas';
 
 const TEXT = 'The fox jumped over the lazy fox.';
-
-const setup = () => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1000;
-  canvas.height = 400;
-
-  let ctx: CanvasRenderingContext2D | null = null;
-  while (ctx === null) {
-    ctx = canvas.getContext('2d');
-  }
-
-  return ctx;
-};
 
 describe('canvas utilities', () => {
   let ctx: CanvasRenderingContext2D;
@@ -30,7 +19,7 @@ describe('canvas utilities', () => {
     ];
 
     beforeEach(() => {
-      ctx = setup();
+      ctx = getContext();
     });
 
     it('should not draw fill or stroke if fillStyle and strokeStyle are not provided', () => {
@@ -87,7 +76,7 @@ describe('canvas utilities', () => {
     const radius = 10;
 
     beforeEach(() => {
-      ctx = setup();
+      ctx = getContext();
     });
 
     it('should not draw fill or stroke if fillStyle and strokeStyle are not provided', () => {
@@ -143,7 +132,7 @@ describe('canvas utilities', () => {
     const defaultPathOptions = { options: {}, type: t.PathType.Straight };
 
     it('should not draw anything with less than 2 data points', () => {
-      ctx = setup();
+      ctx = getContext();
       utils.drawData(ctx, [], true, defaultPathOptions);
       expect(ctx.save).not.toHaveBeenCalled();
       expect(ctx.beginPath).not.toHaveBeenCalled();
@@ -154,7 +143,7 @@ describe('canvas utilities', () => {
     });
 
     it('should draw line with all styles', () => {
-      ctx = setup();
+      ctx = getContext();
       utils.drawData(ctx, data, true, defaultPathOptions, {
         lineCap: DEFAULT.LINE_CAP,
         lineDashOffset: DEFAULT.LINE_DASH_OFFSET,
@@ -174,7 +163,7 @@ describe('canvas utilities', () => {
       const pathOptions = { options: {}, type: t.PathType.Straight };
 
       beforeEach(() => {
-        ctx = setup();
+        ctx = getContext();
       });
 
       it('should save and restore context for each draw', () => {
@@ -210,7 +199,7 @@ describe('canvas utilities', () => {
       };
 
       beforeEach(() => {
-        ctx = setup();
+        ctx = getContext();
       });
 
       it('should save and restore context for each draw', () => {
@@ -256,7 +245,7 @@ describe('canvas utilities', () => {
     const y1 = 15;
 
     beforeEach(() => {
-      ctx = setup();
+      ctx = getContext();
     });
 
     it('should save and restore context for each draw', () => {
@@ -297,7 +286,7 @@ describe('canvas utilities', () => {
     const h = 15;
 
     beforeEach(() => {
-      ctx = setup();
+      ctx = getContext();
     });
 
     it('should not draw fill or stroke if fillStyle and strokeStyle are not provided', () => {
@@ -340,7 +329,7 @@ describe('canvas utilities', () => {
 
   describe('drawRoundedRect', () => {
     it('should draw rounded rectangle', () => {
-      ctx = setup();
+      ctx = getContext();
       utils.drawRoundedRect(ctx, 0, 0, 100, 50, 5);
       expect(ctx.beginPath).toHaveBeenCalled();
       expect(ctx.moveTo).toHaveBeenCalled();
@@ -356,7 +345,7 @@ describe('canvas utilities', () => {
     const rad = Math.PI / 4;
 
     beforeEach(() => {
-      ctx = setup();
+      ctx = getContext();
     });
 
     it('should not draw fill or stroke if fillStyle and strokeStyle are not provided', () => {
@@ -458,7 +447,7 @@ describe('canvas utilities', () => {
 
   describe('getTextSize', () => {
     it('should return text size with default font', () => {
-      ctx = setup();
+      ctx = getContext();
       const size = utils.getTextSize(ctx, TEXT);
       expect(ctx.measureText).toHaveBeenCalled();
       expect(size.w).toBeDefined();
@@ -466,7 +455,7 @@ describe('canvas utilities', () => {
     });
 
     it('should return text size with custom font', () => {
-      ctx = setup();
+      ctx = getContext();
       const font = 'bold 14px serif';
       const size = utils.getTextSize(ctx, TEXT, font);
       expect(ctx.measureText).toHaveBeenCalled();

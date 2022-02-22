@@ -1,4 +1,4 @@
-import { CLOSE_PRECISION } from '../utils/test';
+import { CLOSE_PRECISION } from 'test/utils';
 
 import LogScale from './LogScale';
 
