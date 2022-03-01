@@ -1,12 +1,13 @@
 import { Primitive } from '../types';
 import { value2str } from '../utils/string';
 
-import NiceScale, { DEFAULT_DATA_ON_EDGE } from './NiceScale';
+import NiceScale, { DEFAULT_DATA_ON_EDGE, DEFAULT_REVERSE } from './NiceScale';
 
 class CategoricalScale extends NiceScale {
   constructor(
     protected categories: Primitive[] = [],
     protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
+    protected reverse = DEFAULT_REVERSE,
   ) {
     super(0, 0, dataOnEdge);
     this.tickLabels = this.categories.map(category => value2str(category));

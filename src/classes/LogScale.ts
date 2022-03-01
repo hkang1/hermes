@@ -2,7 +2,7 @@ import { Primitive } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 
-import NiceScale, { DEFAULT_DATA_ON_EDGE } from './NiceScale';
+import NiceScale, { DEFAULT_DATA_ON_EDGE, DEFAULT_REVERSE } from './NiceScale';
 
 export const DEFAULT_LOG_BASE = 10;
 
@@ -19,6 +19,7 @@ class LogScale extends NiceScale {
     protected maxValue: number,
     protected logBase: number = DEFAULT_LOG_BASE,
     protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
+    protected reverse = DEFAULT_REVERSE,
   ) {
     super(minValue, maxValue, dataOnEdge);
     this.denominator = 1;

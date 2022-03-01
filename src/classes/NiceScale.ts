@@ -8,6 +8,7 @@
 import { Primitive } from '../types';
 
 export const DEFAULT_DATA_ON_EDGE = true;
+export const DEFAULT_REVERSE = false;
 
 export const MIN_TICK_DISTANCE = 50;
 
@@ -34,6 +35,7 @@ abstract class NiceScale {
     protected minValue: number,
     protected maxValue: number,
     protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
+    protected reverse = DEFAULT_REVERSE,
   ) {
     this.max = maxValue;
     this.min = minValue;

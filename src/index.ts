@@ -173,6 +173,7 @@ class Hermes {
             internal.range[0],
             internal.range[1],
             dimension.dataOnEdge,
+            dimension.reverse,
           );
         } else if (dimension.type === t.DimensionType.Logarithmic) {
           internal.scale = new LogScale(
@@ -180,10 +181,15 @@ class Hermes {
             internal.range[1],
             dimension.logBase,
             dimension.dataOnEdge,
+            dimension.reverse,
           );
         }
       } else if (dimension.type === t.DimensionType.Categorical) {
-        internal.scale = new CategoricalScale(dimension.categories, dimension.dataOnEdge);
+        internal.scale = new CategoricalScale(
+          dimension.categories,
+          dimension.dataOnEdge,
+          dimension.reverse,
+        );
       }
 
       return internal;
