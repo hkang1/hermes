@@ -1817,7 +1817,7 @@ class Hermes {
         }
     }
     updateActiveFilter(e) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _m, _o;
         if (!this._)
             return;
         const _dl = this._.dims.list;
@@ -1915,6 +1915,8 @@ class Hermes {
         _ixf.active = { ...FILTER };
         _ixf.key = undefined;
         this.cleanUpFilters();
+        // Make hook call back with all of the filter changes.
+        (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, this.filters);
     }
     cleanUpFilters() {
         Object.keys(this.filters).forEach(key => {

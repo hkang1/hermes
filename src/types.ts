@@ -181,6 +181,7 @@ export interface Config {
   direction: EDirection;
   hooks: {
     onDimensionMove?: (dimension: Dimension, index0: number, index1: number) => void;
+    onFilterChange?: (filters: Filters) => void;
     onFilterCreate?: (filter: Filter) => void,
     onFilterMove?: (filter: Filter) => void,
     onFilterRemove?: (filter: Filter) => void,
