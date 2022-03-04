@@ -1,8 +1,15 @@
+import { Direction, EDirection } from '../types';
+
 import LinearScale from './LinearScale';
 
 class TestScale extends LinearScale {
-  constructor(minValue: number, maxValue: number, dataOnEdge?: boolean) {
-    super(minValue, maxValue, dataOnEdge);
+  constructor(
+    direction: EDirection,
+    minValue: number,
+    maxValue: number,
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
+  ) {
+    super(direction, minValue, maxValue, config);
   }
 
   public testCalculate() {
@@ -26,7 +33,7 @@ describe('LinearScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(MIN_VALUE, MAX_VALUE, true);
+      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, { dataOnEdge: true });
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -80,7 +87,7 @@ describe('LinearScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(MIN_VALUE, MAX_VALUE, false);
+      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, { dataOnEdge: false });
       scale.setAxisLength(AXIS_LENGTH);
     });
 

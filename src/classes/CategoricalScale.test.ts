@@ -1,12 +1,16 @@
 import { CLOSE_PRECISION } from 'test/utils';
 
-import { Primitive } from '../types';
+import { Direction, EDirection, Primitive } from '../types';
 
 import CategoricalScale from './CategoricalScale';
 
 class TestScale extends CategoricalScale {
-  constructor(categories?: Primitive[], dataOnEdge?: boolean) {
-    super(categories, dataOnEdge);
+  constructor(
+    direction: EDirection,
+    categories?: Primitive[],
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
+  ) {
+    super(direction, categories, config);
   }
 
   public testCalculate() {
@@ -29,7 +33,7 @@ describe('CategoricalScale', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(CATEGORIES, true);
+      scale = new TestScale(Direction.Horizontal, CATEGORIES, { dataOnEdge: true });
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -82,7 +86,7 @@ describe('CategoricalScale', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(CATEGORIES, false);
+      scale = new TestScale(Direction.Horizontal, CATEGORIES, { dataOnEdge: false });
       scale.setAxisLength(AXIS_LENGTH);
     });
 

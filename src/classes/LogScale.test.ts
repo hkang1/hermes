@@ -1,10 +1,18 @@
 import { CLOSE_PRECISION } from 'test/utils';
 
+import { Direction, EDirection } from '../types';
+
 import LogScale from './LogScale';
 
 class TestScale extends LogScale {
-  constructor(minValue: number, maxValue: number, logBase?: number, dataOnEdge?: boolean) {
-    super(minValue, maxValue, logBase, dataOnEdge);
+  constructor(
+    direction: EDirection,
+    minValue: number,
+    maxValue: number,
+    logBase?: number,
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
+  ) {
+    super(direction, minValue, maxValue, logBase, config);
   }
 
   public getLogBase() {
@@ -32,7 +40,7 @@ describe('LogScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(MIN_VALUE, MAX_VALUE, 2, true);
+      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, 2, { dataOnEdge: true });
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -93,7 +101,7 @@ describe('LogScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(MIN_VALUE, MAX_VALUE, 10, false);
+      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, 10, { dataOnEdge: false });
       scale.setAxisLength(AXIS_LENGTH);
     });
 
