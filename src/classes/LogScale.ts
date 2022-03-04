@@ -45,8 +45,9 @@ class LogScale extends NiceScale {
   public valueToPercent(value: Primitive): number {
     if (!isNumber(value)) return 0;
     const exp = this.log(value) / this.denominator;
-    let percent = (exp - this.minExpExact) / (this.maxExpExact - this.minExpExact);
-    if (this.dataOnEdge) percent = (exp - this.minExp) / (this.maxExp - this.minExp);
+    const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
+    const maxExp = this.dataOnEdge ? this.maxExpExact : this.maxExp;
+    const percent = (exp - minExp) / (maxExp - minExp);
     return this.reverse ? 1 - percent : percent;
   }
 
