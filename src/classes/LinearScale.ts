@@ -12,9 +12,7 @@ class LinearScale extends NiceScale {
   }
 
   public posToValue(pos: number): number {
-    const min = this.dataOnEdge ? this.minValue : this.min;
-    const max = this.dataOnEdge ? this.maxValue : this.max;
-    return (pos / this.axisLength) * (max - min) + min;
+    return this.percentToValue(pos / this.axisLength);
   }
 
   public valueToPercent(value: Primitive): number {

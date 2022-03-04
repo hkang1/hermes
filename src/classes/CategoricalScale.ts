@@ -10,11 +10,14 @@ class CategoricalScale extends NiceScale {
     config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
     super(direction, 0, 0, config);
+
+    if (this.reverse) this.categories.reverse();
+
     this.tickLabels = this.categories.map(category => value2str(category));
   }
 
   public percentToValue(percent: number): Primitive {
-    return this.posToValue((this.reverse ? 1 - percent : percent) * this.axisLength);
+    return this.posToValue(percent * this.axisLength);
   }
 
   public posToValue(pos: number): Primitive {
@@ -34,10 +37,7 @@ class CategoricalScale extends NiceScale {
   public valueToPercent(value: Primitive): number {
     const stringValue = value2str(value);
     const index = this.tickLabels.findIndex(label => label === stringValue);
-    if (index !== -1) {
-      const percent = this.tickPos[index] / this.axisLength;
-      return this.reverse ? 1 - percent : percent;
-    }
+    if (index !== -1) return this.tickPos[index] / this.axisLength;
     return 0;
   }
 

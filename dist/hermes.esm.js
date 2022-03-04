@@ -444,10 +444,12 @@ class CategoricalScale extends NiceScale {
         super(direction, 0, 0, config);
         this.direction = direction;
         this.categories = categories;
+        if (this.reverse)
+            this.categories.reverse();
         this.tickLabels = this.categories.map(category => value2str(category));
     }
     percentToValue(percent) {
-        return this.posToValue((this.reverse ? 1 - percent : percent) * this.axisLength);
+        return this.posToValue(percent * this.axisLength);
     }
     posToValue(pos) {
         let distance = Infinity;
@@ -465,10 +467,8 @@ class CategoricalScale extends NiceScale {
     valueToPercent(value) {
         const stringValue = value2str(value);
         const index = this.tickLabels.findIndex(label => label === stringValue);
-        if (index !== -1) {
-            const percent = this.tickPos[index] / this.axisLength;
-            return this.reverse ? 1 - percent : percent;
-        }
+        if (index !== -1)
+            return this.tickPos[index] / this.axisLength;
         return 0;
     }
     valueToPos(value) {
@@ -508,9 +508,7 @@ class LinearScale extends NiceScale {
         return (this.reverse ? 1 - percent : percent) * (max - min) + min;
     }
     posToValue(pos) {
-        const min = this.dataOnEdge ? this.minValue : this.min;
-        const max = this.dataOnEdge ? this.maxValue : this.max;
-        return (pos / this.axisLength) * (max - min) + min;
+        return this.percentToValue(pos / this.axisLength);
     }
     valueToPercent(value) {
         if (!isNumber(value))
@@ -580,17 +578,15 @@ class LogScale extends NiceScale {
         return this.logBase ** exp;
     }
     posToValue(pos) {
-        const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
-        const exp = (pos / this.axisLength) * this.rangeExp() + minExp;
-        return this.logBase ** exp;
+        return this.percentToValue(pos / this.axisLength);
     }
     valueToPercent(value) {
         if (!isNumber(value))
             return 0;
         const exp = this.log(value) / this.denominator;
+        let percent = (exp - this.minExpExact) / (this.maxExpExact - this.minExpExact);
         if (this.dataOnEdge)
-            return (exp - this.minExpExact) / (this.maxExpExact - this.minExpExact);
-        const percent = (exp - this.minExp) / (this.maxExp - this.minExp);
+            percent = (exp - this.minExp) / (this.maxExp - this.minExp);
         return this.reverse ? 1 - percent : percent;
     }
     valueToPos(value) {
