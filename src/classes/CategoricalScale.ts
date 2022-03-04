@@ -1,14 +1,18 @@
-import { Primitive } from '../types';
+import { EDirection, Primitive } from '../types';
 import { value2str } from '../utils/string';
 
-import NiceScale, { DEFAULT_DATA_ON_EDGE } from './NiceScale';
+import NiceScale from './NiceScale';
 
 class CategoricalScale extends NiceScale {
   constructor(
+    protected direction: EDirection,
     protected categories: Primitive[] = [],
-    protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
-    super(0, 0, dataOnEdge);
+    super(direction, 0, 0, config);
+
+    if (this.reverse) this.categories.reverse();
+
     this.tickLabels = this.categories.map(category => value2str(category));
   }
 
@@ -38,10 +42,7 @@ class CategoricalScale extends NiceScale {
   }
 
   public valueToPos(value: Primitive): number {
-    const stringValue = value2str(value);
-    const index = this.tickLabels.findIndex(label => label === stringValue);
-    if (index !== -1) return this.tickPos[index];
-    return 0;
+    return this.valueToPercent(value) * this.axisLength;
   }
 
   protected calculate(): void {

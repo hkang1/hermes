@@ -1,18 +1,33 @@
 declare class NiceScale {
-  constructor(minValue: number, maxValue: number, dataOnEdge?: boolean);
+  constructor(
+    direction: Hermes.EDirection,
+    minValue: number,
+    maxValue: number,
+    config?: { dataOnEdge?: boolean, reverse?: boolean },
+  );
   public setAxisLength(axisLength: number): void;
   public setMinMaxValues(minValue: number, maxValue: number): void;
   protected niceNum(range: number, round: boolean): number;
 }
 
 declare class CategoricalScale extends NiceScale {
-  constructor(categories?: Hermes.Primitive[], dataOnEdge?: boolean);
+  constructor(
+    direction: Hermes.EDirection,
+    categories?: Hermes.Primitive[],
+    config?: { dataOnEdge?: boolean, reverse?: boolean },
+  );
 }
 
 declare class LinearScale extends NiceScale {}
 
 declare class LogScale extends NiceScale {
-  constructor(minValue: number, maxValue: number, logBase: number, dataOnEdge?: boolean);
+  constructor(
+    direction: Hermes.EDirection,
+    minValue: number,
+    maxValue: number,
+    logBase?: number,
+    config?: { dataOnEdge?: boolean, reverse?: boolean },
+  );
   public setLogBase(logBase?: number): void;
 }
 
@@ -160,6 +175,7 @@ declare namespace Hermes {
     key: string;
     label: string;
     logBase?: number;
+    reverse?: boolean;
     type: EDimensionType;
   }
 

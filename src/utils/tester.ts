@@ -14,6 +14,7 @@ export const dimensionRanges: Record<t.RecordKey, t.Range> = {
   'accuracy': [ 0.55, 0.99 ],
   'dropout': [ 0.2, 0.8 ],
   'global-batch-size': [ 5, 30 ],
+  'layer-free-decay': [ 0.001, 0.1 ],
   'layer-split-factor': [ 1, 16 ],
   'learning-rate': [ 0.0001, 0.1 ],
   'learning-rate-decay': [ 0.000001, 0.001 ],

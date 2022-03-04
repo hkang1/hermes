@@ -1,10 +1,18 @@
 import { CLOSE_PRECISION } from 'test/utils';
 
+import { Direction, EDirection } from '../types';
+
 import LogScale from './LogScale';
 
 class TestScale extends LogScale {
-  constructor(minValue: number, maxValue: number, logBase?: number, dataOnEdge?: boolean) {
-    super(minValue, maxValue, logBase, dataOnEdge);
+  constructor(
+    direction: EDirection,
+    minValue: number,
+    maxValue: number,
+    logBase?: number,
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
+  ) {
+    super(direction, minValue, maxValue, logBase, config);
   }
 
   public getLogBase() {
@@ -32,7 +40,7 @@ describe('LogScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(MIN_VALUE, MAX_VALUE, 2, true);
+      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, 2, { dataOnEdge: true });
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -82,18 +90,18 @@ describe('LogScale class', () => {
 
   describe('without dataOnEdge', () => {
     const AXIS_LENGTH = 200;
-    const MIN_VALUE = 2;
-    const MAX_VALUE = 64;
+    const MIN_VALUE = 1;
+    const MAX_VALUE = 100;
     const tests = [
-      { percent: 0.0, position: 0, value: 1 },
+      { percent: 0.0, position: 0, value: MIN_VALUE },
       { percent: 0.25, position: 50, value: 3.1622776601683795 },
       { percent: 0.5, position: 100, value: 10 },
       { percent: 0.75, position: 150, value: 31.622776601683793 },
-      { percent: 1.0, position: 200, value: 100 },
+      { percent: 1.0, position: 200, value: MAX_VALUE },
     ];
 
     beforeAll(() => {
-      scale = new TestScale(MIN_VALUE, MAX_VALUE, 10, false);
+      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, 10, { dataOnEdge: false });
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -123,10 +131,118 @@ describe('LogScale class', () => {
 
     it('should calculate log values properly', () => {
       scale.testCalculate();
-      expect(scale.min).toBe(2);
-      expect(scale.max).toBe(64);
+      expect(scale.min).toBe(1);
+      expect(scale.max).toBe(100);
       expect(scale.range).toBe(99);
       expect(scale.tickLabels).toStrictEqual([ '1', '10', '100' ]);
+      expect(scale.tickPadding).toBe(0);
+      expect(scale.tickPos).toStrictEqual([ 0, 100, 200 ]);
+      expect(scale.tickSpacing).toBe(1);
+      expect(scale.ticks).toStrictEqual([ 1, 10, 100 ]);
+    });
+  });
+
+  describe('with horizontal and reversed scale', () => {
+    const AXIS_LENGTH = 200;
+    const MIN_VALUE = 1;
+    const MAX_VALUE = 100;
+    const tests = [
+      { percent: 0.0, position: 0, value: MAX_VALUE },
+      { percent: 0.25, position: 50, value: 31.622776601683793 },
+      { percent: 0.5, position: 100, value: 10 },
+      { percent: 0.75, position: 150, value: 3.1622776601683795 },
+      { percent: 1.0, position: 200, value: MIN_VALUE },
+    ];
+
+    beforeAll(() => {
+      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, 10, { reverse: true });
+      scale.setAxisLength(AXIS_LENGTH);
+    });
+
+    it('should convert percent to value', () => {
+      tests.forEach(test => {
+        expect(scale.percentToValue(test.percent)).toBeCloseTo(test.value, CLOSE_PRECISION);
+      });
+    });
+
+    it('should convert value to percent', () => {
+      tests.forEach(test => {
+        expect(scale.valueToPercent(test.value)).toBeCloseTo(test.percent, CLOSE_PRECISION);
+      });
+    });
+
+    it('should convert position to value', () => {
+      tests.forEach(test => {
+        expect(scale.posToValue(test.position)).toBeCloseTo(test.value, CLOSE_PRECISION);
+      });
+    });
+
+    it('should convert value to position', () => {
+      tests.forEach(test => {
+        expect(scale.valueToPos(test.value)).toBeCloseTo(test.position, CLOSE_PRECISION);
+      });
+    });
+
+    it('should calculate log values properly', () => {
+      scale.testCalculate();
+      expect(scale.min).toBe(1);
+      expect(scale.max).toBe(100);
+      expect(scale.range).toBe(99);
+      expect(scale.tickLabels).toStrictEqual([ '*1', '10', '*100' ]);
+      expect(scale.tickPadding).toBe(0);
+      expect(scale.tickPos).toStrictEqual([ 200, 100, 0 ]);
+      expect(scale.tickSpacing).toBe(1);
+      expect(scale.ticks).toStrictEqual([ 1, 10, 100 ]);
+    });
+  });
+
+  describe('with vertical and reversed scale', () => {
+    const AXIS_LENGTH = 200;
+    const MIN_VALUE = 1;
+    const MAX_VALUE = 100;
+    const tests = [
+      { percent: 0.0, position: 0, value: MIN_VALUE },
+      { percent: 0.25, position: 50, value: 3.1622776601683795 },
+      { percent: 0.5, position: 100, value: 10 },
+      { percent: 0.75, position: 150, value: 31.622776601683793 },
+      { percent: 1.0, position: 200, value: MAX_VALUE },
+    ];
+
+    beforeAll(() => {
+      scale = new TestScale(Direction.Vertical, MIN_VALUE, MAX_VALUE, 10, { reverse: true });
+      scale.setAxisLength(AXIS_LENGTH);
+    });
+
+    it('should convert percent to value', () => {
+      tests.forEach(test => {
+        expect(scale.percentToValue(test.percent)).toBeCloseTo(test.value, CLOSE_PRECISION);
+      });
+    });
+
+    it('should convert value to percent', () => {
+      tests.forEach(test => {
+        expect(scale.valueToPercent(test.value)).toBeCloseTo(test.percent, CLOSE_PRECISION);
+      });
+    });
+
+    it('should convert position to value', () => {
+      tests.forEach(test => {
+        expect(scale.posToValue(test.position)).toBeCloseTo(test.value, CLOSE_PRECISION);
+      });
+    });
+
+    it('should convert value to position', () => {
+      tests.forEach(test => {
+        expect(scale.valueToPos(test.value)).toBeCloseTo(test.position, CLOSE_PRECISION);
+      });
+    });
+
+    it('should calculate log values properly', () => {
+      scale.testCalculate();
+      expect(scale.min).toBe(1);
+      expect(scale.max).toBe(100);
+      expect(scale.range).toBe(99);
+      expect(scale.tickLabels).toStrictEqual([ '*1', '10', '*100' ]);
       expect(scale.tickPadding).toBe(0);
       expect(scale.tickPos).toStrictEqual([ 0, 100, 200 ]);
       expect(scale.tickSpacing).toBe(1);

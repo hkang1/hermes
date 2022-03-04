@@ -1,8 +1,8 @@
-import { Primitive } from '../types';
+import { EDirection, Primitive } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 
-import NiceScale, { DEFAULT_DATA_ON_EDGE } from './NiceScale';
+import NiceScale from './NiceScale';
 
 export const DEFAULT_LOG_BASE = 10;
 
@@ -15,12 +15,13 @@ class LogScale extends NiceScale {
   protected minExpExact: number = Number.NaN;
 
   constructor(
+    protected direction: EDirection,
     protected minValue: number,
     protected maxValue: number,
     protected logBase: number = DEFAULT_LOG_BASE,
-    protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
-    super(minValue, maxValue, dataOnEdge);
+    super(direction, minValue, maxValue, config);
     this.denominator = 1;
     this.log = Math.log;
     this.logBase = logBase;
@@ -33,25 +34,25 @@ class LogScale extends NiceScale {
 
   public percentToValue(percent: number): number {
     const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
-    const exp = percent * this.rangeExp() + minExp;
+    const exp = (this.reverse ? 1 - percent : percent) * this.rangeExp() + minExp;
     return this.logBase ** exp;
   }
 
   public posToValue(pos: number): number {
-    const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
-    const exp = (pos / this.axisLength) * this.rangeExp() + minExp;
-    return this.logBase ** exp;
-  }
-
-  public valueToPos(value: Primitive): number {
-    return this.valueToPercent(value) * this.axisLength;
+    return this.percentToValue(pos / this.axisLength);
   }
 
   public valueToPercent(value: Primitive): number {
     if (!isNumber(value)) return 0;
     const exp = this.log(value) / this.denominator;
-    if (this.dataOnEdge) return (exp - this.minExpExact) / (this.maxExpExact - this.minExpExact);
-    return (exp - this.minExp) / (this.maxExp - this.minExp);
+    const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
+    const maxExp = this.dataOnEdge ? this.maxExpExact : this.maxExp;
+    const percent = (exp - minExp) / (maxExp - minExp);
+    return this.reverse ? 1 - percent : percent;
+  }
+
+  public valueToPos(value: Primitive): number {
+    return this.valueToPercent(value) * this.axisLength;
   }
 
   protected rangeExp(): number {

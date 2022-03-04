@@ -154,13 +154,15 @@ class Hermes {
   }
 
   protected setDimensions(dimensions: t.Dimension[]): t.InternalDimension[] {
+    const direction = this.config.direction === t.Direction.Horizontal
+      ? t.Direction.Vertical : t.Direction.Horizontal;
     return clone(dimensions).map(dimension => {
       const key = dimension.key;
       const data = this.data[key] || [];
       const internal: t.InternalDimension = {
         ...dimension,
         range: undefined,
-        scale: new LinearScale(0, 100),
+        scale: new LinearScale(direction, 0, 100),
       };
 
       if (
@@ -170,20 +172,26 @@ class Hermes {
         internal.range = getDataRange(data);
         if (dimension.type === t.DimensionType.Linear) {
           internal.scale = new LinearScale(
+            direction,
             internal.range[0],
             internal.range[1],
-            dimension.dataOnEdge,
+            dimension,
           );
         } else if (dimension.type === t.DimensionType.Logarithmic) {
           internal.scale = new LogScale(
+            direction,
             internal.range[0],
             internal.range[1],
             dimension.logBase,
-            dimension.dataOnEdge,
+            dimension,
           );
         }
       } else if (dimension.type === t.DimensionType.Categorical) {
-        internal.scale = new CategoricalScale(dimension.categories, dimension.dataOnEdge);
+        internal.scale = new CategoricalScale(
+          direction,
+          dimension.categories,
+          dimension,
+        );
       }
 
       return internal;

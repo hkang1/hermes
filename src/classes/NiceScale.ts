@@ -5,9 +5,10 @@
  * https://stackoverflow.com/questions/8506881/nice-label-algorithm-for-charts-with-minimum-ticks
  */
 
-import { Primitive } from '../types';
+import { Direction, EDirection, Primitive } from '../types';
 
 export const DEFAULT_DATA_ON_EDGE = true;
+export const DEFAULT_REVERSE = false;
 
 export const MIN_TICK_DISTANCE = 50;
 
@@ -22,6 +23,8 @@ abstract class NiceScale {
   public tickSpacing = 0;
   protected axisLength = 1;
   protected maxTicks = 1;
+  protected dataOnEdge = DEFAULT_DATA_ON_EDGE;
+  protected reverse = DEFAULT_REVERSE;
 
   /**
    * Instantiates a new instance of the NiceScale class.
@@ -31,12 +34,20 @@ abstract class NiceScale {
    * @param maxTicks the maximum number of tick marks for the axis
    */
   constructor(
+    protected direction: EDirection,
     protected minValue: number,
     protected maxValue: number,
-    protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
     this.max = maxValue;
     this.min = minValue;
+    if (config.dataOnEdge != null) this.dataOnEdge = config.dataOnEdge;
+    if (direction === Direction.Horizontal) {
+      this.reverse = config.reverse != null ? config.reverse : false;
+    } else {
+      this.reverse = config.reverse != null ? !config.reverse : true;
+    }
+
     this.setMinMaxValues(minValue, maxValue, false);
   }
 

@@ -129,6 +129,7 @@ export interface Dimension {
   key: string;
   label: string;
   logBase?: number;
+  reverse?: boolean;
   type: EDimensionType;
 }
 

@@ -1,4 +1,4 @@
-import { Primitive } from '../types';
+import { Direction, Primitive } from '../types';
 
 import NiceScale, { MIN_TICK_DISTANCE } from './NiceScale';
 
@@ -62,7 +62,7 @@ describe('NiceScale class', () => {
   let scale: NaughtyScale;
 
   beforeAll(() => {
-    scale = new NaughtyScale(MIN_VALUE, MAX_VALUE);
+    scale = new NaughtyScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE);
   });
 
   it('should initialize with constructor params', () => {
@@ -79,7 +79,7 @@ describe('NiceScale class', () => {
       { input: 500, output: { max: 750, min: 250 } },
     ];
     tests.forEach(test => {
-      const zeroScale = new NaughtyScale(test.input, test.input);
+      const zeroScale = new NaughtyScale(Direction.Horizontal, test.input, test.input);
       expect(zeroScale.min).toBeCloseTo(test.output.min);
       expect(zeroScale.max).toBeCloseTo(test.output.max);
     });

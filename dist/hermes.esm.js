@@ -299,6 +299,43 @@ const value2str = (value) => {
     return isString(value) ? value : value.toString();
 };
 
+const ActionType = {
+    FilterCreate: 'filter-create',
+    FilterMove: 'filter-move',
+    FilterResizeAfter: 'filter-resize-after',
+    FilterResizeBefore: 'filter-resize-before',
+    LabelMove: 'label-move',
+    None: 'none',
+};
+const DimensionLayout = {
+    AxisEvenlySpaced: 'axis-evenly-spaced',
+    Equidistant: 'equidistant',
+    EvenlySpaced: 'evenly-spaced',
+};
+const DimensionType = {
+    Categorical: 'categorical',
+    Linear: 'linear',
+    Logarithmic: 'logarithmic',
+};
+const Direction = {
+    Horizontal: 'horizontal',
+    Vertical: 'vertical',
+};
+const FocusType = {
+    DimensionAxis: 'dimension-axis',
+    DimensionLabel: 'dimension-label',
+    Filter: 'filter',
+    FilterResize: 'filter-resize',
+};
+const LabelPlacement = {
+    After: 'after',
+    Before: 'before',
+};
+const PathType = {
+    Bezier: 'bezier',
+    Straight: 'straight',
+};
+
 /**
  * NiceScale solves the problem of generating human friendly ticks for chart axes.
  * Normal generative tick techniques make tick marks that jarring for the human to read.
@@ -306,6 +343,7 @@ const value2str = (value) => {
  * https://stackoverflow.com/questions/8506881/nice-label-algorithm-for-charts-with-minimum-ticks
  */
 const DEFAULT_DATA_ON_EDGE = true;
+const DEFAULT_REVERSE = false;
 const MIN_TICK_DISTANCE = 50;
 class NiceScale {
     /**
@@ -315,10 +353,10 @@ class NiceScale {
      * @param maxValue the maximum data point on the axis
      * @param maxTicks the maximum number of tick marks for the axis
      */
-    constructor(minValue, maxValue, dataOnEdge = DEFAULT_DATA_ON_EDGE) {
+    constructor(direction, minValue, maxValue, config = {}) {
+        this.direction = direction;
         this.minValue = minValue;
         this.maxValue = maxValue;
-        this.dataOnEdge = dataOnEdge;
         this.range = 0;
         this.tickLabels = [];
         this.tickPos = [];
@@ -327,8 +365,18 @@ class NiceScale {
         this.tickSpacing = 0;
         this.axisLength = 1;
         this.maxTicks = 1;
+        this.dataOnEdge = DEFAULT_DATA_ON_EDGE;
+        this.reverse = DEFAULT_REVERSE;
         this.max = maxValue;
         this.min = minValue;
+        if (config.dataOnEdge != null)
+            this.dataOnEdge = config.dataOnEdge;
+        if (direction === Direction.Horizontal) {
+            this.reverse = config.reverse != null ? config.reverse : false;
+        }
+        else {
+            this.reverse = config.reverse != null ? !config.reverse : true;
+        }
         this.setMinMaxValues(minValue, maxValue, false);
     }
     setAxisLength(axisLength) {
@@ -392,10 +440,12 @@ class NiceScale {
 }
 
 class CategoricalScale extends NiceScale {
-    constructor(categories = [], dataOnEdge = DEFAULT_DATA_ON_EDGE) {
-        super(0, 0, dataOnEdge);
+    constructor(direction, categories = [], config = {}) {
+        super(direction, 0, 0, config);
+        this.direction = direction;
         this.categories = categories;
-        this.dataOnEdge = dataOnEdge;
+        if (this.reverse)
+            this.categories.reverse();
         this.tickLabels = this.categories.map(category => value2str(category));
     }
     percentToValue(percent) {
@@ -422,11 +472,7 @@ class CategoricalScale extends NiceScale {
         return 0;
     }
     valueToPos(value) {
-        const stringValue = value2str(value);
-        const index = this.tickLabels.findIndex(label => label === stringValue);
-        if (index !== -1)
-            return this.tickPos[index];
-        return 0;
+        return this.valueToPercent(value) * this.axisLength;
     }
     calculate() {
         // Calculate tick positions based on axis length and ticks.
@@ -459,19 +505,18 @@ class LinearScale extends NiceScale {
     percentToValue(percent) {
         const min = this.dataOnEdge ? this.minValue : this.min;
         const max = this.dataOnEdge ? this.maxValue : this.max;
-        return percent * (max - min) + min;
+        return (this.reverse ? 1 - percent : percent) * (max - min) + min;
     }
     posToValue(pos) {
-        const min = this.dataOnEdge ? this.minValue : this.min;
-        const max = this.dataOnEdge ? this.maxValue : this.max;
-        return (pos / this.axisLength) * (max - min) + min;
+        return this.percentToValue(pos / this.axisLength);
     }
     valueToPercent(value) {
         if (!isNumber(value))
             return 0;
         const min = this.dataOnEdge ? this.minValue : this.min;
         const max = this.dataOnEdge ? this.maxValue : this.max;
-        return (value - min) / (max - min);
+        const percent = (value - min) / (max - min);
+        return this.reverse ? 1 - percent : percent;
     }
     valueToPos(value) {
         return this.valueToPercent(value) * this.axisLength;
@@ -509,12 +554,12 @@ class LinearScale extends NiceScale {
 
 const DEFAULT_LOG_BASE = 10;
 class LogScale extends NiceScale {
-    constructor(minValue, maxValue, logBase = DEFAULT_LOG_BASE, dataOnEdge = DEFAULT_DATA_ON_EDGE) {
-        super(minValue, maxValue, dataOnEdge);
+    constructor(direction, minValue, maxValue, logBase = DEFAULT_LOG_BASE, config = {}) {
+        super(direction, minValue, maxValue, config);
+        this.direction = direction;
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.logBase = logBase;
-        this.dataOnEdge = dataOnEdge;
         this.maxExp = Number.NaN;
         this.maxExpExact = Number.NaN;
         this.minExp = Number.NaN;
@@ -529,24 +574,23 @@ class LogScale extends NiceScale {
     }
     percentToValue(percent) {
         const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
-        const exp = percent * this.rangeExp() + minExp;
+        const exp = (this.reverse ? 1 - percent : percent) * this.rangeExp() + minExp;
         return this.logBase ** exp;
     }
     posToValue(pos) {
-        const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
-        const exp = (pos / this.axisLength) * this.rangeExp() + minExp;
-        return this.logBase ** exp;
-    }
-    valueToPos(value) {
-        return this.valueToPercent(value) * this.axisLength;
+        return this.percentToValue(pos / this.axisLength);
     }
     valueToPercent(value) {
         if (!isNumber(value))
             return 0;
         const exp = this.log(value) / this.denominator;
-        if (this.dataOnEdge)
-            return (exp - this.minExpExact) / (this.maxExpExact - this.minExpExact);
-        return (exp - this.minExp) / (this.maxExp - this.minExp);
+        const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
+        const maxExp = this.dataOnEdge ? this.maxExpExact : this.maxExp;
+        const percent = (exp - minExp) / (maxExp - minExp);
+        return this.reverse ? 1 - percent : percent;
+    }
+    valueToPos(value) {
+        return this.valueToPercent(value) * this.axisLength;
     }
     rangeExp() {
         return this.dataOnEdge ? this.maxExpExact - this.minExpExact : this.maxExp - this.minExp;
@@ -587,43 +631,6 @@ class LogScale extends NiceScale {
         this.tickPos = this.ticks.map(tick => this.valueToPos(tick));
     }
 }
-
-const ActionType = {
-    FilterCreate: 'filter-create',
-    FilterMove: 'filter-move',
-    FilterResizeAfter: 'filter-resize-after',
-    FilterResizeBefore: 'filter-resize-before',
-    LabelMove: 'label-move',
-    None: 'none',
-};
-const DimensionLayout = {
-    AxisEvenlySpaced: 'axis-evenly-spaced',
-    Equidistant: 'equidistant',
-    EvenlySpaced: 'evenly-spaced',
-};
-const DimensionType = {
-    Categorical: 'categorical',
-    Linear: 'linear',
-    Logarithmic: 'logarithmic',
-};
-const Direction = {
-    Horizontal: 'horizontal',
-    Vertical: 'vertical',
-};
-const FocusType = {
-    DimensionAxis: 'dimension-axis',
-    DimensionLabel: 'dimension-label',
-    Filter: 'filter',
-    FilterResize: 'filter-resize',
-};
-const LabelPlacement = {
-    After: 'after',
-    Before: 'before',
-};
-const PathType = {
-    Bezier: 'bezier',
-    Straight: 'straight',
-};
 
 /**
  * Invalid defaults.
@@ -1139,6 +1146,7 @@ const dimensionRanges = {
     'accuracy': [0.55, 0.99],
     'dropout': [0.2, 0.8],
     'global-batch-size': [5, 30],
+    'layer-free-decay': [0.001, 0.1],
     'layer-split-factor': [1, 16],
     'learning-rate': [0.0001, 0.1],
     'learning-rate-decay': [0.000001, 0.001],
@@ -1358,26 +1366,28 @@ class Hermes {
         return { count, valid: true };
     }
     setDimensions(dimensions) {
+        const direction = this.config.direction === Direction.Horizontal
+            ? Direction.Vertical : Direction.Horizontal;
         return clone(dimensions).map(dimension => {
             const key = dimension.key;
             const data = this.data[key] || [];
             const internal = {
                 ...dimension,
                 range: undefined,
-                scale: new LinearScale(0, 100),
+                scale: new LinearScale(direction, 0, 100),
             };
             if (dimension.type === DimensionType.Linear ||
                 dimension.type === DimensionType.Logarithmic) {
                 internal.range = getDataRange(data);
                 if (dimension.type === DimensionType.Linear) {
-                    internal.scale = new LinearScale(internal.range[0], internal.range[1], dimension.dataOnEdge);
+                    internal.scale = new LinearScale(direction, internal.range[0], internal.range[1], dimension);
                 }
                 else if (dimension.type === DimensionType.Logarithmic) {
-                    internal.scale = new LogScale(internal.range[0], internal.range[1], dimension.logBase, dimension.dataOnEdge);
+                    internal.scale = new LogScale(direction, internal.range[0], internal.range[1], dimension.logBase, dimension);
                 }
             }
             else if (dimension.type === DimensionType.Categorical) {
-                internal.scale = new CategoricalScale(dimension.categories, dimension.dataOnEdge);
+                internal.scale = new CategoricalScale(direction, dimension.categories, dimension);
             }
             return internal;
         });
