@@ -159,13 +159,14 @@ The dimension axes are drawn vertically, the axis tick values increase from the 
 
 ## Hermes Config and Styles
 
-The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L230-L267) provides a more up-to-date definition of the config.
+The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L234-L272) provides a more up-to-date definition of the config.
 
 ```
 interface Config {
   direction: EDirection;
   hooks: {
     onDimensionMove?: (dimension: Dimension, index0: number, index1: number) => void;
+    onFilterChange?: (filters: Filters) => void,
     onFilterCreate?: (filter: Filter) => void,
     onFilterMove?: (filter: Filter) => void,
     onFilterRemove?: (filter: Filter) => void,
@@ -214,6 +215,10 @@ The number of milliseconds to throttle the resizing. Resizing performs new calcu
 ### Hooks
 
 #### onDimensionMove
+#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L230-L232)) => void;
+
+Option to provide a hook that gets called for any filter changes. The callback is specifically called on the `mouseup` event. The entire updated filters object is returned.
+
 #### onFilterCreate
 #### onFilterMove
 #### onFilterRemove
