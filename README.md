@@ -58,7 +58,7 @@ The `container` can be an HTML element passed in directly or a query selector th
 
 ## Hermes Data Format
 
-The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L209), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
+The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L228), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
 
 ```
 type Data = Record<DimensionKey, Primitive[]>;
@@ -76,7 +76,7 @@ const data = {
 
 ## Hermes Dimensions Definition
 
-The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L154-L161), where it is defined as:
+The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L172-L180), where it is defined as:
 
 ```
 interface Dimension {
@@ -85,6 +85,7 @@ interface Dimension {
   key: string;
   label: string;
   logBase?: number;
+  reverse?: boolean;
   type: EDimensionType;
 }
 type Primitive = boolean | number | string
@@ -152,9 +153,13 @@ If disabled and set to `false`, Hermes will try to find the nearest *nice* numbe
 
 If the [dimension scale type](#type) is set to `logarithmic`, `logBase` can be set to determine what logarithmic base you wish the scale to be set. If this value is not provided, it defaults to `logBase` of 10. Common log base values are 2 and 10.
 
+### reverse (optional)
+
+The dimension axes are drawn vertically, the axis tick values increase from the bottom up. When drawn horizontally, the axis tick values increase from left to right. Setting the `reverse` to `true` will reverse the direction of the axis tick along the axes.
+
 ## Hermes Config and Styles
 
-The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L211-L248) provides a more up-to-date definition of the config.
+The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L230-L267) provides a more up-to-date definition of the config.
 
 ```
 interface Config {
