@@ -775,6 +775,9 @@ class Hermes {
     _ixf.key = undefined;
 
     this.cleanUpFilters();
+
+    // Make hook call back with all of the filter changes.
+    this.config.hooks?.onFilterChange?.(this.filters);
   }
 
   protected cleanUpFilters(): void {
