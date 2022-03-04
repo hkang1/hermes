@@ -1,20 +1,20 @@
-import { Primitive } from '../types';
+import { EDirection, Primitive } from '../types';
 import { value2str } from '../utils/string';
 
-import NiceScale, { DEFAULT_DATA_ON_EDGE, DEFAULT_REVERSE } from './NiceScale';
+import NiceScale from './NiceScale';
 
 class CategoricalScale extends NiceScale {
   constructor(
+    protected direction: EDirection,
     protected categories: Primitive[] = [],
-    protected dataOnEdge = DEFAULT_DATA_ON_EDGE,
-    protected reverse = DEFAULT_REVERSE,
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
-    super(0, 0, dataOnEdge);
+    super(direction, 0, 0, config);
     this.tickLabels = this.categories.map(category => value2str(category));
   }
 
   public percentToValue(percent: number): Primitive {
-    return this.posToValue(percent * this.axisLength);
+    return this.posToValue((this.reverse ? 1 - percent : percent) * this.axisLength);
   }
 
   public posToValue(pos: number): Primitive {
@@ -34,15 +34,15 @@ class CategoricalScale extends NiceScale {
   public valueToPercent(value: Primitive): number {
     const stringValue = value2str(value);
     const index = this.tickLabels.findIndex(label => label === stringValue);
-    if (index !== -1) return this.tickPos[index] / this.axisLength;
+    if (index !== -1) {
+      const percent = this.tickPos[index] / this.axisLength;
+      return this.reverse ? 1 - percent : percent;
+    }
     return 0;
   }
 
   public valueToPos(value: Primitive): number {
-    const stringValue = value2str(value);
-    const index = this.tickLabels.findIndex(label => label === stringValue);
-    if (index !== -1) return this.tickPos[index];
-    return 0;
+    return this.valueToPercent(value) * this.axisLength;
   }
 
   protected calculate(): void {
