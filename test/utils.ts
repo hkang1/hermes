@@ -1,6 +1,7 @@
 import Hermes from '../src';
 import HermesError from '../src/classes/HermesError';
 import * as t from '../src/types';
+import * as tester from '../src/utils/tester';
 
 export const CLOSE_PRECISION = 8;
 
@@ -50,6 +51,8 @@ export const tryHermes = (
  */
 
 export const ELEMENT_ID = 'hermes';
+export const DIMENSION_COUNT = 4;
+export const DATA_COUNT = 50;
 
 export const hermesSetup = (): void => {
   const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
@@ -61,6 +64,8 @@ export const hermesSetup = (): void => {
     element.style.height = '768px';
 
     hermesTest.element = element;
+    hermesTest.dimensions = tester.generateDimensions(DIMENSION_COUNT);
+    hermesTest.data = tester.generateData(hermesTest.dimensions, DATA_COUNT);
 
     document.body.appendChild(element);
 

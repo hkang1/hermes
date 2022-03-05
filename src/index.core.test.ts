@@ -3,33 +3,21 @@ import { hermesSetup, HermesTester, tryHermes } from 'test/utils';
 import HermesError from './classes/HermesError';
 import * as t from './types';
 import { clone } from './utils/data';
-import * as tester from './utils/tester';
 
 import Hermes from './index';
 
-const DIMENSION_COUNT = 4;
-const DATA_COUNT = 50;
-
 describe('Hermes Core', () => {
-  let dimensions: t.Dimension[];
-  let data: t.Data;
-
-  beforeEach(() => {
-    dimensions = tester.generateDimensions(DIMENSION_COUNT);
-    data = tester.generateData(dimensions, DATA_COUNT);
-  });
-
   describe('constructor', () => {
     hermesSetup();
 
     it('should draw chart if all the inputs are valid', () => {
-      tryHermes(dimensions, {}, data);
+      tryHermes(hermesTest.dimensions, {}, hermesTest.data);
       expect(hermesTest.error).toBeUndefined();
       expect(hermesTest.hermes).toBeInstanceOf(Hermes);
     });
 
     it('should create chart without config and data', () => {
-      tryHermes(dimensions);
+      tryHermes(hermesTest.dimensions);
       expect(hermesTest.error).toBeUndefined();
       expect(hermesTest.hermes).toBeInstanceOf(Hermes);
     });
@@ -44,7 +32,7 @@ describe('Hermes Core', () => {
       let error: HermesError | undefined;
 
       try {
-        hermes = new HermesTester(`#${elementId}`, dimensions);
+        hermes = new HermesTester(`#${elementId}`, hermesTest.dimensions);
       } catch (e) {
         error = e as HermesError;
       }
@@ -61,7 +49,7 @@ describe('Hermes Core', () => {
       let error: HermesError | undefined;
 
       try {
-        hermes = new HermesTester('.nothing', dimensions);
+        hermes = new HermesTester('.nothing', hermesTest.dimensions);
       } catch (e) {
         error = e as HermesError;
       }
@@ -77,7 +65,7 @@ describe('Hermes Core', () => {
       // Force `canvas.getContext` to return `null`.
       HTMLCanvasElement.prototype.getContext = () => null;
 
-      tryHermes(dimensions, {});
+      tryHermes(hermesTest.dimensions);
       expect(hermesTest.error?.message).toMatch(/unable to get context/i);
       expect(hermesTest.hermes).toBeUndefined();
 
@@ -86,13 +74,13 @@ describe('Hermes Core', () => {
     });
 
     it('should fail if the dimension list is empty', () => {
-      tryHermes([], {});
+      tryHermes([]);
       expect(hermesTest.error?.message).toMatch(/need at least one dimension defined/i);
       expect(hermesTest.hermes).toBeUndefined();
     });
 
     it('should fail if data sizes are not uniform across dimensions', () => {
-      const nonuniformData = clone(data);
+      const nonuniformData = clone(hermesTest.data);
       const dimKeys = Object.keys(nonuniformData);
 
       // Make first series short one data point.
@@ -100,7 +88,7 @@ describe('Hermes Core', () => {
         nonuniformData[dimKeys[0]].splice(1, 1);
       }
 
-      tryHermes(dimensions, {}, nonuniformData);
+      tryHermes(hermesTest.dimensions, {}, nonuniformData);
       expect(hermesTest.error?.message).toMatch(/data are not uniform in size/i);
       expect(hermesTest.hermes).toBeUndefined();
     });
@@ -121,12 +109,12 @@ describe('Hermes Core', () => {
     hermesSetup();
 
     beforeEach(() => {
-      tryHermes(dimensions, {}, data);
-      newData = clone(data);
+      tryHermes(hermesTest.dimensions, {}, hermesTest.data);
+      newData = clone(hermesTest.data);
 
       // Add copy and add the first few data points back into the dimension data.
-      Object.keys(data).forEach(key => {
-        const dimData = data[key];
+      Object.keys(hermesTest.data).forEach(key => {
+        const dimData = hermesTest.data[key];
         dimData.push(dimData[0], dimData[1], dimData[2]);
       });
 
@@ -154,7 +142,7 @@ describe('Hermes Core', () => {
     hermesSetup();
 
     it('should clean up during destroy', () => {
-      tryHermes(dimensions, {}, data);
+      tryHermes(hermesTest.dimensions, {}, hermesTest.data);
       if (!hermesTest.hermes) throw new Error('Hermes not initialized.');
 
       // Should contain a canvas element.
