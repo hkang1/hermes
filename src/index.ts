@@ -54,9 +54,14 @@ class Hermes {
     // Set config early as setSize references it early.
     this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
-    // Create a canvas and append it to the target element.
-    this.canvas = document.createElement('canvas');
-    this.element.appendChild(this.canvas);
+    // Create a canvas and append it to the target element. Only if there isn't an existing one.
+    const canvases = this.element.querySelectorAll('canvas');
+    if (canvases.length === 0) {
+      this.canvas = document.createElement('canvas');
+      this.element.appendChild(this.canvas);
+    } else {
+      this.canvas = canvases[0];
+    }
 
     // Setup initial canvas size.
     const rect = this.element.getBoundingClientRect();
@@ -1053,6 +1058,7 @@ class Hermes {
   }
 
   protected handleResize(entries: ResizeObserverEntry[]): void {
+    console.log('handleResize', entries);
     const { width: w1, height: h1 } = entries[0].contentRect;
     const { w: w0, h: h0 } = this.size;
     if (w0 === w1 && h0 === h1) return;
