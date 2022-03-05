@@ -13,7 +13,7 @@ module.exports = {
     [ 'jest-junit', { outputDirectory: 'test-results', outputName: 'junit.xml' } ],
   ],
   setupFilesAfterEnv: [ './test/setup.ts', 'jest-extended/all' ],
-  testEnvironment: 'jsdom',
+  testEnvironment: './test/HermesTestEnvironment.ts',
   testMatch: [ '**/*.test.ts' ],
   transform: { '^.+\\.(ts|tsx)?$': 'ts-jest' },
 };
