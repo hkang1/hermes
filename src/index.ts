@@ -130,7 +130,13 @@ class Hermes {
   }
 
   public destroy(): void {
+    // Remove observers and listeners.
     this.resizeObserver?.unobserve(this.element);
+    this.element.removeEventListener('dblclick', this.handleDoubleClick.bind(this));
+    this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this));
+    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
+
     if (this.canvas && this.element.contains(this.canvas)) {
       this.element.removeChild(this.canvas);
     }
@@ -1046,7 +1052,7 @@ class Hermes {
     });
   }
 
-  protected handleResize(entries: ResizeObserverEntry[]) {
+  protected handleResize(entries: ResizeObserverEntry[]): void {
     const { width: w1, height: h1 } = entries[0].contentRect;
     const { w: w0, h: h0 } = this.size;
     if (w0 === w1 && h0 === h1) return;

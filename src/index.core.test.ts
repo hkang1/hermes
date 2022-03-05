@@ -1,5 +1,5 @@
-import HermesError from './classes/HermesError';
-import { HERMES_CONFIG } from './defaults';
+import { HermesTester, HermesTesterDestroy, tryHermes } from 'test/utils';
+
 import * as t from './types';
 import { clone } from './utils/data';
 import * as tester from './utils/tester';
@@ -10,28 +10,7 @@ const ELEMENT_ID = 'chart';
 const DIMENSION_COUNT = 4;
 const DATA_COUNT = 50;
 
-class HermesTester extends Hermes {
-  public getData(): t.Data { return this.data; }
-  public getDataCount(): number { return this.dataCount; }
-}
-
-const tryHermes = (
-  target: HTMLElement | string,
-  dimensions: t.Dimension[],
-  config: t.RecursivePartial<t.Config> = {},
-  data: t.Data = {},
-): { error?: HermesError, hermes?: HermesTester } => {
-  let hermes: HermesTester | undefined;
-  let error: HermesError | undefined;
-  try {
-    hermes = new HermesTester(target, dimensions, config, data);
-  } catch (e) {
-    error = e as HermesError;
-  }
-  return { error, hermes };
-};
-
-describe('Hermes class', () => {
+describe('Hermes Core', () => {
   let element: HTMLDivElement;
   let dimensions: t.Dimension[];
   let data: t.Data;
@@ -51,27 +30,31 @@ describe('Hermes class', () => {
 
   describe('constructor', () => {
     it('should draw chart if all the inputs are valid', () => {
-      const { error, hermes } = tryHermes(element, dimensions, {}, data);
+      const { destroy, error, hermes } = tryHermes(element, dimensions, {}, data);
       expect(error).toBeUndefined();
       expect(hermes).toBeInstanceOf(Hermes);
+      destroy();
     });
 
     it('should create chart without data', () => {
-      const { error, hermes } = tryHermes(element, dimensions, {});
+      const { destroy, error, hermes } = tryHermes(element, dimensions, {});
       expect(error).toBeUndefined();
       expect(hermes).toBeInstanceOf(Hermes);
+      destroy();
     });
 
     it('should create chart with element id', () => {
-      const { error, hermes } = tryHermes(`#${ELEMENT_ID}`, dimensions, {});
+      const { destroy, error, hermes } = tryHermes(`#${ELEMENT_ID}`, dimensions, {});
       expect(error).toBeUndefined();
       expect(hermes).toBeInstanceOf(Hermes);
+      destroy();
     });
 
     it('should fail if target is invalid', () => {
-      const { error, hermes } = tryHermes('.nothing', dimensions, {});
+      const { destroy, error, hermes } = tryHermes('.nothing', dimensions, {});
       expect(error?.message).toMatch(/selector did not match anything/i);
       expect(hermes).toBeUndefined();
+      destroy();
     });
 
     it('should fail if unable to get canvas 2d context', () => {
@@ -90,9 +73,10 @@ describe('Hermes class', () => {
     });
 
     it('should fail if the dimension list is empty', () => {
-      const { error, hermes } = tryHermes(element, [], {});
+      const { destroy, error, hermes } = tryHermes(element, [], {});
       expect(error?.message).toMatch(/need at least one dimension defined/i);
       expect(hermes).toBeUndefined();
+      destroy();
     });
 
     it('should fail if data sizes are not uniform across dimensions', () => {
@@ -104,9 +88,10 @@ describe('Hermes class', () => {
         nonuniformData[dimKeys[0]].splice(1, 1);
       }
 
-      const { error, hermes } = tryHermes(element, dimensions, {}, nonuniformData);
+      const { destroy, error, hermes } = tryHermes(element, dimensions, {}, nonuniformData);
       expect(error?.message).toMatch(/data are not uniform in size/i);
       expect(hermes).toBeUndefined();
+      destroy();
     });
   });
 
@@ -120,11 +105,12 @@ describe('Hermes class', () => {
 
   describe('setData', () => {
     let hermes: HermesTester | undefined;
+    let destroy: HermesTesterDestroy;
     let newData: t.Data;
     let spyRedraw: jest.SpyInstance<void, []>;
 
     beforeEach(() => {
-      hermes = tryHermes(element, dimensions, {}, data).hermes;
+      ({ destroy, hermes } = tryHermes(element, dimensions, {}, data));
       newData = clone(data);
 
       // Add copy and add the first few data points back into the dimension data.
@@ -136,6 +122,10 @@ describe('Hermes class', () => {
       if (hermes) {
         spyRedraw = jest.spyOn(hermes, 'redraw');
       }
+    });
+
+    afterEach(() => {
+      destroy();
     });
 
     it('should set data', () => {
@@ -155,7 +145,7 @@ describe('Hermes class', () => {
 
   describe('destroy', () => {
     it('should clean up during destroy', () => {
-      const { hermes } = tryHermes(element, dimensions, {}, data);
+      const { destroy, hermes } = tryHermes(element, dimensions, {}, data);
       if (!hermes) throw new Error('Hermes not initialized.');
 
       // Should contain a canvas element.
@@ -163,7 +153,8 @@ describe('Hermes class', () => {
       expect(children.length).toBe(1);
       expect(children[0] instanceof HTMLCanvasElement).toBe(true);
 
-      hermes.destroy();
+      // Calls `hermes.destroy()`.
+      destroy();
 
       // Children list should be empty after `destroy`.
       expect([].slice.call(element.children).length).toBe(0);
