@@ -1,3 +1,5 @@
+import { getBoundingClientRect } from 'test/utils';
+
 import * as utils from './dom';
 
 describe('DOM utilities', () => {
@@ -52,7 +54,7 @@ describe('DOM utilities', () => {
     ];
 
     beforeAll(() => {
-      Element.prototype.getBoundingClientRect = () => BOUNDING_CLIENT_RECT;
+      Element.prototype.getBoundingClientRect = getBoundingClientRect(BOUNDING_CLIENT_RECT);
     });
 
     afterAll(() => {
