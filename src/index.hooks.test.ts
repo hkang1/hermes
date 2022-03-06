@@ -21,22 +21,17 @@ describe('Hermes Hooks', () => {
     expect(onReset).toHaveBeenCalled();
   });
 
-  it('should call `onResize` when chart element resizes', done => {
+  it('should call `onResize` when chart element resizes', () => {
     const onResize = jest.fn();
     const config: t.RecursivePartial<t.Config> = { hooks: { onResize }, resizeThrottleDelay: 0 };
     tryHermes(hermesTest.dimensions, config, hermesTest.data);
 
     expect(onResize).toHaveBeenCalled();
 
-    // hermes?.overrideResizeObserver(element);
     // TODO: ResizeObserver is not calling the resize handler via resize-observer-polyfill
-    // element.dispatchEvent(resizeEvent);
-    if (hermesTest.element) hermesTest.element.style.width = '100px';
+    hermesTest.hermes?.overrideResizeObserver();
+    if (hermesTest.element) hermesTest.element.dispatchEvent(resizeEvent);
 
-    setTimeout(() => {
-      console.log(document.body.innerHTML);
-      expect(onResize).toHaveBeenCalledTimes(2);
-      done();
-    }, 1000);
+    expect(onResize).toHaveBeenCalledTimes(2);
   });
 });

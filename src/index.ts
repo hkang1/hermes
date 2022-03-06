@@ -1058,7 +1058,8 @@ class Hermes {
   }
 
   protected handleResize(entries: ResizeObserverEntry[]): void {
-    console.log('handleResize', entries);
+    if (entries.length === 0) return;
+
     const { width: w1, height: h1 } = entries[0].contentRect;
     const { w: w0, h: h0 } = this.size;
     if (w0 === w1 && h0 === h1) return;

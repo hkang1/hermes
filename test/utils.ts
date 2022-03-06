@@ -24,12 +24,30 @@ const DEFAULT_DOM_RECT: DOMRect = {
 export class HermesTester extends Hermes {
   public getData(): t.Data { return this.data; }
   public getDataCount(): number { return this.dataCount; }
-  public overrideResizeObserver(element: HTMLElement): void {
-    console.log('hello');
-    this.resizeObserver = new ResizeObserver(() => {
-      console.log('Resized!');
+
+  /**
+   * The ResizeObserver doesn't trigger properly in jsdom.
+   * Instead we capture a resize event to fire off the handler.
+   */
+  public overrideResizeObserver(): void {
+    this.element.addEventListener('resize', () => {
+      this.handleResize([ {
+        borderBoxSize: [],
+        contentBoxSize: [],
+        contentRect: {
+          bottom: 0,
+          height: 500,
+          left: 0,
+          right: 0,
+          toJSON: jest.fn(),
+          top: 0,
+          width: 1000,
+          x: 0,
+          y: 0,
+        },
+        target: this.element,
+      } ]);
     });
-    this.resizeObserver.observe(element);
   }
 }
 
