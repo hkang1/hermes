@@ -1,77 +1,20 @@
-import Hermes from '../src';
+import resizeObserverEntry from 'test/mocks/resizeObserverEntry';
+
 import HermesError from '../src/classes/HermesError';
+import Hermes from '../src/index';
 import * as t from '../src/types';
-import * as canvas from '../src/utils/canvas';
 import * as tester from '../src/utils/tester';
 
 export const CLOSE_PRECISION = 8;
 
 export const ELEMENT_ID = 'hermes';
-export const DIMENSION_COUNT = 4;
+export const DIMENSION_COUNT = 10;
 export const DATA_COUNT = 50;
 
-export const DEFAULT_DIMENSIONS = tester.generateDimensions(DIMENSION_COUNT);
+export const DEFAULT_WIDTH = 1280;
+export const DEFAULT_HEIGHT = 500;
+export const DEFAULT_DIMENSIONS = tester.generateDimensions(DIMENSION_COUNT, false);
 export const DEFAULT_DATA = tester.generateData(DEFAULT_DIMENSIONS, DATA_COUNT);
-
-const DEFAULT_WIDTH = 1280;
-const DEFAULT_HEIGHT = 500;
-const DEFAULT_DOM_RECT: DOMRect = {
-  bottom: 0,
-  height: DEFAULT_HEIGHT,
-  left: 0,
-  right: 0,
-  toJSON: jest.fn(),
-  top: 0,
-  width: DEFAULT_WIDTH,
-  x: 0,
-  y: 0,
-};
-
-/**
- * Mock Related Functions
- */
-
-export const mockCanvasUtils = (): void => {
-  jest.mock('../src/utils/canvas', () => ({
-    __esModule: true,
-    ...canvas,
-    getTextBoundary: (
-      x: number,
-      y: number,
-      w: number,
-      h: number,
-      rad?: number,
-      offsetX = 0,
-      offsetY = 0,
-      padding = 0,
-    ): t.Boundary => {
-      console.log('getTextBoundary', x, y, w, h, rad);
-      return [
-        { x: 0, y: 0 },
-        { x: 0, y: 0 },
-        { x: 0, y: 0 },
-        { x: 0, y: 0 },
-      ];
-    },
-  }));
-};
-
-const mockResizeObserverEntry = (target: HTMLElement): ResizeObserverEntry => ({
-  borderBoxSize: [],
-  contentBoxSize: [],
-  contentRect: {
-    bottom: 0,
-    height: 500,
-    left: 0,
-    right: 0,
-    toJSON: jest.fn(),
-    top: 0,
-    width: 1000,
-    x: 0,
-    y: 0,
-  },
-  target,
-});
 
 /**
  * Test Wrapper Classes and Related Functions
@@ -97,7 +40,7 @@ export class HermesTester extends Hermes {
      * Instead we capture a resize event to fire off the handler.
      */
     this.element.addEventListener('resize', () => {
-      this.handleResize([ mockResizeObserverEntry(this.element) ]);
+      this.handleResize([ resizeObserverEntry(this.element) ]);
     });
   }
 
@@ -153,5 +96,3 @@ export const getContext = (): CanvasRenderingContext2D => {
 
   return ctx;
 };
-
-export const getBoundingClientRect = (defaultRect = DEFAULT_DOM_RECT) => (): DOMRect => defaultRect;
