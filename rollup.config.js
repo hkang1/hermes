@@ -3,7 +3,7 @@ import resolve from '@rollup/plugin-node-resolve';
 
 export default [
   {
-    input: './tsc-out/index.js',
+    input: './tsc-out/src/index.js',
     output: [
       {
         file: './dist/hermes.esm.js',
