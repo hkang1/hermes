@@ -1,0 +1,83 @@
+import { FONT } from '../../src/defaults';
+import { Size } from '../../src/types';
+
+const MOCKED_FONT = 'normal 11px sans-serif';
+const MOCKED_RESPONSE = [
+  { input: 'Dropout', output: { h: 10.18359375, w: 37.98974609375 } },
+  { input: 'Global Batch Size', output: { h: 8.3251953125, w: 86.42626953125 } },
+  { input: 'Layer Dense Size', output: { h: 10.44677734375, w: 85.5078125 } },
+  { input: 'Layer Free Decay', output: { h: 10.248046875, w: 86.45849609375 } },
+  { input: 'Layer Inverse', output: { h: 10.248046875, w: 65.32861328125 } },
+  { input: 'Learning Rate', output: { h: 10.3232421875, w: 67.78857421875 } },
+  { input: 'Learning Rate Decay', output: { h: 10.3232421875, w: 102.373046875 } },
+  { input: 'Layer Split Factor', output: { h: 10.44677734375, w: 85.23388671875 } },
+  { input: 'Metrics Base', output: { h: 8.1103515625, w: 62.283203125 } },
+  { input: 'Accuracy', output: { h: 10.248046875, w: 44.9453125 } },
+  { input: '0.2', output: { h: 7.927734375, w: 14.4912109375 } },
+  { input: '0.3', output: { h: 7.91162109375, w: 14.4697265625 } },
+  { input: '0.4', output: { h: 7.92236328125, w: 14.58251953125 } },
+  { input: '0.5', output: { h: 7.90087890625, w: 14.48046875 } },
+  { input: '0.6', output: { h: 7.93310546875, w: 14.51806640625 } },
+  { input: '0.7', output: { h: 7.90087890625, w: 14.58251953125 } },
+  { input: '0.8', output: { h: 7.93310546875, w: 14.4697265625 } },
+  { input: '5', output: { h: 7.755859375, w: 5.2958984375 } },
+  { input: '10', output: { h: 7.90087890625, w: 10.71533203125 } },
+  { input: '15', output: { h: 7.8525390625, w: 10.71533203125 } },
+  { input: '20', output: { h: 7.927734375, w: 11.42431640625 } },
+  { input: '25', output: { h: 7.91162109375, w: 11.42431640625 } },
+  { input: '30', output: { h: 7.91162109375, w: 11.5048828125 } },
+  { input: '64', output: { h: 7.92236328125, w: 11.45654296875 } },
+  { input: '32', output: { h: 7.927734375, w: 11.515625 } },
+  { input: '16', output: { h: 7.92236328125, w: 10.7529296875 } },
+  { input: '8', output: { h: 7.93310546875, w: 5.28515625 } },
+  { input: '4', output: { h: 7.712890625, w: 5.47314453125 } },
+  { input: '1.0e-3', output: { h: 7.91162109375, w: 29.6591796875 } },
+  { input: '0.01', output: { h: 7.90087890625, w: 18.841796875 } },
+  { input: '0.1', output: { h: 7.90087890625, w: 12.72412109375 } },
+  { input: 'false', output: { h: 8.22314453125, w: 22.60693359375 } },
+  { input: 'true', output: { h: 7.5625, w: 18.35302734375 } },
+  { input: '1.0e-4', output: { h: 7.92236328125, w: 29.77197265625 } },
+  { input: '1.0e-3', output: { h: 7.91162109375, w: 29.6591796875 } },
+  { input: '0.01', output: { h: 7.90087890625, w: 18.841796875 } },
+  { input: '0.1', output: { h: 7.90087890625, w: 12.72412109375 } },
+  { input: '1.0e-6', output: { h: 7.93310546875, w: 29.70751953125 } },
+  { input: '1.0e-5', output: { h: 7.90087890625, w: 29.669921875 } },
+  { input: '1.0e-4', output: { h: 7.92236328125, w: 29.77197265625 } },
+  { input: '1.0e-3', output: { h: 7.91162109375, w: 29.6591796875 } },
+  { input: '1', output: { h: 7.6591796875, w: 2.84130859375 } },
+  { input: '2', output: { h: 7.71826171875, w: 5.3173828125 } },
+  { input: '4', output: { h: 7.712890625, w: 5.47314453125 } },
+  { input: '8', output: { h: 7.93310546875, w: 5.28515625 } },
+  { input: '16', output: { h: 7.92236328125, w: 10.7529296875 } },
+  { input: '0.5', output: { h: 7.90087890625, w: 14.48046875 } },
+  { input: '0.55', output: { h: 7.90087890625, w: 20.59814453125 } },
+  { input: '0.6', output: { h: 7.93310546875, w: 14.51806640625 } },
+  { input: '0.65', output: { h: 7.93310546875, w: 20.59814453125 } },
+  { input: '0.7', output: { h: 7.90087890625, w: 14.58251953125 } },
+  { input: '0.75', output: { h: 7.90087890625, w: 20.59814453125 } },
+  { input: '0.8', output: { h: 7.93310546875, w: 14.4697265625 } },
+  { input: '0.85', output: { h: 7.93310546875, w: 20.59814453125 } },
+  { input: '0.9', output: { h: 7.9169921875, w: 14.42138671875 } },
+  { input: '*0.55121', output: { h: 8.099609375, w: 41.400390625 } },
+  { input: '0.6', output: { h: 7.93310546875, w: 14.51806640625 } },
+  { input: '0.65', output: { h: 7.93310546875, w: 20.59814453125 } },
+  { input: '0.7', output: { h: 7.90087890625, w: 14.58251953125 } },
+  { input: '0.75', output: { h: 7.90087890625, w: 20.59814453125 } },
+  { input: '0.8', output: { h: 7.93310546875, w: 14.4697265625 } },
+  { input: '0.85', output: { h: 7.93310546875, w: 20.59814453125 } },
+  { input: '0.9', output: { h: 7.9169921875, w: 14.42138671875 } },
+  { input: '0.95', output: { h: 7.9169921875, w: 20.59814453125 } },
+  { input: '*0.982702', output: { h: 8.1103515625, w: 49.28515625 } },
+];
+const DEFAULT_MOCKED_SIZE = { h: 7.9169921875, w: 20.59814453125 };
+
+const getTextSize = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  font: string = FONT,
+): Size => {
+  const response = MOCKED_RESPONSE.find(mock => mock.input === text && MOCKED_FONT === font);
+  return response?.output ?? DEFAULT_MOCKED_SIZE;
+};
+
+export default getTextSize;

@@ -1,4 +1,4 @@
-import { getBoundingClientRect } from 'test/utils';
+import getBoundingClientRect from 'test/mocks/getBoundingClientRect';
 
 import * as utils from './dom';
 
