@@ -16,6 +16,8 @@ export const DEFAULT_HEIGHT = 500;
 export const DEFAULT_DIMENSIONS = tester.generateDimensions(DIMENSION_COUNT, false);
 export const DEFAULT_DATA = tester.generateData(DEFAULT_DIMENSIONS, DATA_COUNT);
 
+export const DEFAULT_MOUSE_INIT = { bubbles: true, cancelable: true, view: window };
+
 /**
  * Test Wrapper Classes and Related Functions
  */
@@ -83,6 +85,15 @@ export const hermesTeardown = (setup: HermesSetup): void => {
 /**
  * Helper Functions
  */
+
+export const dispatchMouseEvent = (
+  type: 'dblclick' | 'mousedown' | 'mousemove' | 'mouseup',
+  target?: HTMLElement,
+  options?: MouseEventInit,
+): void => {
+  const event = new MouseEvent(type, { ...DEFAULT_MOUSE_INIT, ...(options || {}) });
+  target?.dispatchEvent(event);
+};
 
 export const getContext = (): CanvasRenderingContext2D => {
   const canvas = document.createElement('canvas');

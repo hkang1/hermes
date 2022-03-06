@@ -1,59 +1,63 @@
-import { DEFAULT_DATA, DEFAULT_DIMENSIONS, hermesSetup, hermesTeardown } from 'test/utils';
+import getTextSize from 'test/mocks/getTextSize';
+import * as utils from 'test/utils';
 
 import * as t from './types';
+import * as canvas from './utils/canvas';
 
-const EVENT_INIT = { bubbles: true, cancelable: true, view: window };
+const EVENT_OPTIONS = { bubbles: true, cancelable: true, view: window };
 
 describe('Hermes Hooks', () => {
-  const dblClickEvent = new MouseEvent('dblclick', EVENT_INIT);
-  const resizeEvent = new Event('resize', EVENT_INIT);
+  const resizeEvent = new Event('resize', EVENT_OPTIONS);
+
+  beforeAll(() => {
+    jest.spyOn(canvas, 'getTextSize').mockImplementation(getTextSize);
+  });
+
+  afterAll(() => {
+    jest.resetAllMocks();
+  });
 
   it('should call `onDimensionMove` when dimensions get dragged', () => {
     const onDimensionMove = jest.fn();
     const config: t.RecursivePartial<t.Config> = { hooks: { onDimensionMove } };
-    const setup = hermesSetup(DEFAULT_DIMENSIONS, config, DEFAULT_DATA);
+    const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
-    setup.element?.dispatchEvent(new MouseEvent('mousedown', {
-      ...EVENT_INIT,
-      clientX: 953,
-      clientY: 38,
-    }));
-    setup.element?.dispatchEvent(new MouseEvent('mousemove', {
-      ...EVENT_INIT,
-      clientX: 578,
-      clientY: 38,
-    }));
-    setup.element?.dispatchEvent(new MouseEvent('mouseup', {
-      ...EVENT_INIT,
-      clientX: 578,
-      clientY: 38,
-    }));
+    expect(onDimensionMove).not.toHaveBeenCalled();
+
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 953, clientY: 38 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 578, clientY: 38 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 578, clientY: 38 });
+
     expect(onDimensionMove).toHaveBeenCalled();
 
-    hermesTeardown(setup);
+    utils.hermesTeardown(setup);
   });
 
   it('should call `onReset` when double clicking chart', () => {
     const onReset = jest.fn();
     const config: t.RecursivePartial<t.Config> = { hooks: { onReset } };
-    const setup = hermesSetup(DEFAULT_DIMENSIONS, config, DEFAULT_DATA);
+    const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
     expect(onReset).not.toHaveBeenCalled();
-    setup.element?.dispatchEvent(dblClickEvent);
+
+    utils.dispatchMouseEvent('dblclick', setup.element);
+
     expect(onReset).toHaveBeenCalled();
 
-    hermesTeardown(setup);
+    utils.hermesTeardown(setup);
   });
 
   it('should call `onResize` when chart element resizes', () => {
     const onResize = jest.fn();
     const config: t.RecursivePartial<t.Config> = { hooks: { onResize }, resizeThrottleDelay: 0 };
-    const setup = hermesSetup(DEFAULT_DIMENSIONS, config, DEFAULT_DATA);
+    const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
     expect(onResize).toHaveBeenCalled();
+
     setup.element?.dispatchEvent(resizeEvent);
+
     expect(onResize).toHaveBeenCalledTimes(2);
 
-    hermesTeardown(setup);
+    utils.hermesTeardown(setup);
   });
 });
