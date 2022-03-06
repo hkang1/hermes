@@ -1,109 +1,140 @@
 import Hermes from '../src';
 import HermesError from '../src/classes/HermesError';
 import * as t from '../src/types';
+import * as canvas from '../src/utils/canvas';
 import * as tester from '../src/utils/tester';
 
 export const CLOSE_PRECISION = 8;
-
-const DEFAULT_DOM_RECT: DOMRect = {
-  bottom: 0,
-  height: 768,
-  left: 0,
-  right: 0,
-  toJSON: jest.fn(),
-  top: 0,
-  width: 1024,
-  x: 0,
-  y: 0,
-};
-
-/**
- * Test Wrapper Classes and Related Functions
- */
-
-export class HermesTester extends Hermes {
-  public getData(): t.Data { return this.data; }
-  public getDataCount(): number { return this.dataCount; }
-
-  /**
-   * The ResizeObserver doesn't trigger properly in jsdom.
-   * Instead we capture a resize event to fire off the handler.
-   */
-  public overrideResizeObserver(): void {
-    this.element.addEventListener('resize', () => {
-      this.handleResize([ {
-        borderBoxSize: [],
-        contentBoxSize: [],
-        contentRect: {
-          bottom: 0,
-          height: 500,
-          left: 0,
-          right: 0,
-          toJSON: jest.fn(),
-          top: 0,
-          width: 1000,
-          x: 0,
-          y: 0,
-        },
-        target: this.element,
-      } ]);
-    });
-  }
-}
-
-export const tryHermes = (
-  dimensions: t.Dimension[],
-  config: t.RecursivePartial<t.Config> = {},
-  data: t.Data = {},
-): void => {
-  try {
-    if (!hermesTest.element) throw new HermesError('Missing hermes chart element.');
-    hermesTest.hermes = new HermesTester(hermesTest.element, dimensions, config, data);
-  } catch (e) {
-    hermesTest.error = e as HermesError;
-  }
-};
-
-/**
- * Jest Helper Functions
- */
 
 export const ELEMENT_ID = 'hermes';
 export const DIMENSION_COUNT = 4;
 export const DATA_COUNT = 50;
 
-export const hermesSetup = (): void => {
-  const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+export const DEFAULT_DIMENSIONS = tester.generateDimensions(DIMENSION_COUNT);
+export const DEFAULT_DATA = tester.generateData(DEFAULT_DIMENSIONS, DATA_COUNT);
 
-  beforeAll(() => {
-    const element = document.createElement('div');
-    element.id = ELEMENT_ID;
-    element.style.width = '1024px';
-    element.style.height = '768px';
+const DEFAULT_WIDTH = 1280;
+const DEFAULT_HEIGHT = 500;
+const DEFAULT_DOM_RECT: DOMRect = {
+  bottom: 0,
+  height: DEFAULT_HEIGHT,
+  left: 0,
+  right: 0,
+  toJSON: jest.fn(),
+  top: 0,
+  width: DEFAULT_WIDTH,
+  x: 0,
+  y: 0,
+};
 
-    hermesTest.element = element;
-    hermesTest.dimensions = tester.generateDimensions(DIMENSION_COUNT);
-    hermesTest.data = tester.generateData(hermesTest.dimensions, DATA_COUNT);
+/**
+ * Mock Related Functions
+ */
 
-    document.body.appendChild(element);
+export const mockCanvasUtils = (): void => {
+  jest.mock('../src/utils/canvas', () => ({
+    __esModule: true,
+    ...canvas,
+    getTextBoundary: (
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      rad?: number,
+      offsetX = 0,
+      offsetY = 0,
+      padding = 0,
+    ): t.Boundary => {
+      console.log('getTextBoundary', x, y, w, h, rad);
+      return [
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+      ];
+    },
+  }));
+};
 
-    Element.prototype.getBoundingClientRect = getBoundingClientRect();
-  });
+const mockResizeObserverEntry = (target: HTMLElement): ResizeObserverEntry => ({
+  borderBoxSize: [],
+  contentBoxSize: [],
+  contentRect: {
+    bottom: 0,
+    height: 500,
+    left: 0,
+    right: 0,
+    toJSON: jest.fn(),
+    top: 0,
+    width: 1000,
+    x: 0,
+    y: 0,
+  },
+  target,
+});
 
-  afterAll(() => {
-    if (hermesTest.element) {
-      document.body.removeChild(hermesTest.element);
-      hermesTest.element = undefined;
-    }
+/**
+ * Test Wrapper Classes and Related Functions
+ */
 
-    Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
-  });
+export interface HermesSetup {
+  element?: HTMLElement;
+  error?: HermesError;
+  hermes?: HermesTester;
+}
 
-  afterEach(() => {
-    hermesTest.hermes?.destroy();
-    hermesTest.hermes = undefined;
-    hermesTest.error = undefined;
-  });
+export class HermesTester extends Hermes {
+  constructor(
+    target: HTMLElement | string,
+    dimensions: t.Dimension[],
+    config: t.RecursivePartial<t.Config> = {},
+    data: t.Data = {},
+  ) {
+    super(target, dimensions, config, data);
+
+    /**
+     * The ResizeObserver doesn't trigger properly in jsdom.
+     * Instead we capture a resize event to fire off the handler.
+     */
+    this.element.addEventListener('resize', () => {
+      this.handleResize([ mockResizeObserverEntry(this.element) ]);
+    });
+  }
+
+  public getData(): t.Data { return this.data; }
+  public getDataCount(): number { return this.dataCount; }
+}
+
+export const hermesSetup = (
+  dimensions: t.Dimension[],
+  config: t.RecursivePartial<t.Config> = {},
+  data: t.Data = {},
+): HermesSetup => {
+  const setup: HermesSetup = { element: undefined, error: undefined, hermes: undefined };
+
+  try {
+    setup.element = document.createElement('div');
+    setup.element.id = ELEMENT_ID;
+    setup.element.style.width = `${DEFAULT_WIDTH}px`;
+    setup.element.style.height = `${DEFAULT_HEIGHT}px`;
+    document.body.appendChild(setup.element);
+
+    if (!setup.element) throw new HermesError('Unable to create chart HTML element.');
+
+    setup.hermes = new HermesTester(setup.element, dimensions, config, data);
+  } catch (e) {
+    setup.error = e as HermesError;
+  }
+
+  return setup;
+};
+
+export const hermesTeardown = (setup: HermesSetup): void => {
+  setup.hermes?.destroy();
+
+  if (setup.element && document.body.contains(setup.element)) {
+    document.body.removeChild(setup.element);
+  }
 };
 
 /**

@@ -1,4 +1,4 @@
-import { hermesSetup, tryHermes } from 'test/utils';
+import { DEFAULT_DATA, DEFAULT_DIMENSIONS, hermesSetup, hermesTeardown } from 'test/utils';
 
 import * as t from './types';
 
@@ -8,30 +8,52 @@ describe('Hermes Hooks', () => {
   const dblClickEvent = new MouseEvent('dblclick', EVENT_INIT);
   const resizeEvent = new Event('resize', EVENT_INIT);
 
-  hermesSetup();
+  it('should call `onDimensionMove` when dimensions get dragged', () => {
+    const onDimensionMove = jest.fn();
+    const config: t.RecursivePartial<t.Config> = { hooks: { onDimensionMove } };
+    const setup = hermesSetup(DEFAULT_DIMENSIONS, config, DEFAULT_DATA);
+
+    setup.element?.dispatchEvent(new MouseEvent('mousedown', {
+      ...EVENT_INIT,
+      clientX: 953,
+      clientY: 38,
+    }));
+    setup.element?.dispatchEvent(new MouseEvent('mousemove', {
+      ...EVENT_INIT,
+      clientX: 578,
+      clientY: 38,
+    }));
+    setup.element?.dispatchEvent(new MouseEvent('mouseup', {
+      ...EVENT_INIT,
+      clientX: 578,
+      clientY: 38,
+    }));
+    expect(onDimensionMove).toHaveBeenCalled();
+
+    hermesTeardown(setup);
+  });
 
   it('should call `onReset` when double clicking chart', () => {
     const onReset = jest.fn();
     const config: t.RecursivePartial<t.Config> = { hooks: { onReset } };
-    tryHermes(hermesTest.dimensions, config, hermesTest.data);
+    const setup = hermesSetup(DEFAULT_DIMENSIONS, config, DEFAULT_DATA);
 
     expect(onReset).not.toHaveBeenCalled();
-
-    hermesTest.element?.dispatchEvent(dblClickEvent);
+    setup.element?.dispatchEvent(dblClickEvent);
     expect(onReset).toHaveBeenCalled();
+
+    hermesTeardown(setup);
   });
 
   it('should call `onResize` when chart element resizes', () => {
     const onResize = jest.fn();
     const config: t.RecursivePartial<t.Config> = { hooks: { onResize }, resizeThrottleDelay: 0 };
-    tryHermes(hermesTest.dimensions, config, hermesTest.data);
+    const setup = hermesSetup(DEFAULT_DIMENSIONS, config, DEFAULT_DATA);
 
     expect(onResize).toHaveBeenCalled();
-
-    // TODO: ResizeObserver is not calling the resize handler via resize-observer-polyfill
-    hermesTest.hermes?.overrideResizeObserver();
-    if (hermesTest.element) hermesTest.element.dispatchEvent(resizeEvent);
-
+    setup.element?.dispatchEvent(resizeEvent);
     expect(onResize).toHaveBeenCalledTimes(2);
+
+    hermesTeardown(setup);
   });
 });
