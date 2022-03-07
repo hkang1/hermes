@@ -61,6 +61,10 @@ describe('CategoricalScale', () => {
       });
     });
 
+    it('should return 0 for percent for `valueToPercent` with an invalid value', () => {
+      expect(scale.valueToPercent(true)).toBe(0);
+    });
+
     it('should calculate log values properly', () => {
       scale.testCalculate();
       expect(scale.min).toBe(0);

@@ -133,6 +133,10 @@ describe('color utilities', () => {
           expect(utils.str2rgba(color.hex)).toStrictEqual(color.rgb);
         });
       });
+
+      it('should return return a black color if an invalid string is provides', () => {
+        expect(utils.str2rgba('junk')).toStrictEqual({ a: 1, b: 0, g: 0, r: 0 });
+      });
     });
   });
 
