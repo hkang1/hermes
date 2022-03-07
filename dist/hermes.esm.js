@@ -1260,7 +1260,6 @@ const generateData = (dimensions, count, random = true) => {
                         ? randomItem(dimension.categories)
                         : idempotentItem(dimension.categories, index);
                 }
-                return INVALID_VALUE;
             }
             else if (dimension.type === DimensionType.Linear) {
                 const range = dimensionRanges[dimension.key];
@@ -1269,7 +1268,6 @@ const generateData = (dimensions, count, random = true) => {
                         ? randomNumber(range[1], range[0])
                         : idempotentNumber(range[1], range[0], count, index);
                 }
-                return INVALID_VALUE;
             }
             else if (dimension.type === DimensionType.Logarithmic) {
                 const range = dimensionRanges[dimension.key];
@@ -1278,7 +1276,6 @@ const generateData = (dimensions, count, random = true) => {
                         ? randomLogNumber(dimension.logBase, range[1], range[0])
                         : idempotentLogNumber(dimension.logBase, range[1], range[0], count, index);
                 }
-                return INVALID_VALUE;
             }
             return INVALID_VALUE;
         });

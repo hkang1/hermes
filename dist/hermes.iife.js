@@ -1263,7 +1263,6 @@ var Hermes = (function (exports) {
                           ? randomItem(dimension.categories)
                           : idempotentItem(dimension.categories, index);
                   }
-                  return INVALID_VALUE;
               }
               else if (dimension.type === DimensionType.Linear) {
                   const range = dimensionRanges[dimension.key];
@@ -1272,7 +1271,6 @@ var Hermes = (function (exports) {
                           ? randomNumber(range[1], range[0])
                           : idempotentNumber(range[1], range[0], count, index);
                   }
-                  return INVALID_VALUE;
               }
               else if (dimension.type === DimensionType.Logarithmic) {
                   const range = dimensionRanges[dimension.key];
@@ -1281,7 +1279,6 @@ var Hermes = (function (exports) {
                           ? randomLogNumber(dimension.logBase, range[1], range[0])
                           : idempotentLogNumber(dimension.logBase, range[1], range[0], count, index);
                   }
-                  return INVALID_VALUE;
               }
               return INVALID_VALUE;
           });

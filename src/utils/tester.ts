@@ -116,7 +116,6 @@ export const generateData = (dimensions: t.Dimension[], count: number, random = 
             ? dataUtils.randomItem(dimension.categories)
             : dataUtils.idempotentItem(dimension.categories, index);
         }
-        return DEFAULT.INVALID_VALUE;
       } else if (dimension.type === t.DimensionType.Linear) {
         const range = dimensionRanges[dimension.key];
         if (range) {
@@ -124,7 +123,6 @@ export const generateData = (dimensions: t.Dimension[], count: number, random = 
             ? dataUtils.randomNumber(range[1], range[0])
             : dataUtils.idempotentNumber(range[1], range[0], count, index);
         }
-        return DEFAULT.INVALID_VALUE;
       } else if (dimension.type === t.DimensionType.Logarithmic) {
         const range = dimensionRanges[dimension.key];
         if (range && dimension.logBase) {
@@ -132,7 +130,6 @@ export const generateData = (dimensions: t.Dimension[], count: number, random = 
             ? dataUtils.randomLogNumber(dimension.logBase, range[1], range[0])
             : dataUtils.idempotentLogNumber(dimension.logBase, range[1], range[0], count, index);
         }
-        return DEFAULT.INVALID_VALUE;
       }
       return DEFAULT.INVALID_VALUE;
     });
