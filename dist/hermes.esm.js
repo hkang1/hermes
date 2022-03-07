@@ -1091,7 +1091,7 @@ const str2rgba = (str) => {
             rgba.a = parseFloat(result[5]);
         return rgba;
     }
-    return { a: 0.0, b: 0, g: 0, r: 0 };
+    return { a: 1.0, b: 0, g: 0, r: 0 };
 };
 
 const getElement = (target) => {
