@@ -54,9 +54,14 @@ class Hermes {
     // Set config early as setSize references it early.
     this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
-    // Create a canvas and append it to the target element.
-    this.canvas = document.createElement('canvas');
-    this.element.appendChild(this.canvas);
+    // Create a canvas and append it to the target element. Only if there isn't an existing one.
+    const canvases = this.element.querySelectorAll('canvas');
+    if (canvases.length === 0) {
+      this.canvas = document.createElement('canvas');
+      this.element.appendChild(this.canvas);
+    } else {
+      this.canvas = canvases[0];
+    }
 
     // Setup initial canvas size.
     const rect = this.element.getBoundingClientRect();
@@ -130,7 +135,13 @@ class Hermes {
   }
 
   public destroy(): void {
+    // Remove observers and listeners.
     this.resizeObserver?.unobserve(this.element);
+    this.element.removeEventListener('dblclick', this.handleDoubleClick.bind(this));
+    this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this));
+    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
+
     if (this.canvas && this.element.contains(this.canvas)) {
       this.element.removeChild(this.canvas);
     }
@@ -1046,7 +1057,9 @@ class Hermes {
     });
   }
 
-  protected handleResize(entries: ResizeObserverEntry[]) {
+  protected handleResize(entries: ResizeObserverEntry[]): void {
+    if (entries.length === 0) return;
+
     const { width: w1, height: h1 } = entries[0].contentRect;
     const { w: w0, h: h0 } = this.size;
     if (w0 === w1 && h0 === h1) return;

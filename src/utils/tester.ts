@@ -25,11 +25,13 @@ export const dimensionRanges: Record<t.RecordKey, t.Range> = {
 
 export const dimensionSamples: t.Dimension[] = [
   {
+    dataOnEdge: false,
     key: 'dropout',
     label: 'Dropout',
     type: t.DimensionType.Linear,
   },
   {
+    dataOnEdge: false,
     key: 'global-batch-size',
     label: 'Global Batch Size',
     type: t.DimensionType.Linear,
@@ -42,6 +44,7 @@ export const dimensionSamples: t.Dimension[] = [
     type: t.DimensionType.Categorical,
   },
   {
+    dataOnEdge: false,
     key: 'layer-free-decay',
     label: 'Layer Free Decay',
     logBase: 10,
@@ -55,29 +58,34 @@ export const dimensionSamples: t.Dimension[] = [
     type: t.DimensionType.Categorical,
   },
   {
+    dataOnEdge: false,
     key: 'learning-rate',
     label: 'Learning Rate',
     logBase: 10,
     type: t.DimensionType.Logarithmic,
   },
   {
+    dataOnEdge: false,
     key: 'learning-rate-decay',
     label: 'Learning Rate Decay',
     logBase: 10,
     type: t.DimensionType.Logarithmic,
   },
   {
+    dataOnEdge: false,
     key: 'layer-split-factor',
     label: 'Layer Split Factor',
     logBase: 2,
     type: t.DimensionType.Logarithmic,
   },
   {
+    dataOnEdge: false,
     key: 'metrics-base',
     label: 'Metrics Base',
     type: t.DimensionType.Linear,
   },
   {
+    dataOnEdge: false,
     key: 'n-filters',
     label: 'N Filters',
     type: t.DimensionType.Linear,

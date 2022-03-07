@@ -1,3 +1,5 @@
+import getBoundingClientRect from 'test/mocks/getBoundingClientRect';
+
 import * as utils from './dom';
 
 describe('DOM utilities', () => {
@@ -5,11 +7,26 @@ describe('DOM utilities', () => {
   const div = document.createElement('div');
   div.id = DIV_ID;
 
+  const BOUNDING_CLIENT_RECT = {
+    bottom: 0,
+    height: 400,
+    left: 0,
+    right: 0,
+    toJSON: jest.fn(),
+    top: 0,
+    width: 200,
+    x: 50,
+    y: 100,
+  };
+  const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+
   beforeAll(() => {
+    Element.prototype.getBoundingClientRect = getBoundingClientRect(BOUNDING_CLIENT_RECT);
     document.body.appendChild(div);
   });
 
   afterAll(() => {
+    Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
     document.body.removeChild(div);
   });
 
@@ -24,18 +41,6 @@ describe('DOM utilities', () => {
   });
 
   describe('getMousePoint', () => {
-    const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
-    const BOUNDING_CLIENT_RECT = {
-      bottom: 0,
-      height: 400,
-      left: 0,
-      right: 0,
-      toJSON: jest.fn(),
-      top: 0,
-      width: 200,
-      x: 50,
-      y: 100,
-    };
     const tests = [
       {
         input: new window.MouseEvent('mousedown', { clientX: 0, clientY: 0 }),
@@ -50,14 +55,6 @@ describe('DOM utilities', () => {
         output: { x: 50, y: 100 },
       },
     ];
-
-    beforeAll(() => {
-      Element.prototype.getBoundingClientRect = () => BOUNDING_CLIENT_RECT;
-    });
-
-    afterAll(() => {
-      Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
-    });
 
     it('should get mouse point relative to element position', () => {
       tests.forEach(test => {
