@@ -1,6 +1,6 @@
 /** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 module.exports = {
-  collectCoverageFrom: [ './src/**' ],
+  collectCoverageFrom: [ './src/**/*.ts' ],
   coverageDirectory: 'test-results',
   globals: { 'ts-jest': { tsconfig: 'tsconfig.test.json' } },
   moduleDirectories: [ 'node_modules', 'src' ],
