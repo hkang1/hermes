@@ -5,9 +5,11 @@ import { clone } from './data';
 import * as utils from './tester';
 
 describe('library testing utility functions', () => {
+  const dimCount = 3;
+  const dataCount = 10;
+  const idempotentCount = 5;
+
   describe('generateData', () => {
-    const dimCount = 3;
-    const dataCount = 10;
     const dimensions = utils.generateDimensions(dimCount, false);
 
     it('should generate data', () => {
@@ -16,6 +18,13 @@ describe('library testing utility functions', () => {
 
       Object.values(data).forEach(dimData => {
         expect(dimData.length).toBe(dataCount);
+      });
+    });
+
+    it('should generate idempotent data', () => {
+      const initialData = utils.generateData(dimensions, dataCount, false);
+      new Array(idempotentCount).fill(null).forEach(() => {
+        expect(utils.generateData(dimensions, dataCount, false)).toStrictEqual(initialData);
       });
     });
 
@@ -45,8 +54,7 @@ describe('library testing utility functions', () => {
     });
 
     it('should generate dimensions with count', () => {
-      const count = 3;
-      const dimensions = utils.generateDimensions(count);
+      const dimensions = utils.generateDimensions(dimCount);
 
       for (let i = 0; i < dimensions.length - 1; i++) {
         const dimension = dimensions[i];
@@ -56,15 +64,11 @@ describe('library testing utility functions', () => {
       expect(utils.metricDimensionSamples.includes(dimensions[dimensions.length - 1])).toBe(true);
     });
 
-    it('should generate dimensions sequentially and not randomly', () => {
-      const count = 3;
-      const dimensions = utils.generateDimensions(count, false);
-
-      for (let i = 0; i < dimensions.length - 1; i++) {
-        expect(dimensions[i]).toStrictEqual(utils.dimensionSamples[i]);
-      }
-
-      expect(dimensions[count - 1]).toStrictEqual(utils.metricDimensionSamples[0]);
+    it('should generate idempotent dimensions', () => {
+      const initialDimensions = utils.generateDimensions(dimCount, false);
+      new Array(idempotentCount).fill(null).forEach(() => {
+        expect(utils.generateDimensions(dimCount, false)).toStrictEqual(initialDimensions);
+      });
     });
   });
 });

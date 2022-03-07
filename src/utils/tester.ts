@@ -1,10 +1,10 @@
 import * as DEFAULT from '../defaults';
 import * as t from '../types';
 
-import { randomItem, randomLogNumber, randomNumber } from './data';
+import * as dataUtils from './data';
 
 export interface Tester {
-  generateData: (dimensions: t.Dimension[], count: number) => t.Data;
+  generateData: (dimensions: t.Dimension[], count: number, random?: boolean) => t.Data;
   generateDimensions: (dimCount?: number, random?: boolean) => t.Dimension[];
 }
 
@@ -94,29 +94,45 @@ export const dimensionSamples: t.Dimension[] = [
 
 export const metricDimensionSamples: t.Dimension[] = [
   {
+    dataOnEdge: false,
     key: 'accuracy',
     label: 'Accuracy',
     type: t.DimensionType.Linear,
   },
   {
+    dataOnEdge: false,
     key: 'loss',
     label: 'Loss',
     type: t.DimensionType.Linear,
   },
 ];
 
-export const generateData = (dimensions: t.Dimension[], count: number): t.Data => {
+export const generateData = (dimensions: t.Dimension[], count: number, random = true): t.Data => {
   return dimensions.reduce((acc, dimension) => {
-    acc[dimension.key] = new Array(count).fill(null).map(() => {
+    acc[dimension.key] = new Array(count).fill(null).map((_, index) => {
       if (dimension.type === t.DimensionType.Categorical) {
-        return dimension.categories ? randomItem(dimension.categories) : DEFAULT.INVALID_VALUE;
+        if (dimension.categories) {
+          return random
+            ? dataUtils.randomItem(dimension.categories)
+            : dataUtils.idempotentItem(dimension.categories, index);
+        }
+        return DEFAULT.INVALID_VALUE;
       } else if (dimension.type === t.DimensionType.Linear) {
         const range = dimensionRanges[dimension.key];
-        return range ? randomNumber(range[1], range[0]) : DEFAULT.INVALID_VALUE;
+        if (range) {
+          return random
+            ? dataUtils.randomNumber(range[1], range[0])
+            : dataUtils.idempotentNumber(range[1], range[0], count, index);
+        }
+        return DEFAULT.INVALID_VALUE;
       } else if (dimension.type === t.DimensionType.Logarithmic) {
         const range = dimensionRanges[dimension.key];
-        return range && dimension.logBase
-          ? randomLogNumber(dimension.logBase, range[1], range[0]) : DEFAULT.INVALID_VALUE;
+        if (range && dimension.logBase) {
+          return random
+            ? dataUtils.randomLogNumber(dimension.logBase, range[1], range[0])
+            : dataUtils.idempotentLogNumber(dimension.logBase, range[1], range[0], count, index);
+        }
+        return DEFAULT.INVALID_VALUE;
       }
       return DEFAULT.INVALID_VALUE;
     });
@@ -130,12 +146,15 @@ export const generateDimensions = (
 ): t.Dimension[] => {
   // Generate the dimensions based on config.
   const dims = new Array(dimCount - 1).fill(null).map((_, index) => {
-    if (random) return randomItem(dimensionSamples);
-    return dimensionSamples[index % dimensionSamples.length];
+    return random
+      ? dataUtils.randomItem(dimensionSamples)
+      : dataUtils.idempotentItem(dimensionSamples, index);
   });
 
   // Add a metric dimension to the end.
-  const metricDimension = random ? randomItem(metricDimensionSamples) : metricDimensionSamples[0];
+  const metricDimension = random
+    ? dataUtils.randomItem(metricDimensionSamples)
+    : dataUtils.idempotentItem(metricDimensionSamples, 0);
   dims.push(metricDimension);
 
   return dims;
