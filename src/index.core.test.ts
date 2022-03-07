@@ -16,13 +16,11 @@ describe('Hermes Core', () => {
 
     it('should draw chart if all the inputs are valid', () => {
       setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, {}, utils.DEFAULT_DATA);
-      expect(setup.error).toBeUndefined();
       expect(setup.hermes).toBeInstanceOf(Hermes);
     });
 
     it('should create chart without config and data', () => {
       setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS);
-      expect(setup.error).toBeUndefined();
       expect(setup.hermes).toBeInstanceOf(Hermes);
     });
 
@@ -69,9 +67,9 @@ describe('Hermes Core', () => {
       // Force `canvas.getContext` to return `null`.
       HTMLCanvasElement.prototype.getContext = () => null;
 
-      const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS);
+      const setup = utils.hermesSetupWithError(utils.DEFAULT_DIMENSIONS);
       expect(setup.error?.message).toMatch(/unable to get context/i);
-      expect(setup.hermes).toBeUndefined();
+
       utils.hermesTeardown(setup);
 
       // Restore `canvas.getContext`.
@@ -79,7 +77,7 @@ describe('Hermes Core', () => {
     });
 
     it('should fail if the dimension list is empty', () => {
-      const setup = utils.hermesSetup([]);
+      const setup = utils.hermesSetupWithError([]);
       expect(setup.error?.message).toMatch(/need at least one dimension defined/i);
       expect(setup.hermes).toBeUndefined();
       utils.hermesTeardown(setup);
@@ -94,7 +92,7 @@ describe('Hermes Core', () => {
         nonuniformData[dimKeys[0]].splice(1, 1);
       }
 
-      const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, {}, nonuniformData);
+      const setup = utils.hermesSetupWithError(utils.DEFAULT_DIMENSIONS, {}, nonuniformData);
       expect(setup.error?.message).toMatch(/data are not uniform in size/i);
       expect(setup.hermes).toBeUndefined();
       utils.hermesTeardown(setup);
