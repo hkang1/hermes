@@ -1156,11 +1156,13 @@ const dimensionRanges = {
 };
 const dimensionSamples = [
     {
+        dataOnEdge: false,
         key: 'dropout',
         label: 'Dropout',
         type: DimensionType.Linear,
     },
     {
+        dataOnEdge: false,
         key: 'global-batch-size',
         label: 'Global Batch Size',
         type: DimensionType.Linear,
@@ -1173,6 +1175,7 @@ const dimensionSamples = [
         type: DimensionType.Categorical,
     },
     {
+        dataOnEdge: false,
         key: 'layer-free-decay',
         label: 'Layer Free Decay',
         logBase: 10,
@@ -1186,29 +1189,34 @@ const dimensionSamples = [
         type: DimensionType.Categorical,
     },
     {
+        dataOnEdge: false,
         key: 'learning-rate',
         label: 'Learning Rate',
         logBase: 10,
         type: DimensionType.Logarithmic,
     },
     {
+        dataOnEdge: false,
         key: 'learning-rate-decay',
         label: 'Learning Rate Decay',
         logBase: 10,
         type: DimensionType.Logarithmic,
     },
     {
+        dataOnEdge: false,
         key: 'layer-split-factor',
         label: 'Layer Split Factor',
         logBase: 2,
         type: DimensionType.Logarithmic,
     },
     {
+        dataOnEdge: false,
         key: 'metrics-base',
         label: 'Metrics Base',
         type: DimensionType.Linear,
     },
     {
+        dataOnEdge: false,
         key: 'n-filters',
         label: 'N Filters',
         type: DimensionType.Linear,
@@ -1282,9 +1290,15 @@ class Hermes {
         this.element = element;
         // Set config early as setSize references it early.
         this.config = customDeepmerge(HERMES_CONFIG, config);
-        // Create a canvas and append it to the target element.
-        this.canvas = document.createElement('canvas');
-        this.element.appendChild(this.canvas);
+        // Create a canvas and append it to the target element. Only if there isn't an existing one.
+        const canvases = this.element.querySelectorAll('canvas');
+        if (canvases.length === 0) {
+            this.canvas = document.createElement('canvas');
+            this.element.appendChild(this.canvas);
+        }
+        else {
+            this.canvas = canvases[0];
+        }
         // Setup initial canvas size.
         const rect = this.element.getBoundingClientRect();
         this.setSize(rect.width, rect.height);
@@ -1345,7 +1359,12 @@ class Hermes {
     }
     destroy() {
         var _a;
+        // Remove observers and listeners.
         (_a = this.resizeObserver) === null || _a === void 0 ? void 0 : _a.unobserve(this.element);
+        this.element.removeEventListener('dblclick', this.handleDoubleClick.bind(this));
+        this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this));
+        window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+        window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
         if (this.canvas && this.element.contains(this.canvas)) {
             this.element.removeChild(this.canvas);
         }
@@ -2149,6 +2168,8 @@ class Hermes {
         });
     }
     handleResize(entries) {
+        if (entries.length === 0)
+            return;
         const { width: w1, height: h1 } = entries[0].contentRect;
         const { w: w0, h: h0 } = this.size;
         if (w0 === w1 && h0 === h1)
