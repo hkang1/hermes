@@ -30,6 +30,35 @@ export const getDataRange = (data: unknown[]): Range => {
   }, [ Infinity, -Infinity ]);
 };
 
+export const idempotentItem = <T = unknown>(list: T[], index: number): T => {
+  return list[index % list.length];
+};
+
+export const idempotentLogNumber = (
+  base: number,
+  max: number,
+  min: number,
+  count: number,
+  index: number,
+): number => {
+  const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
+  const denominator = log === Math.log ? Math.log(base) : 1;
+  const maxExp = log(max) / denominator;
+  const minExp = log(min) / denominator;
+  return base ** idempotentNumber(maxExp, minExp, count, index);
+};
+
+export const idempotentNumber = (
+  max: number,
+  min: number,
+  count: number,
+  index: number,
+): number => {
+  const adjustedCount = count > 1 ? count - 1 : 1;
+  const inc = (max - min) / adjustedCount;
+  return (index % (adjustedCount + 1)) * inc + min;
+};
+
 export const randomInt = (max: number, min = 0): number => {
   return Math.floor(Math.random() * (max - min)) + min;
 };
