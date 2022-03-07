@@ -258,6 +258,21 @@ var Hermes = (function (exports) {
           return acc;
       }, [Infinity, -Infinity]);
   };
+  const idempotentItem = (list, index) => {
+      return list[index % list.length];
+  };
+  const idempotentLogNumber = (base, max, min, count, index) => {
+      const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
+      const denominator = log === Math.log ? Math.log(base) : 1;
+      const maxExp = log(max) / denominator;
+      const minExp = log(min) / denominator;
+      return base ** idempotentNumber(maxExp, minExp, count, index);
+  };
+  const idempotentNumber = (max, min, count, index) => {
+      const adjustedCount = count > 1 ? count - 1 : 1;
+      const inc = (max - min) / adjustedCount;
+      return (index % (adjustedCount + 1)) * inc + min;
+  };
   const randomInt = (max, min = 0) => {
       return Math.floor(Math.random() * (max - min)) + min;
   };
@@ -1227,30 +1242,43 @@ var Hermes = (function (exports) {
   ];
   const metricDimensionSamples = [
       {
+          dataOnEdge: false,
           key: 'accuracy',
           label: 'Accuracy',
           type: DimensionType.Linear,
       },
       {
+          dataOnEdge: false,
           key: 'loss',
           label: 'Loss',
           type: DimensionType.Linear,
       },
   ];
-  const generateData = (dimensions, count) => {
+  const generateData = (dimensions, count, random = true) => {
       return dimensions.reduce((acc, dimension) => {
-          acc[dimension.key] = new Array(count).fill(null).map(() => {
+          acc[dimension.key] = new Array(count).fill(null).map((_, index) => {
               if (dimension.type === DimensionType.Categorical) {
-                  return dimension.categories ? randomItem(dimension.categories) : INVALID_VALUE;
+                  if (dimension.categories) {
+                      return random
+                          ? randomItem(dimension.categories)
+                          : idempotentItem(dimension.categories, index);
+                  }
               }
               else if (dimension.type === DimensionType.Linear) {
                   const range = dimensionRanges[dimension.key];
-                  return range ? randomNumber(range[1], range[0]) : INVALID_VALUE;
+                  if (range) {
+                      return random
+                          ? randomNumber(range[1], range[0])
+                          : idempotentNumber(range[1], range[0], count, index);
+                  }
               }
               else if (dimension.type === DimensionType.Logarithmic) {
                   const range = dimensionRanges[dimension.key];
-                  return range && dimension.logBase
-                      ? randomLogNumber(dimension.logBase, range[1], range[0]) : INVALID_VALUE;
+                  if (range && dimension.logBase) {
+                      return random
+                          ? randomLogNumber(dimension.logBase, range[1], range[0])
+                          : idempotentLogNumber(dimension.logBase, range[1], range[0], count, index);
+                  }
               }
               return INVALID_VALUE;
           });
@@ -1260,12 +1288,14 @@ var Hermes = (function (exports) {
   const generateDimensions = (dimCount = DEFAULT_DIMENSION_COUNT, random = true) => {
       // Generate the dimensions based on config.
       const dims = new Array(dimCount - 1).fill(null).map((_, index) => {
-          if (random)
-              return randomItem(dimensionSamples);
-          return dimensionSamples[index % dimensionSamples.length];
+          return random
+              ? randomItem(dimensionSamples)
+              : idempotentItem(dimensionSamples, index);
       });
       // Add a metric dimension to the end.
-      const metricDimension = random ? randomItem(metricDimensionSamples) : metricDimensionSamples[0];
+      const metricDimension = random
+          ? randomItem(metricDimensionSamples)
+          : idempotentItem(metricDimensionSamples, 0);
       dims.push(metricDimension);
       return dims;
   };

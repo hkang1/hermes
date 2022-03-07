@@ -213,7 +213,7 @@ declare namespace Hermes {
   }
 
   export interface Tester {
-    generateData: (dimensions: Dimension[], count: number) => Data;
+    generateData: (dimensions: Dimension[], count: number, random?: boolean) => Data;
     generateDimensions: (dimCount?: number, random?: boolean) => Dimension[];
   }
 

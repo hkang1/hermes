@@ -4,23 +4,19 @@ import * as utils from 'test/utils';
 import * as t from './types';
 import * as canvas from './utils/canvas';
 
-const EVENT_OPTIONS = { bubbles: true, cancelable: true, view: window };
-
 describe('Hermes Hooks', () => {
-  const resizeEvent = new Event('resize', EVENT_OPTIONS);
+  let spyGetTextSize: jest.SpyInstance<t.Size, [
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    font?: string | undefined
+  ]>;
 
   beforeAll(() => {
-    jest.spyOn(canvas, 'getTextSize').mockImplementation(getTextSize);
+    spyGetTextSize = jest.spyOn(canvas, 'getTextSize').mockImplementation(getTextSize);
   });
 
   afterAll(() => {
-    /**
-     * Performing `jest.resetAllMocks()` in between `describe()` and `it()` blocks
-     * interferes with `jest-canvas-mock`, such that future `getContext()` calls
-     * fails to return a context.
-     * https://github.com/hustcc/jest-canvas-mock/issues/72#issuecomment-1021724961
-     */
-    jest.resetAllMocks();
+    spyGetTextSize.mockClear();
   });
 
   it('should call `onDimensionMove` when dimensions get dragged', () => {
@@ -166,7 +162,7 @@ describe('Hermes Hooks', () => {
 
     expect(onResize).toHaveBeenCalled();
 
-    setup.element?.dispatchEvent(resizeEvent);
+    utils.dispatchResizeEvent(setup.element);
 
     expect(onResize).toHaveBeenCalledTimes(2);
 

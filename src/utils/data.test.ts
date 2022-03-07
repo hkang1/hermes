@@ -94,6 +94,92 @@ describe('data utilities', () => {
     });
   });
 
+  describe('idempotentItem', () => {
+    it('should return the same item from a list everytime given an index', () => {
+      const list = [ 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vw', 'xyz' ];
+
+      expect(utils.idempotentItem(list, 0)).toBe('abc');
+      expect(utils.idempotentItem(list, 0)).toBe('abc');
+      expect(utils.idempotentItem(list, 8)).toBe('xyz');
+      expect(utils.idempotentItem(list, 8)).toBe('xyz');
+    });
+
+    it('should wrap around the list if the index is greater than the list size', () => {
+      const list = [ 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vw', 'xyz' ];
+
+      expect(utils.idempotentItem(list, list.length)).toBe('abc');
+      expect(utils.idempotentItem(list, list.length)).toBe('abc');
+      expect(utils.idempotentItem(list, 3 * list.length)).toBe('abc');
+      expect(utils.idempotentItem(list, 3 * list.length)).toBe('abc');
+    });
+  });
+
+  describe('idempotentLogNumber', () => {
+    it('should return the same number given the same range, count and index', () => {
+      const [ logBase, min, max, count ] = [ 2, 4, 16, 3 ];
+
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 0)).toBe(4);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 0)).toBe(4);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 1)).toBe(8);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 1)).toBe(8);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 2)).toBe(16);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 2)).toBe(16);
+    });
+
+    it('should wrap around the range if the index is greater than count', () => {
+      const [ logBase, min, max, count ] = [ 2, 4, 16, 3 ];
+
+      expect(utils.idempotentLogNumber(logBase, max, min, count, count)).toBe(4);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, count)).toBe(4);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 3 * count)).toBe(4);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 3 * count)).toBe(4);
+    });
+
+    it('should return min and max even with invalid count', () => {
+      const [ logBase, min, max, count ] = [ 2, 4, 16, 0 ];
+
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 0)).toBe(4);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 0)).toBe(4);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 1)).toBe(16);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 1)).toBe(16);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 2)).toBe(4);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 2)).toBe(4);
+    });
+  });
+
+  describe('idempotentNumber', () => {
+    it('should return the same number given the same range, count and index', () => {
+      const [ min, max, count ] = [ 50, 100, 3 ];
+
+      expect(utils.idempotentNumber(max, min, count, 0)).toBe(50);
+      expect(utils.idempotentNumber(max, min, count, 0)).toBe(50);
+      expect(utils.idempotentNumber(max, min, count, 1)).toBe(75);
+      expect(utils.idempotentNumber(max, min, count, 1)).toBe(75);
+      expect(utils.idempotentNumber(max, min, count, 2)).toBe(100);
+      expect(utils.idempotentNumber(max, min, count, 2)).toBe(100);
+    });
+
+    it('should wrap around the range if the index is greater than count', () => {
+      const [ min, max, count ] = [ 50, 100, 3 ];
+
+      expect(utils.idempotentNumber(max, min, count, count)).toBe(50);
+      expect(utils.idempotentNumber(max, min, count, count)).toBe(50);
+      expect(utils.idempotentNumber(max, min, count, 3 * count)).toBe(50);
+      expect(utils.idempotentNumber(max, min, count, 3 * count)).toBe(50);
+    });
+
+    it('should return min and max even with invalid count', () => {
+      const [ min, max, count ] = [ 50, 100, 0 ];
+
+      expect(utils.idempotentNumber(max, min, count, 0)).toBe(50);
+      expect(utils.idempotentNumber(max, min, count, 0)).toBe(50);
+      expect(utils.idempotentNumber(max, min, count, 1)).toBe(100);
+      expect(utils.idempotentNumber(max, min, count, 1)).toBe(100);
+      expect(utils.idempotentNumber(max, min, count, 2)).toBe(50);
+      expect(utils.idempotentNumber(max, min, count, 2)).toBe(50);
+    });
+  });
+
   describe('getDataRange', () => {
     it('should get a range from a list of data', () => {
       const data = [ -123, 123, 0, 48 ];

@@ -16,13 +16,18 @@ export const DEFAULT_HEIGHT = 500;
 export const DEFAULT_DIMENSIONS = tester.generateDimensions(DIMENSION_COUNT, false);
 export const DEFAULT_DATA = tester.generateData(DEFAULT_DIMENSIONS, DATA_COUNT);
 
-export const DEFAULT_MOUSE_INIT = { bubbles: true, cancelable: true, view: window };
+export const DEFAULT_EVENT_INIT = { bubbles: true, cancelable: true, view: window };
 
 /**
  * Test Wrapper Classes and Related Functions
  */
 
 export interface HermesSetup {
+  element: HTMLElement;
+  hermes: HermesTester;
+}
+
+export interface HermesSetupWithError {
   element?: HTMLElement;
   error?: HermesError;
   hermes?: HermesTester;
@@ -46,8 +51,10 @@ export class HermesTester extends Hermes {
     });
   }
 
+  public getCtx(): CanvasRenderingContext2D { return this.ctx; }
   public getData(): t.Data { return this.data; }
   public getDataCount(): number { return this.dataCount; }
+  public drawDebugOutline(): void { super.drawDebugOutline(); }
 }
 
 export const hermesSetup = (
@@ -55,18 +62,34 @@ export const hermesSetup = (
   config: t.RecursivePartial<t.Config> = {},
   data: t.Data = {},
 ): HermesSetup => {
-  const setup: HermesSetup = { element: undefined, error: undefined, hermes: undefined };
+  const setup: HermesSetupWithError = {};
+
+  setup.element = document.createElement('div');
+  setup.element.id = ELEMENT_ID;
+  setup.element.style.width = `${DEFAULT_WIDTH}px`;
+  setup.element.style.height = `${DEFAULT_HEIGHT}px`;
+  if (!setup.element) throw new HermesError('Unable to create chart HTML element.');
+
+  document.body.appendChild(setup.element);
+
+  setup.hermes = new HermesTester(setup.element, dimensions, config, data);
+  if (!setup.hermes) {
+    hermesTeardown(setup);
+    throw new Error('Unable to initialize Hermes.');
+  }
+
+  return setup as HermesSetup;
+};
+
+export const hermesSetupWithError = (
+  dimensions: t.Dimension[],
+  config: t.RecursivePartial<t.Config> = {},
+  data: t.Data = {},
+): HermesSetupWithError => {
+  let setup: HermesSetupWithError = {};
 
   try {
-    setup.element = document.createElement('div');
-    setup.element.id = ELEMENT_ID;
-    setup.element.style.width = `${DEFAULT_WIDTH}px`;
-    setup.element.style.height = `${DEFAULT_HEIGHT}px`;
-    document.body.appendChild(setup.element);
-
-    if (!setup.element) throw new HermesError('Unable to create chart HTML element.');
-
-    setup.hermes = new HermesTester(setup.element, dimensions, config, data);
+    setup = hermesSetup(dimensions, config, data);
   } catch (e) {
     setup.error = e as HermesError;
   }
@@ -74,7 +97,7 @@ export const hermesSetup = (
   return setup;
 };
 
-export const hermesTeardown = (setup: HermesSetup): void => {
+export const hermesTeardown = (setup: HermesSetupWithError): void => {
   setup.hermes?.destroy();
 
   if (setup.element && document.body.contains(setup.element)) {
@@ -91,7 +114,15 @@ export const dispatchMouseEvent = (
   target?: HTMLElement,
   options?: MouseEventInit,
 ): void => {
-  const event = new MouseEvent(type, { ...DEFAULT_MOUSE_INIT, ...(options || {}) });
+  const event = new MouseEvent(type, { ...DEFAULT_EVENT_INIT, ...(options || {}) });
+  target?.dispatchEvent(event);
+};
+
+export const dispatchResizeEvent = (
+  target?: HTMLElement,
+  options?: EventInit,
+): void => {
+  const event = new Event('resize', { ...DEFAULT_EVENT_INIT, ...(options || {}) });
   target?.dispatchEvent(event);
 };
 
