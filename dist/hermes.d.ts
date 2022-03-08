@@ -39,6 +39,9 @@ declare class Hermes {
     data?: Hermes.Data,
   );
   static getTester(): Hermes.Tester;
+  static validateData(data: Hermes.Data): { count: number, valid: boolean };
+  static validateDimension(dimension: Hermes.Dimension): { message: string, valid: boolean };
+  static validateDimensions(dimensions: Hermes.Dimension[]): { message: string, valid: boolean };
   setData(data: Hermes.Data, redraw?: boolean): void;
   setSize(w: number, h: number): void;
   redraw(): void;
