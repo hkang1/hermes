@@ -179,24 +179,12 @@ declare namespace Hermes {
     type: EDimensionType;
   }
 
-  export interface LabelMoveOptions extends LabelOptions {
-    boundaryPadding: number;
-  }
-
-  export interface Filter {
-    p0: number;         // starting axis % position relative to axisStart.(x|y).
-    p1: number;         // ending axis % position relative to axisStart.(x|y).
-    value0: Primitive;  // starting axis value.
-    value1: Primitive;  // ending axis value.
-  }
-
-  export interface FilterActive extends Filter {
-    startP0?: number;   // Initial p0 value before an existing filter is shifted via dragging.
-    startP1?: number;   // Initial p1 value before an existing filter is shifted via dragging.
-  }
-
   export interface FilterOptions extends StyleRect {
     width: number;
+  }
+
+  export interface LabelMoveOptions extends LabelOptions {
+    boundaryPadding: number;
   }
 
   export interface LabelOptions extends StyleText {
@@ -226,6 +214,8 @@ declare namespace Hermes {
    */
 
   export type Data = Record<DimensionKey, Primitive[]>;
+
+  export type Filter = Range<Primitive>;
 
   export interface Filters {
     [key: DimensionKey]: Filter[];
