@@ -16,6 +16,7 @@ abstract class NiceScale {
   public max: number;
   public min: number;
   public range = 0;
+  public reverse = DEFAULT_REVERSE;
   public tickLabels: string[] = [];
   public tickPos: number[] = [];
   public ticks: number[] = [];
@@ -24,7 +25,6 @@ abstract class NiceScale {
   protected axisLength = 1;
   protected maxTicks = 1;
   protected dataOnEdge = DEFAULT_DATA_ON_EDGE;
-  protected reverse = DEFAULT_REVERSE;
 
   /**
    * Instantiates a new instance of the NiceScale class.
