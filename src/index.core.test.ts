@@ -107,6 +107,58 @@ describe('Hermes Core', () => {
     });
   });
 
+  describe('validateData', () => {
+    it('should validate data to ensure all dimensions data have the same count', () => {
+      const validData = { abc: [ 0, 1, 2 ], def: [ 0, 1, 2 ] };
+      const check0 = utils.HermesTester.validateData(validData);
+      expect(check0.count).toBe(3);
+      expect(check0.valid).toBeTrue();
+
+      const invalidData = { abc: [ 0, 1 ], def: [ 0, 1, 2 ] };
+      const check1 = utils.HermesTester.validateData(invalidData);
+      expect(check1.valid).toBeFalse();
+    });
+  });
+
+  describe('dimension validation', () => {
+    const validLinearDimension = { key: 'a', label: 'a', type: t.DimensionType.Linear };
+    const invalidCategoricalDimension = { key: 'b', label: 'b', type: t.DimensionType.Categorical };
+    const invalidLogarithmicDimension = { key: 'c', label: 'c', type: t.DimensionType.Logarithmic };
+
+    describe('validateDimension', () => {
+      it('should validate dimension config', () => {
+        const check0 = utils.HermesTester.validateDimension(validLinearDimension);
+        expect(check0.valid).toBeTrue();
+
+        const check1 = utils.HermesTester.validateDimension(invalidCategoricalDimension);
+        expect(check1.valid).toBeFalse();
+
+        const check2 = utils.HermesTester.validateDimension(invalidLogarithmicDimension);
+        expect(check2.valid).toBeFalse();
+      });
+    });
+
+    describe('validateDimensions', () => {
+      it('should validate dimensions config', () => {
+        const validDimensions = [
+          validLinearDimension,
+          validLinearDimension,
+          validLinearDimension,
+        ];
+        const check0 = utils.HermesTester.validateDimensions(validDimensions);
+        expect(check0.valid).toBeTrue();
+
+        const invalidDimensions = [
+          validLinearDimension,
+          invalidCategoricalDimension,
+          invalidLogarithmicDimension,
+        ];
+        const check1 = utils.HermesTester.validateDimensions(invalidDimensions);
+        expect(check1.valid).toBeFalse();
+      });
+    });
+  });
+
   describe('setData', () => {
     let newData: t.Data;
     let spyRedraw: jest.SpyInstance<void, []>;
