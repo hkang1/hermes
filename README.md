@@ -58,7 +58,7 @@ The `container` can be an HTML element passed in directly or a query selector th
 
 ## Hermes Data Format
 
-The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L228), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
+The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L216), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
 
 ```
 type Data = Record<DimensionKey, Primitive[]>;
@@ -159,7 +159,7 @@ The dimension axes are drawn vertically, the axis tick values increase from the 
 
 ## Hermes Config and Styles
 
-The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L234-L272) provides a more up-to-date definition of the config.
+The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L224-L261) provides a more up-to-date definition of the config.
 
 ```
 interface Config {
@@ -215,7 +215,7 @@ The number of milliseconds to throttle the resizing. Resizing performs new calcu
 ### Hooks
 
 #### onDimensionMove
-#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L230-L232)) => void;
+#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L220-L222)) => void;
 
 Option to provide a hook that gets called for any filter changes. The callback is specifically called on the `mouseup` event. The entire updated filters object is returned.
 
