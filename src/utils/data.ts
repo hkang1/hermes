@@ -1,4 +1,4 @@
-import { Range } from '../types';
+import { Primitive, Range } from '../types';
 
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
@@ -18,6 +18,12 @@ export const clone = <T = unknown>(data: T): T => {
 
 export const capDataRange = (data: number, range: Range): number => {
   return Math.min(range[1], Math.max(range[0], data));
+};
+
+export const comparePrimitive = (a: Primitive, b: Primitive): number => {
+  if (isString(a) && isString(b)) return a.localeCompare(b);
+  if (a === b) return 0;
+  return a > b ? 1 : -1;
 };
 
 export const getDataRange = (data: unknown[]): Range => {

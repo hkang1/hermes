@@ -247,6 +247,13 @@ var Hermes = (function (exports) {
   const capDataRange = (data, range) => {
       return Math.min(range[1], Math.max(range[0], data));
   };
+  const comparePrimitive = (a, b) => {
+      if (isString(a) && isString(b))
+          return a.localeCompare(b);
+      if (a === b)
+          return 0;
+      return a > b ? 1 : -1;
+  };
   const getDataRange = (data) => {
       return data.reduce((acc, x) => {
           if (isNumber(x)) {
@@ -1158,6 +1165,19 @@ var Hermes = (function (exports) {
       }
       return newFilter;
   };
+  const translateFilter = (filter) => {
+      return comparePrimitive(filter.value0, filter.value1) === 1
+          ? [filter.value1, filter.value0]
+          : [filter.value0, filter.value1];
+  };
+  const translateFilters = (filters) => {
+      return Object.keys(filters).reduce((acc, key) => {
+          acc[key] = filters[key]
+              .map(filter => translateFilter(filter))
+              .sort((a, b) => comparePrimitive(a[0], b[0]));
+          return acc;
+      }, {});
+  };
 
   const DEFAULT_DIMENSION_COUNT = 10;
   const dimensionRanges = {
@@ -1937,7 +1957,7 @@ var Hermes = (function (exports) {
               const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
               if (removeIndex !== -1) {
                   // Make hook callback.
-                  (_d = (_c = this.config.hooks).onFilterRemove) === null || _d === void 0 ? void 0 : _d.call(_c, filters[removeIndex]);
+                  (_d = (_c = this.config.hooks).onFilterRemove) === null || _d === void 0 ? void 0 : _d.call(_c, translateFilter(filters[removeIndex]));
                   // Remove filter.
                   filters.splice(removeIndex, 1);
               }
@@ -1952,14 +1972,14 @@ var Hermes = (function (exports) {
               // Make corresponding filter hook callback.
               switch (_ixsa.type) {
                   case ActionType.FilterCreate:
-                      (_f = (_e = this.config.hooks).onFilterCreate) === null || _f === void 0 ? void 0 : _f.call(_e, _ixf.active);
+                      (_f = (_e = this.config.hooks).onFilterCreate) === null || _f === void 0 ? void 0 : _f.call(_e, translateFilter(_ixf.active));
                       break;
                   case ActionType.FilterMove:
-                      (_h = (_g = this.config.hooks).onFilterMove) === null || _h === void 0 ? void 0 : _h.call(_g, _ixf.active);
+                      (_h = (_g = this.config.hooks).onFilterMove) === null || _h === void 0 ? void 0 : _h.call(_g, translateFilter(_ixf.active));
                       break;
                   case ActionType.FilterResizeAfter:
                   case ActionType.FilterResizeBefore:
-                      (_k = (_j = this.config.hooks).onFilterResize) === null || _k === void 0 ? void 0 : _k.call(_j, _ixf.active);
+                      (_k = (_j = this.config.hooks).onFilterResize) === null || _k === void 0 ? void 0 : _k.call(_j, translateFilter(_ixf.active));
                       break;
               }
           }
@@ -1968,17 +1988,18 @@ var Hermes = (function (exports) {
           _ixf.key = undefined;
           this.cleanUpFilters();
           // Make hook call back with all of the filter changes.
-          (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, this.filters);
+          (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, translateFilters(this.filters));
       }
       cleanUpFilters() {
           Object.keys(this.filters).forEach(key => {
               const filters = this.filters[key] || [];
               for (let i = 0; i < filters.length; i++) {
-                  // Remove invalid filters or filters that are sized 0.
+                  // Remove invalid filters.
                   if (isFilterInvalid(filters[i])) {
                       filters[i] = { ...FILTER };
                       continue;
                   }
+                  // Remove filters that are sized 0.
                   for (let j = i + 1; j < filters.length; j++) {
                       if (isFilterEmpty(filters[i]) || isFilterEmpty(filters[j]))
                           continue;

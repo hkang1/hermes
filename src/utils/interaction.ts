@@ -1,7 +1,7 @@
 import { FILTER, INVALID_RECT } from '../defaults';
 import * as t from '../types';
 
-import { clone } from './data';
+import { clone, comparePrimitive, isString } from './data';
 import { shiftRect } from './math';
 
 export const DIMENSION_SWAP_THRESHOLD = 30;
@@ -16,21 +16,27 @@ export const getDragBound = (index: number, ix: t.IX, bound: t.Rect): t.Rect => 
   return isLabelDrag ? shiftRect(dragBound, offset) : bound;
 };
 
-export const isFilterEmpty = (filter: t.Filter): boolean => {
+export const isFilterEmpty = (filter: t.InternalFilter): boolean => {
   return isNaN(filter.p0) && isNaN(filter.p1);
 };
 
 // TODO: possibly invalid logic
-export const isFilterInvalid = (filter: t.Filter): boolean => {
+export const isFilterInvalid = (filter: t.InternalFilter): boolean => {
   return filter.p0 >= filter.p1;
 };
 
-export const isIntersectingFilters = (filter0: t.Filter, filter1: t.Filter): boolean => {
+export const isIntersectingFilters = (
+  filter0: t.InternalFilter,
+  filter1: t.InternalFilter,
+): boolean => {
   return filter0.p0 <= filter1.p1 && filter1.p0 <= filter0.p1;
 };
 
-export const mergeFilters = (filter0: t.Filter, filter1: t.Filter): t.Filter => {
-  const newFilter: t.Filter = clone(FILTER);
+export const mergeFilters = (
+  filter0: t.InternalFilter,
+  filter1: t.InternalFilter,
+): t.InternalFilter => {
+  const newFilter: t.InternalFilter = clone(FILTER);
   if (filter0.p0 < filter1.p0) {
     newFilter.p0 = filter0.p0;
     newFilter.value0 = filter0.value0;
@@ -46,4 +52,19 @@ export const mergeFilters = (filter0: t.Filter, filter1: t.Filter): t.Filter => 
     newFilter.value1 = filter1.value1;
   }
   return newFilter;
+};
+
+export const translateFilter = (filter: t.InternalFilter): t.Filter => {
+  return comparePrimitive(filter.value0, filter.value1) === 1
+    ? [ filter.value1, filter.value0 ]
+    : [ filter.value0, filter.value1 ];
+};
+
+export const translateFilters = (filters: t.InternalFilters): t.Filters => {
+  return Object.keys(filters).reduce((acc, key) => {
+    acc[key] = filters[key]
+      .map(filter => translateFilter(filter))
+      .sort((a: t.Filter, b: t.Filter) => comparePrimitive(a[0], b[0]));
+    return acc;
+  }, {} as t.Filters);
 };

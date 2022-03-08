@@ -38,7 +38,7 @@ class Hermes {
   protected config: t.Config;
   protected size: t.Size = { h: 0, w: 0 };
   protected ix: t.IX = clone(DEFAULT.IX);
-  protected filters: t.Filters = {};
+  protected filters: t.InternalFilters = {};
   protected _?: t.Internal = undefined;
 
   constructor(
@@ -753,7 +753,7 @@ class Hermes {
       const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
       if (removeIndex !== -1) {
         // Make hook callback.
-        this.config.hooks.onFilterRemove?.(filters[removeIndex]);
+        this.config.hooks.onFilterRemove?.(ix.translateFilter(filters[removeIndex]));
 
         // Remove filter.
         filters.splice(removeIndex, 1);
@@ -769,14 +769,14 @@ class Hermes {
       // Make corresponding filter hook callback.
       switch (_ixsa.type) {
         case t.ActionType.FilterCreate:
-          this.config.hooks.onFilterCreate?.(_ixf.active);
+          this.config.hooks.onFilterCreate?.(ix.translateFilter(_ixf.active));
           break;
         case t.ActionType.FilterMove:
-          this.config.hooks.onFilterMove?.(_ixf.active);
+          this.config.hooks.onFilterMove?.(ix.translateFilter(_ixf.active));
           break;
         case t.ActionType.FilterResizeAfter:
         case t.ActionType.FilterResizeBefore:
-          this.config.hooks.onFilterResize?.(_ixf.active);
+          this.config.hooks.onFilterResize?.(ix.translateFilter(_ixf.active));
           break;
       }
     }
@@ -788,18 +788,20 @@ class Hermes {
     this.cleanUpFilters();
 
     // Make hook call back with all of the filter changes.
-    this.config.hooks?.onFilterChange?.(this.filters);
+    this.config.hooks?.onFilterChange?.(ix.translateFilters(this.filters));
   }
 
   protected cleanUpFilters(): void {
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
       for (let i = 0; i < filters.length; i++) {
-        // Remove invalid filters or filters that are sized 0.
+        // Remove invalid filters.
         if (ix.isFilterInvalid(filters[i])) {
           filters[i] = { ...DEFAULT.FILTER };
           continue;
         }
+
+        // Remove filters that are sized 0.
         for (let j = i + 1; j < filters.length; j++) {
           if (ix.isFilterEmpty(filters[i]) || ix.isFilterEmpty(filters[j])) continue;
           /**

@@ -133,24 +133,28 @@ export interface Dimension {
   type: EDimensionType;
 }
 
-export interface LabelMoveOptions extends LabelOptions {
-  boundaryPadding: number;
+export interface FilterOptions extends StyleRect {
+  width: number;
 }
 
-export interface Filter {
+export interface InternalFilter {
   p0: number;         // starting axis % position relative to axisStart.(x|y).
   p1: number;         // ending axis % position relative to axisStart.(x|y).
   value0: Primitive;  // starting axis value.
   value1: Primitive;  // ending axis value.
 }
 
-export interface FilterActive extends Filter {
+export interface InternalFilterActive extends InternalFilter {
   startP0?: number;   // Initial p0 value before an existing filter is shifted via dragging.
   startP1?: number;   // Initial p1 value before an existing filter is shifted via dragging.
 }
 
-export interface FilterOptions extends StyleRect {
-  width: number;
+export interface InternalFilters {
+  [key: DimensionKey]: InternalFilter[];
+}
+
+export interface LabelMoveOptions extends LabelOptions {
+  boundaryPadding: number;
 }
 
 export interface LabelOptions extends StyleText {
@@ -224,7 +228,7 @@ export interface IX {
     offset: number;
   };
   filters: {
-    active: FilterActive;
+    active: InternalFilterActive;
     key?: DimensionKey;
   };
   shared: {
@@ -232,6 +236,8 @@ export interface IX {
     focus?: Focus;
   };
 }
+
+export type Filter = Range<Primitive>;
 
 export interface Filters {
   [key: DimensionKey]: Filter[];

@@ -1,5 +1,5 @@
 import * as DEFAULT from '../defaults';
-import { ActionType, IX } from '../types';
+import * as t from '../types';
 
 import { clone } from './data';
 import * as utils from './interaction';
@@ -9,7 +9,7 @@ describe('interaction utilities', () => {
     const dimIndex = 2;
     const bound = { h: 100, w: 100, x: 0, y: 0 };
     const boundOffset = { x: 50, y: 100 };
-    let ix: IX;
+    let ix: t.IX;
 
     beforeEach(() => {
       ix = clone(DEFAULT.IX);
@@ -19,12 +19,12 @@ describe('interaction utilities', () => {
     });
 
     it('should get dragging boundary if applicable', () => {
-      ix.shared.action.type = ActionType.LabelMove;
+      ix.shared.action.type = t.ActionType.LabelMove;
       expect(utils.getDragBound(dimIndex, ix, bound)).toStrictEqual({ ...bound, ...boundOffset });
     });
 
     it('should get default bound if not applicable', () => {
-      ix.shared.action.type = ActionType.None;
+      ix.shared.action.type = t.ActionType.None;
       expect(utils.getDragBound(dimIndex, ix, bound)).toStrictEqual(bound);
     });
   });
@@ -90,6 +90,31 @@ describe('interaction utilities', () => {
       const expected = { p0: 0.2, p1: 0.8, value0: 20, value1: 80 };
       expect(utils.mergeFilters(filter0, filter1)).toStrictEqual(expected);
       expect(utils.mergeFilters(filter1, filter0)).toStrictEqual(expected);
+    });
+  });
+
+  describe('translate internal filters for filter hook calls', () => {
+    const tests: { input: t.InternalFilter, output: t.Filter }[] = [
+      { input: { p0: 0.5, p1: 0.2, value0: 5, value1: 2 }, output: [ 2, 5 ] },
+      { input: { p0: 0.1, p1: 0.2, value0: 1, value1: 2 }, output: [ 1, 2 ] },
+      { input: { p0: 0.8, p1: 0.1, value0: 8, value1: 1 }, output: [ 1, 8 ] },
+    ];
+
+    describe('translateFilter', () => {
+      it('should translate internal filter to external filter', () => {
+        tests.forEach(test => {
+          expect(utils.translateFilter(test.input)).toStrictEqual(test.output);
+        });
+      });
+    });
+
+    describe('translateFilters', () => {
+      it('should translate internal filters to external filters', () => {
+        const filterKey = 'key';
+        const filters = { [filterKey]: tests.map(test => test.input) };
+        const output = { [filterKey]: [ [ 1, 2 ], [ 1, 8 ], [ 2, 5 ] ] };
+        expect(utils.translateFilters(filters)).toStrictEqual(output);
+      });
     });
   });
 });
