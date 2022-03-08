@@ -1361,13 +1361,15 @@ var Hermes = (function (exports) {
               throw new HermesError('Unable to get context from target element.');
           this.ctx = ctx;
           // All the dimension data should be equal in size.
-          const { count, valid } = this.validateData(data);
+          const { count, valid } = Hermes.validateData(data);
           if (!valid)
               throw new HermesError('The dimension data are not uniform in size.');
           this.dataCount = count;
           this.data = data;
-          if (dimensions.length === 0)
-              throw new HermesError('Need at least one dimension defined.');
+          // Validate that the dimensions are set properly.
+          const { message, valid: dimValid } = Hermes.validateDimensions(dimensions);
+          if (!dimValid)
+              throw new HermesError(message);
           this.dimensionsOriginal = clone(dimensions);
           this.dimensions = this.setDimensions(dimensions);
           // Add resize observer to detect target element resizing.
@@ -1385,8 +1387,51 @@ var Hermes = (function (exports) {
       static getTester() {
           return tester;
       }
+      static validateData(data) {
+          let count = 0;
+          const values = Object.values(data);
+          // All the dimension data should be equal in size.
+          for (let i = 0; i < values.length; i++) {
+              const value = values[i];
+              if (i === 0) {
+                  count = value.length;
+              }
+              else if (value.length !== count) {
+                  return { count, valid: false };
+              }
+          }
+          return { count, valid: true };
+      }
+      static validateDimension(dimension) {
+          if (dimension.type === DimensionType.Categorical) {
+              if (!dimension.categories || dimension.categories.length === 0)
+                  return {
+                      message: `Categorical dimension "${dimension.key}" is missing "categories".`,
+                      valid: false,
+                  };
+          }
+          else if (dimension.type === DimensionType.Logarithmic) {
+              if (dimension.logBase == null || dimension.logBase === 0)
+                  return {
+                      message: `Logarithmic dimension "${dimension.key}" is missing "logBase".`,
+                      valid: false,
+                  };
+          }
+          return { message: '', valid: true };
+      }
+      static validateDimensions(dimensions) {
+          if (dimensions.length === 0) {
+              return { message: 'Need at least one dimension defined.', valid: false };
+          }
+          for (let i = 0; i < dimensions.length; i++) {
+              const { message, valid } = Hermes.validateDimension(dimensions[i]);
+              if (!valid)
+                  return { message, valid };
+          }
+          return { message: '', valid: true };
+      }
       setData(data, redraw = true) {
-          const { count, valid } = this.validateData(data);
+          const { count, valid } = Hermes.validateData(data);
           if (!valid)
               return;
           this.data = data;
@@ -1421,21 +1466,6 @@ var Hermes = (function (exports) {
           if (this.canvas && this.element.contains(this.canvas)) {
               this.element.removeChild(this.canvas);
           }
-      }
-      validateData(data) {
-          let count = 0;
-          const values = Object.values(data);
-          // All the dimension data should be equal in size.
-          for (let i = 0; i < values.length; i++) {
-              const value = values[i];
-              if (i === 0) {
-                  count = value.length;
-              }
-              else if (value.length !== count) {
-                  return { count, valid: false };
-              }
-          }
-          return { count, valid: true };
       }
       setDimensions(dimensions) {
           const direction = this.config.direction === Direction.Horizontal
