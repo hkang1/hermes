@@ -113,7 +113,7 @@ export const HERMES_CONFIG: t.Config = {
   },
 };
 
-export const FILTER: t.Filter = {
+export const FILTER: t.InternalFilter = {
   p0: Number.NaN,
   p1: Number.NaN,
   value0: Number.NaN,

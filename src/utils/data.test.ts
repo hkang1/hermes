@@ -94,6 +94,42 @@ describe('data utilities', () => {
     });
   });
 
+  describe('capDataRange', () => {
+    it('should cap the data within the provided range', () => {
+      expect(utils.capDataRange(-Infinity, [ 0, 10 ])).toBe(0);
+      expect(utils.capDataRange(-1, [ 0, 10 ])).toBe(0);
+      expect(utils.capDataRange(11, [ 0, 10 ])).toBe(10);
+      expect(utils.capDataRange(Infinity, [ 0, 10 ])).toBe(10);
+      expect(utils.capDataRange(NaN, [ 0, 10 ])).toBe(NaN);
+    });
+  });
+
+  describe('comparePrimitive', () => {
+    it('should compare booleans', () => {
+      expect(utils.comparePrimitive(false, true)).toBe(-1);
+      expect(utils.comparePrimitive(true, false)).toBe(1);
+      expect(utils.comparePrimitive(true, true)).toBe(0);
+      expect(utils.comparePrimitive(false, false)).toBe(0);
+    });
+
+    it('should compare numbers', () => {
+      expect(utils.comparePrimitive(-1, 1)).toBe(-1);
+      expect(utils.comparePrimitive(1, -1)).toBe(1);
+      expect(utils.comparePrimitive(-1, -1)).toBe(0);
+      expect(utils.comparePrimitive(0, 0)).toBe(0);
+      expect(utils.comparePrimitive(1, 1)).toBe(0);
+    });
+
+    it('should compare strings', () => {
+      expect(utils.comparePrimitive('abc', 'abcd')).toBe(-1);
+      expect(utils.comparePrimitive('Abc', 'abcd')).toBe(-1);
+      expect(utils.comparePrimitive('bcd', 'abcd')).toBe(1);
+      expect(utils.comparePrimitive('Bcd', 'bcd')).toBe(1);
+      expect(utils.comparePrimitive('abc', 'abc')).toBe(0);
+      expect(utils.comparePrimitive('', '')).toBe(0);
+    });
+  });
+
   describe('idempotentItem', () => {
     it('should return the same item from a list everytime given an index', () => {
       const list = [ 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vw', 'xyz' ];
