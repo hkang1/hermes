@@ -890,7 +890,9 @@ class Hermes {
 
         if (dimColorKey === key) {
           const percent = dimension.scale?.valueToPercent(value) ?? 0;
-          const scaleColor = scale2rgba(dataStyle.colorScale?.colors || [], percent);
+          const reverse = dimension.scale?.reverse ?? false;
+          const colors = dataStyle.colorScale?.colors || [];
+          const scaleColor = scale2rgba(reverse ? colors.slice().reverse() : colors, percent);
           dataDefaultStyle.strokeStyle = scaleColor;
         }
 

@@ -384,6 +384,7 @@ class NiceScale {
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.range = 0;
+        this.reverse = DEFAULT_REVERSE;
         this.tickLabels = [];
         this.tickPos = [];
         this.ticks = [];
@@ -392,7 +393,6 @@ class NiceScale {
         this.axisLength = 1;
         this.maxTicks = 1;
         this.dataOnEdge = DEFAULT_DATA_ON_EDGE;
-        this.reverse = DEFAULT_REVERSE;
         this.max = maxValue;
         this.min = minValue;
         if (config.dataOnEdge != null)
@@ -2078,7 +2078,7 @@ class Hermes {
             let hasFilters = false;
             let isFilteredOut = false;
             const series = this.dimensions.map((dimension, i) => {
-                var _a, _b, _c, _d, _e, _f, _g;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j;
                 const key = dimension.key;
                 const layout = _dl[i].layout;
                 const bound = getDragBound(i, _ix, layout.bound);
@@ -2089,7 +2089,9 @@ class Hermes {
                 const y = bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
                 if (dimColorKey === key) {
                     const percent = (_f = (_e = dimension.scale) === null || _e === void 0 ? void 0 : _e.valueToPercent(value)) !== null && _f !== void 0 ? _f : 0;
-                    const scaleColor = scale2rgba(((_g = dataStyle.colorScale) === null || _g === void 0 ? void 0 : _g.colors) || [], percent);
+                    const reverse = (_h = (_g = dimension.scale) === null || _g === void 0 ? void 0 : _g.reverse) !== null && _h !== void 0 ? _h : false;
+                    const colors = ((_j = dataStyle.colorScale) === null || _j === void 0 ? void 0 : _j.colors) || [];
+                    const scaleColor = scale2rgba(reverse ? colors.slice().reverse() : colors, percent);
                     dataDefaultStyle.strokeStyle = scaleColor;
                 }
                 /**
