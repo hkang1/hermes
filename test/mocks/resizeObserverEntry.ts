@@ -1,14 +1,18 @@
-const resizeObserverEntry = (target: HTMLElement): ResizeObserverEntry => ({
+const resizeObserverEntry = (
+  target: HTMLElement,
+  width = 1000,
+  height = 500,
+): ResizeObserverEntry => ({
   borderBoxSize: [],
   contentBoxSize: [],
   contentRect: {
     bottom: 0,
-    height: 500,
+    height,
     left: 0,
     right: 0,
     toJSON: jest.fn(),
     top: 0,
-    width: 1000,
+    width,
     x: 0,
     y: 0,
   },
