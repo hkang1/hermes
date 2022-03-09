@@ -3,6 +3,7 @@ import resizeObserverEntry from 'test/mocks/resizeObserverEntry';
 import HermesError from '../src/classes/HermesError';
 import Hermes from '../src/index';
 import * as t from '../src/types';
+import { throttle } from '../src/utils/event';
 import * as tester from '../src/utils/tester';
 
 export const CLOSE_PRECISION = 8;
@@ -36,9 +37,9 @@ export interface HermesSetupWithError {
 export class HermesTester extends Hermes {
   constructor(
     target: HTMLElement | string,
-    dimensions: t.Dimension[],
-    config: t.RecursivePartial<t.Config> = {},
-    data: t.Data = {},
+    dimensions?: t.Dimension[],
+    config?: t.RecursivePartial<t.Config>,
+    data?: t.Data,
   ) {
     super(target, dimensions, config, data);
 
@@ -46,9 +47,19 @@ export class HermesTester extends Hermes {
      * The ResizeObserver doesn't trigger properly in jsdom.
      * Instead we capture a resize event to fire off the handler.
      */
-    this.element.addEventListener('resize', () => {
-      this.handleResize([ resizeObserverEntry(this.element) ]);
-    });
+    const size = { h: 500, w: 1000 };
+    const resize = () => {
+      this.handleResize([ resizeObserverEntry(this.element, size.w++, size.h++) ]);
+    };
+    this.element.addEventListener(
+      'resize',
+      this.config.resizeThrottleDelay === 0
+        ? resize
+        : throttle(() => resize(), this.config.resizeThrottleDelay),
+    );
+
+    // We fire a resize event to simulate the ResizeObserver.observe() behavior.
+    if (config) dispatchResizeEvent(this.element);
   }
 
   public getCtx(): CanvasRenderingContext2D { return this.ctx; }
@@ -58,9 +69,9 @@ export class HermesTester extends Hermes {
 }
 
 export const hermesSetup = (
-  dimensions: t.Dimension[],
-  config: t.RecursivePartial<t.Config> = {},
-  data: t.Data = {},
+  dimensions?: t.Dimension[],
+  config?: t.RecursivePartial<t.Config>,
+  data?: t.Data,
 ): HermesSetup => {
   const setup: HermesSetupWithError = {};
 
@@ -82,9 +93,9 @@ export const hermesSetup = (
 };
 
 export const hermesSetupWithError = (
-  dimensions: t.Dimension[],
-  config: t.RecursivePartial<t.Config> = {},
-  data: t.Data = {},
+  dimensions?: t.Dimension[],
+  config?: t.RecursivePartial<t.Config>,
+  data?: t.Data,
 ): HermesSetupWithError => {
   let setup: HermesSetupWithError = {};
 
