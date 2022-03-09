@@ -11,6 +11,8 @@ export type Primitive = boolean | number | string;
 export type Range<T = number> = [ T, T ];
 export type RecordKey = string | number | symbol;
 export type RecursivePartial<T> = { [P in keyof T]?: RecursivePartial<T[P]> };
+export type Validation = { message: string, valid: boolean };
+export type ValidationData = Validation & { count: number };
 
 /**
  * Canvas Rendering Types
@@ -126,6 +128,7 @@ export interface DataOptions {
 export interface Dimension {
   categories?: Primitive[];
   dataOnEdge?: boolean;
+  filters?: Filter[];
   key: string;
   label: string;
   logBase?: number;
