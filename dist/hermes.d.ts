@@ -34,7 +34,7 @@ declare class LogScale extends NiceScale {
 declare class Hermes {
   constructor(
     target: HTMLElement | string,
-    dimensions: Hermes.Dimension[],
+    dimensions?: Hermes.Dimension[],
     options?: Hermes.RecursivePartial<Hermes.Config>,
     data?: Hermes.Data,
   );
@@ -42,7 +42,9 @@ declare class Hermes {
   static validateData(data: Hermes.Data): { count: number, valid: boolean };
   static validateDimension(dimension: Hermes.Dimension): { message: string, valid: boolean };
   static validateDimensions(dimensions: Hermes.Dimension[]): { message: string, valid: boolean };
+  setConfig(config: Hermes.RecursivePartial<Hermes.Config>, redraw?: boolean): void;
   setData(data: Hermes.Data, redraw?: boolean): void;
+  setDimensions(dimensions: Hermes.Dimension[], redraw?: boolean): void;
   setSize(w: number, h: number): void;
   redraw(): void;
   destroy(): void;

@@ -30,29 +30,26 @@ class Hermes {
   protected element: HTMLElement;
   protected canvas: HTMLCanvasElement;
   protected ctx: CanvasRenderingContext2D;
-  protected resizeObserver: ResizeObserver;
-  protected data: t.Data;
-  protected dataCount: number;
-  protected dimensions: t.InternalDimension[];
-  protected dimensionsOriginal: t.Dimension[];
+  protected config: t.Config = DEFAULT.HERMES_CONFIG;
+  protected data: t.Data = {};
+  protected dataCount = 0;
+  protected dimensions: t.InternalDimension[] = [];
+  protected dimensionsOriginal: t.Dimension[] = [];
   protected filters: t.InternalFilters = {};
-  protected config: t.Config;
+  protected resizeObserver: ResizeObserver | undefined;
   protected size: t.Size = { h: 0, w: 0 };
   protected ix: t.IX = clone(DEFAULT.IX);
   protected _?: t.Internal = undefined;
 
   constructor(
     target: HTMLElement | string,
-    dimensions: t.Dimension[],
-    config: t.RecursivePartial<t.Config> = {},
-    data: t.Data = {},
+    dimensions?: t.Dimension[],
+    config?: t.RecursivePartial<t.Config>,
+    data?: t.Data,
   ) {
     const element = getElement(target);
     if (!element) throw new HermesError('Target element selector did not match anything.');
     this.element = element;
-
-    // Set config early as setSize references it early.
-    this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
     // Create a canvas and append it to the target element. Only if there isn't an existing one.
     const canvases = this.element.querySelectorAll('canvas');
@@ -72,28 +69,9 @@ class Hermes {
     if (!ctx) throw new HermesError('Unable to get context from target element.');
     this.ctx = ctx;
 
-    // All the dimension data should be equal in size.
-    const dataValidation = Hermes.validateData(data);
-    if (!dataValidation.valid) throw new HermesError(dataValidation.message);
-    this.dataCount = dataValidation.count;
-    this.data = data;
-
-    // Validate that the dimensions are set properly.
-    const dimValidation = Hermes.validateDimensions(dimensions);
-    if (!dimValidation.valid) throw new HermesError(dimValidation.message);
-    this.dimensionsOriginal = clone(dimensions);
-    this.dimensions = this.setDimensions(dimensions);
-
-    // Add resize observer to detect target element resizing.
-    this.resizeObserver = new ResizeObserver(
-      this.config.resizeThrottleDelay === 0
-        ? this.handleResize.bind(this)
-        : throttle(
-          entries => this.handleResize.bind(this)(entries as ResizeObserverEntry[]),
-          this.config.resizeThrottleDelay,
-        ),
-    );
-    this.resizeObserver.observe(this.element);
+    if (dimensions) this.setDimensions(dimensions, false);
+    if (config) this.setConfig(config, false);
+    if (data) this.setData(data, false);
 
     // Add mouse event handlers.
     this.element.addEventListener('dblclick', this.handleDoubleClick.bind(this));
@@ -101,7 +79,7 @@ class Hermes {
     window.addEventListener('mousemove', this.handleMouseMove.bind(this));
     window.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
-    this.redraw();
+    if (dimensions || config || data) this.redraw();
   }
 
   static getTester(): tester.Tester {
@@ -155,51 +133,51 @@ class Hermes {
     return { message: '', valid: true };
   }
 
-  public setData(data: t.Data, redraw = true): void {
-    const { count, valid } = Hermes.validateData(data);
+  public setConfig(config: t.RecursivePartial<t.Config> = {}, redraw = true): void {
+    // Set config early as setSize references it early.
+    this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
-    if (!valid) return;
+    // Clear out previously setup resize observer.
+    if (this.resizeObserver) {
+      this.resizeObserver.unobserve(this.element);
+      this.resizeObserver = undefined;
+    }
 
-    this.data = data;
-    this.dataCount = count;
-    this.dimensions = this.setDimensions(this.dimensionsOriginal);
+    // Add resize observer to detect target element resizing.
+    this.resizeObserver = new ResizeObserver(
+      this.config.resizeThrottleDelay === 0
+        ? this.handleResize.bind(this)
+        : throttle(
+          entries => this.handleResize.bind(this)(entries as ResizeObserverEntry[]),
+          this.config.resizeThrottleDelay,
+        ),
+    );
+    this.resizeObserver.observe(this.element);
 
     if (redraw) this.redraw();
   }
 
-  public setSize(w: number, h: number): void {
-    const oldSize = { h: this.size.h, w: this.size.w };
-    this.canvas.width = w;
-    this.canvas.height = h;
-    this.size = { h, w };
+  public setData(data: t.Data, redraw = true): void {
+    const dataValidation = Hermes.validateData(data);
+    if (!dataValidation.valid) throw new HermesError(dataValidation.message);
 
-    // Make hook callback.
-    this.config.hooks.onResize?.({ h, w }, oldSize);
+    this.data = data;
+    this.dataCount = dataValidation.count;
+    this.setDimensions(this.dimensionsOriginal, false);
+
+    if (redraw) this.redraw();
   }
 
-  public redraw(): void {
-    this.calculate();
-    if (this.config.debug) this.drawDebugOutline();
-    this.draw();
-  }
+  public setDimensions(dimensions: t.Dimension[], redraw = true): void {
+    // Validate that the dimensions are set properly.
+    const dimValidation = Hermes.validateDimensions(dimensions);
+    if (!dimValidation.valid) throw new HermesError(dimValidation.message);
 
-  public destroy(): void {
-    // Remove observers and listeners.
-    this.resizeObserver?.unobserve(this.element);
-    this.element.removeEventListener('dblclick', this.handleDoubleClick.bind(this));
-    this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this));
-    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
-    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
-
-    if (this.canvas && this.element.contains(this.canvas)) {
-      this.element.removeChild(this.canvas);
-    }
-  }
-
-  protected setDimensions(dimensions: t.Dimension[]): t.InternalDimension[] {
     const direction = this.config.direction === t.Direction.Horizontal
-      ? t.Direction.Vertical : t.Direction.Horizontal;
-    return clone(dimensions).map(dimension => {
+      ? t.Direction.Vertical
+      : t.Direction.Horizontal;
+    this.dimensionsOriginal = dimensions;
+    this.dimensions = clone(dimensions).map(dimension => {
       const key = dimension.key;
       const data = this.data[key] || [];
       const internal: t.InternalDimension = {
@@ -239,6 +217,37 @@ class Hermes {
 
       return internal;
     });
+
+    if (redraw) this.redraw();
+  }
+
+  public setSize(w: number, h: number): void {
+    const oldSize = { h: this.size.h, w: this.size.w };
+    this.canvas.width = w;
+    this.canvas.height = h;
+    this.size = { h, w };
+
+    // Make hook callback.
+    this.config.hooks.onResize?.({ h, w }, oldSize);
+  }
+
+  public redraw(): void {
+    this.calculate();
+    if (this.config.debug) this.drawDebugOutline();
+    this.draw();
+  }
+
+  public destroy(): void {
+    // Remove observers and listeners.
+    this.resizeObserver?.unobserve(this.element);
+    this.element.removeEventListener('dblclick', this.handleDoubleClick.bind(this));
+    this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this));
+    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
+
+    if (this.canvas && this.element.contains(this.canvas)) {
+      this.element.removeChild(this.canvas);
+    }
   }
 
   protected calculate(): void {
@@ -1106,7 +1115,7 @@ class Hermes {
 
   protected handleDoubleClick(): void {
     // Reset chart settings.
-    this.dimensions = this.setDimensions(this.dimensionsOriginal);
+    this.setDimensions(this.dimensionsOriginal, false);
     this.filters = {};
     this.ix = clone(DEFAULT.IX);
 
