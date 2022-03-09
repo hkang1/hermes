@@ -1,6 +1,6 @@
 {
   "name": "hermes-parallel-coordinates",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "A lightweight and fast canvas-based parallel coordinates chart library.",
   "keywords": [
     "es6",
