@@ -1132,6 +1132,19 @@ const getDragBound = (index, ix, bound) => {
     const offset = ix.dimension.boundOffset || { x: 0, y: 0 };
     return isLabelDrag ? shiftRect(dragBound, offset) : bound;
 };
+const internalToFilter = (filter) => {
+    return comparePrimitive(filter.value0, filter.value1) === 1
+        ? [filter.value1, filter.value0]
+        : [filter.value0, filter.value1];
+};
+const internalToFilters = (filters) => {
+    return Object.keys(filters).reduce((acc, key) => {
+        acc[key] = filters[key]
+            .map(filter => internalToFilter(filter))
+            .sort((a, b) => comparePrimitive(a[0], b[0]));
+        return acc;
+    }, {});
+};
 const isFilterEmpty = (filter) => {
     return isNaN(filter.p0) && isNaN(filter.p1);
 };
@@ -1161,19 +1174,6 @@ const mergeFilters = (filter0, filter1) => {
         newFilter.value1 = filter1.value1;
     }
     return newFilter;
-};
-const translateFilter = (filter) => {
-    return comparePrimitive(filter.value0, filter.value1) === 1
-        ? [filter.value1, filter.value0]
-        : [filter.value0, filter.value1];
-};
-const translateFilters = (filters) => {
-    return Object.keys(filters).reduce((acc, key) => {
-        acc[key] = filters[key]
-            .map(filter => translateFilter(filter))
-            .sort((a, b) => comparePrimitive(a[0], b[0]));
-        return acc;
-    }, {});
 };
 
 const DEFAULT_DIMENSION_COUNT = 10;
@@ -1330,9 +1330,9 @@ var tester = /*#__PURE__*/Object.freeze({
 const customDeepmerge = deepmergeCustom({ mergeArrays: false });
 class Hermes {
     constructor(target, dimensions, config = {}, data = {}) {
+        this.filters = {};
         this.size = { h: 0, w: 0 };
         this.ix = clone(IX);
-        this.filters = {};
         this._ = undefined;
         const element = getElement(target);
         if (!element)
@@ -1358,15 +1358,15 @@ class Hermes {
             throw new HermesError('Unable to get context from target element.');
         this.ctx = ctx;
         // All the dimension data should be equal in size.
-        const { count, valid } = Hermes.validateData(data);
-        if (!valid)
-            throw new HermesError('The dimension data are not uniform in size.');
-        this.dataCount = count;
+        const dataValidation = Hermes.validateData(data);
+        if (!dataValidation.valid)
+            throw new HermesError(dataValidation.message);
+        this.dataCount = dataValidation.count;
         this.data = data;
         // Validate that the dimensions are set properly.
-        const { message, valid: dimValid } = Hermes.validateDimensions(dimensions);
-        if (!dimValid)
-            throw new HermesError(message);
+        const dimValidation = Hermes.validateDimensions(dimensions);
+        if (!dimValidation.valid)
+            throw new HermesError(dimValidation.message);
         this.dimensionsOriginal = clone(dimensions);
         this.dimensions = this.setDimensions(dimensions);
         // Add resize observer to detect target element resizing.
@@ -1385,19 +1385,21 @@ class Hermes {
         return tester;
     }
     static validateData(data) {
-        let count = 0;
+        const validation = { count: 0, message: '', valid: true };
         const values = Object.values(data);
         // All the dimension data should be equal in size.
         for (let i = 0; i < values.length; i++) {
             const value = values[i];
             if (i === 0) {
-                count = value.length;
+                validation.count = value.length;
             }
-            else if (value.length !== count) {
-                return { count, valid: false };
+            else if (value.length !== validation.count) {
+                validation.message = 'The dimension data are not uniform in size.';
+                validation.valid = false;
+                return validation;
             }
         }
-        return { count, valid: true };
+        return validation;
     }
     static validateDimension(dimension) {
         if (dimension.type === DimensionType.Categorical) {
@@ -1984,7 +1986,7 @@ class Hermes {
             const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
             if (removeIndex !== -1) {
                 // Make hook callback.
-                (_d = (_c = this.config.hooks).onFilterRemove) === null || _d === void 0 ? void 0 : _d.call(_c, translateFilter(filters[removeIndex]));
+                (_d = (_c = this.config.hooks).onFilterRemove) === null || _d === void 0 ? void 0 : _d.call(_c, internalToFilter(filters[removeIndex]));
                 // Remove filter.
                 filters.splice(removeIndex, 1);
             }
@@ -1999,14 +2001,14 @@ class Hermes {
             // Make corresponding filter hook callback.
             switch (_ixsa.type) {
                 case ActionType.FilterCreate:
-                    (_f = (_e = this.config.hooks).onFilterCreate) === null || _f === void 0 ? void 0 : _f.call(_e, translateFilter(_ixf.active));
+                    (_f = (_e = this.config.hooks).onFilterCreate) === null || _f === void 0 ? void 0 : _f.call(_e, internalToFilter(_ixf.active));
                     break;
                 case ActionType.FilterMove:
-                    (_h = (_g = this.config.hooks).onFilterMove) === null || _h === void 0 ? void 0 : _h.call(_g, translateFilter(_ixf.active));
+                    (_h = (_g = this.config.hooks).onFilterMove) === null || _h === void 0 ? void 0 : _h.call(_g, internalToFilter(_ixf.active));
                     break;
                 case ActionType.FilterResizeAfter:
                 case ActionType.FilterResizeBefore:
-                    (_k = (_j = this.config.hooks).onFilterResize) === null || _k === void 0 ? void 0 : _k.call(_j, translateFilter(_ixf.active));
+                    (_k = (_j = this.config.hooks).onFilterResize) === null || _k === void 0 ? void 0 : _k.call(_j, internalToFilter(_ixf.active));
                     break;
             }
         }
@@ -2015,7 +2017,7 @@ class Hermes {
         _ixf.key = undefined;
         this.cleanUpFilters();
         // Make hook call back with all of the filter changes.
-        (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, translateFilters(this.filters));
+        (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, internalToFilters(this.filters));
     }
     cleanUpFilters() {
         Object.keys(this.filters).forEach(key => {

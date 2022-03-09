@@ -35,10 +35,10 @@ class Hermes {
   protected dataCount: number;
   protected dimensions: t.InternalDimension[];
   protected dimensionsOriginal: t.Dimension[];
+  protected filters: t.InternalFilters = {};
   protected config: t.Config;
   protected size: t.Size = { h: 0, w: 0 };
   protected ix: t.IX = clone(DEFAULT.IX);
-  protected filters: t.InternalFilters = {};
   protected _?: t.Internal = undefined;
 
   constructor(
@@ -73,14 +73,14 @@ class Hermes {
     this.ctx = ctx;
 
     // All the dimension data should be equal in size.
-    const { count, valid } = Hermes.validateData(data);
-    if (!valid) throw new HermesError('The dimension data are not uniform in size.');
-    this.dataCount = count;
+    const dataValidation = Hermes.validateData(data);
+    if (!dataValidation.valid) throw new HermesError(dataValidation.message);
+    this.dataCount = dataValidation.count;
     this.data = data;
 
     // Validate that the dimensions are set properly.
-    const { message, valid: dimValid } = Hermes.validateDimensions(dimensions);
-    if (!dimValid) throw new HermesError(message);
+    const dimValidation = Hermes.validateDimensions(dimensions);
+    if (!dimValidation.valid) throw new HermesError(dimValidation.message);
     this.dimensionsOriginal = clone(dimensions);
     this.dimensions = this.setDimensions(dimensions);
 
@@ -108,24 +108,26 @@ class Hermes {
     return tester;
   }
 
-  static validateData(data: t.Data): { count: number, valid: boolean } {
-    let count = 0;
+  static validateData(data: t.Data): t.ValidationData {
+    const validation = { count: 0, message: '', valid: true };
     const values = Object.values(data);
 
     // All the dimension data should be equal in size.
     for (let i = 0; i < values.length; i++) {
       const value = values[i];
       if (i === 0) {
-        count = value.length;
-      } else if (value.length !== count) {
-        return { count, valid: false };
+        validation.count = value.length;
+      } else if (value.length !== validation.count) {
+        validation.message = 'The dimension data are not uniform in size.';
+        validation.valid = false;
+        return validation;
       }
     }
 
-    return { count, valid: true };
+    return validation;
   }
 
-  static validateDimension(dimension: t.Dimension): { message: string, valid: boolean } {
+  static validateDimension(dimension: t.Dimension): t.Validation {
     if (dimension.type === t.DimensionType.Categorical) {
       if (!dimension.categories || dimension.categories.length === 0) return {
         message: `Categorical dimension "${dimension.key}" is missing "categories".`,
@@ -140,7 +142,7 @@ class Hermes {
     return { message: '', valid: true };
   }
 
-  static validateDimensions(dimensions: t.Dimension[]): { message: string, valid: boolean } {
+  static validateDimensions(dimensions: t.Dimension[]): t.Validation {
     if (dimensions.length === 0) {
       return { message: 'Need at least one dimension defined.', valid: false };
     }
@@ -783,7 +785,7 @@ class Hermes {
       const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
       if (removeIndex !== -1) {
         // Make hook callback.
-        this.config.hooks.onFilterRemove?.(ix.translateFilter(filters[removeIndex]));
+        this.config.hooks.onFilterRemove?.(ix.internalToFilter(filters[removeIndex]));
 
         // Remove filter.
         filters.splice(removeIndex, 1);
@@ -799,14 +801,14 @@ class Hermes {
       // Make corresponding filter hook callback.
       switch (_ixsa.type) {
         case t.ActionType.FilterCreate:
-          this.config.hooks.onFilterCreate?.(ix.translateFilter(_ixf.active));
+          this.config.hooks.onFilterCreate?.(ix.internalToFilter(_ixf.active));
           break;
         case t.ActionType.FilterMove:
-          this.config.hooks.onFilterMove?.(ix.translateFilter(_ixf.active));
+          this.config.hooks.onFilterMove?.(ix.internalToFilter(_ixf.active));
           break;
         case t.ActionType.FilterResizeAfter:
         case t.ActionType.FilterResizeBefore:
-          this.config.hooks.onFilterResize?.(ix.translateFilter(_ixf.active));
+          this.config.hooks.onFilterResize?.(ix.internalToFilter(_ixf.active));
           break;
       }
     }
@@ -818,7 +820,7 @@ class Hermes {
     this.cleanUpFilters();
 
     // Make hook call back with all of the filter changes.
-    this.config.hooks?.onFilterChange?.(ix.translateFilters(this.filters));
+    this.config.hooks?.onFilterChange?.(ix.internalToFilters(this.filters));
   }
 
   protected cleanUpFilters(): void {

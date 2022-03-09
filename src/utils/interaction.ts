@@ -1,7 +1,7 @@
 import { FILTER, INVALID_RECT } from '../defaults';
 import * as t from '../types';
 
-import { clone, comparePrimitive, isString } from './data';
+import { clone, comparePrimitive } from './data';
 import { shiftRect } from './math';
 
 export const DIMENSION_SWAP_THRESHOLD = 30;
@@ -14,6 +14,21 @@ export const getDragBound = (index: number, ix: t.IX, bound: t.Rect): t.Rect => 
   const dragBound = ix.dimension.bound || INVALID_RECT;
   const offset = ix.dimension.boundOffset || { x: 0, y: 0 };
   return isLabelDrag ? shiftRect(dragBound, offset) : bound;
+};
+
+export const internalToFilter = (filter: t.InternalFilter): t.Filter => {
+  return comparePrimitive(filter.value0, filter.value1) === 1
+    ? [ filter.value1, filter.value0 ]
+    : [ filter.value0, filter.value1 ];
+};
+
+export const internalToFilters = (filters: t.InternalFilters): t.Filters => {
+  return Object.keys(filters).reduce((acc, key) => {
+    acc[key] = filters[key]
+      .map(filter => internalToFilter(filter))
+      .sort((a: t.Filter, b: t.Filter) => comparePrimitive(a[0], b[0]));
+    return acc;
+  }, {} as t.Filters);
 };
 
 export const isFilterEmpty = (filter: t.InternalFilter): boolean => {
@@ -52,19 +67,4 @@ export const mergeFilters = (
     newFilter.value1 = filter1.value1;
   }
   return newFilter;
-};
-
-export const translateFilter = (filter: t.InternalFilter): t.Filter => {
-  return comparePrimitive(filter.value0, filter.value1) === 1
-    ? [ filter.value1, filter.value0 ]
-    : [ filter.value0, filter.value1 ];
-};
-
-export const translateFilters = (filters: t.InternalFilters): t.Filters => {
-  return Object.keys(filters).reduce((acc, key) => {
-    acc[key] = filters[key]
-      .map(filter => translateFilter(filter))
-      .sort((a: t.Filter, b: t.Filter) => comparePrimitive(a[0], b[0]));
-    return acc;
-  }, {} as t.Filters);
 };
