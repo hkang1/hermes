@@ -108,15 +108,22 @@ describe('Hermes Core', () => {
   });
 
   describe('validateData', () => {
-    it('should validate data to ensure all dimensions data have the same count', () => {
-      const validData = { abc: [ 0, 1, 2 ], def: [ 0, 1, 2 ] };
-      const check0 = utils.HermesTester.validateData(validData);
-      expect(check0.count).toBe(3);
-      expect(check0.valid).toBeTrue();
+    const dimensions: t.Dimension[] = [
+      { key: 'abc', label: 'abc', type: t.DimensionType.Linear },
+      { key: 'def', label: 'def', type: t.DimensionType.Linear },
+    ];
 
+    it('should check that all dimension data have the same number of data points', () => {
+      const validData = { abc: [ 0, 1, 2 ], def: [ 0, 1, 2 ] };
+      const check = utils.HermesTester.validateData(validData, dimensions);
+      expect(check.count).toBe(3);
+      expect(check.valid).toBeTrue();
+    });
+
+    it('should throw an error when dimension data are not uniform', () => {
       const invalidData = { abc: [ 0, 1 ], def: [ 0, 1, 2 ] };
-      const check1 = utils.HermesTester.validateData(invalidData);
-      expect(check1.valid).toBeFalse();
+      const check = utils.HermesTester.validateData(invalidData, dimensions);
+      expect(check.valid).toBeFalse();
     });
   });
 
@@ -195,6 +202,25 @@ describe('Hermes Core', () => {
       setup.hermes?.setData(newData, false);
       expect(setup.hermes?.getData()).toStrictEqual(newData);
       expect(spyRedraw).not.toHaveBeenCalled();
+    });
+
+    it('should throw an error if the data is not uniform across dimensions', () => {
+      // Remove one data point from the first dimension data series.
+      const invalidData = clone(utils.DEFAULT_DATA);
+      const dimensionKey = utils.DEFAULT_DIMENSIONS[0].key;
+      invalidData[dimensionKey].pop();
+
+      const setData = () => setup.hermes?.setData(invalidData);
+      expect(setData).toThrowWithMessage(HermesError, /not uniform in size/i);
+    });
+
+    it('should throw an error if the data is missing data points for a dimension key', () => {
+      const invalidData = clone(utils.DEFAULT_DATA);
+      const dimensionKey = utils.DEFAULT_DIMENSIONS[0].key;
+      delete invalidData[dimensionKey];
+
+      const setData = () => setup.hermes?.setData(invalidData);
+      expect(setData).toThrowWithMessage(HermesError, /data for .* is missing/i);
     });
   });
 

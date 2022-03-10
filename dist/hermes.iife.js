@@ -1380,7 +1380,7 @@ var Hermes = (function (exports) {
       static getTester() {
           return tester;
       }
-      static validateData(data) {
+      static validateData(data, dimensions) {
           const validation = { count: 0, message: '', valid: true };
           const values = Object.values(data);
           // All the dimension data should be equal in size.
@@ -1391,6 +1391,16 @@ var Hermes = (function (exports) {
               }
               else if (value.length !== validation.count) {
                   validation.message = 'The dimension data are not uniform in size.';
+                  validation.valid = false;
+                  return validation;
+              }
+          }
+          // Check that the data as all of the dimension keys.
+          const dataKeys = Object.keys(data);
+          for (let j = 0; j < dimensions.length; j++) {
+              const dimensionKey = dimensions[j].key;
+              if (!dataKeys.includes(dimensionKey)) {
+                  validation.message = `Data for "${dimensionKey} is missing.`;
                   validation.valid = false;
                   return validation;
               }
@@ -1442,7 +1452,7 @@ var Hermes = (function (exports) {
               this.redraw();
       }
       setData(data, redraw = true) {
-          const dataValidation = Hermes.validateData(data);
+          const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
           if (!dataValidation.valid)
               throw new HermesError(dataValidation.message);
           this.data = data;

@@ -86,7 +86,7 @@ class Hermes {
     return tester;
   }
 
-  static validateData(data: t.Data): t.ValidationData {
+  static validateData(data: t.Data, dimensions: t.Dimension[]): t.ValidationData {
     const validation = { count: 0, message: '', valid: true };
     const values = Object.values(data);
 
@@ -97,6 +97,17 @@ class Hermes {
         validation.count = value.length;
       } else if (value.length !== validation.count) {
         validation.message = 'The dimension data are not uniform in size.';
+        validation.valid = false;
+        return validation;
+      }
+    }
+
+    // Check that the data as all of the dimension keys.
+    const dataKeys = Object.keys(data);
+    for (let j = 0; j < dimensions.length; j++) {
+      const dimensionKey = dimensions[j].key;
+      if (!dataKeys.includes(dimensionKey)) {
+        validation.message = `Data for "${dimensionKey} is missing.`;
         validation.valid = false;
         return validation;
       }
@@ -158,7 +169,7 @@ class Hermes {
   }
 
   public setData(data: t.Data, redraw = true): void {
-    const dataValidation = Hermes.validateData(data);
+    const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
     if (!dataValidation.valid) throw new HermesError(dataValidation.message);
 
     this.data = data;
