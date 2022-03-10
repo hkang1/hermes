@@ -1,6 +1,3 @@
-import type { DeepMergeLeafURI } from 'deepmerge-ts';
-import { deepmergeCustom } from 'deepmerge-ts';
-
 import CategoricalScale from './classes/CategoricalScale';
 import HermesError from './classes/HermesError';
 import LinearScale from './classes/LinearScale';
@@ -10,7 +7,7 @@ import * as DEFAULT from './defaults';
 import * as t from './types';
 import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
-import { capDataRange, clone, getDataRange } from './utils/data';
+import { capDataRange, clone, deepMerge, getDataRange } from './utils/data';
 import { getElement, getMousePoint } from './utils/dom';
 import { throttle } from './utils/event';
 import * as ix from './utils/interaction';
@@ -21,10 +18,6 @@ export {
   ActionType, DimensionLayout, DimensionType,
   Direction, FocusType, LabelPlacement, PathType,
 } from './types';
-
-const customDeepmerge = deepmergeCustom<{
-  DeepMergeArraysURI: DeepMergeLeafURI; // <-- Needed for correct output type.
-}>({ mergeArrays: false });
 
 class Hermes {
   protected element: HTMLElement;
@@ -146,7 +139,7 @@ class Hermes {
 
   public setConfig(config: t.RecursivePartial<t.Config> = {}, redraw = true): void {
     // Set config early as setSize references it early.
-    this.config = customDeepmerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
+    this.config = deepMerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
     // Clear out previously setup resize observer.
     if (this.resizeObserver) {

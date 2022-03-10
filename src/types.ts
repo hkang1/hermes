@@ -6,6 +6,7 @@ import LogScale from './classes/LogScale';
  * TYPES
  */
 
+export type NestedObject = Record<RecordKey, unknown>;
 export type Padding = number | [ number, number ] | [ number, number, number, number ];
 export type Primitive = boolean | number | string;
 export type Range<T = number> = [ T, T ];

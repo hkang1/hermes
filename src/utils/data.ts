@@ -1,12 +1,13 @@
-import { Primitive, Range } from '../types';
+import { NestedObject, Primitive, Range, RecordKey } from '../types';
 
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
 export const isNumber = (data: unknown): data is number => typeof data === 'number';
 export const isMap = (data: unknown): boolean => data instanceof Map;
 export const isObject = (data: unknown): boolean => {
-  return typeof data === 'object' && !Array.isArray(data)
-    && !isMap(data) && !isSet(data) && data !== null;
+  return typeof data === 'object' && data != null
+    && Object.getPrototypeOf(data) === Object.prototype
+    && !Array.isArray(data) && !isMap(data) && !isSet(data);
 };
 export const isSet = (data: unknown): boolean => data instanceof Set;
 export const isString = (data: unknown): data is string => typeof data === 'string';
@@ -24,6 +25,26 @@ export const comparePrimitive = (a: Primitive, b: Primitive): number => {
   if (isString(a) && isString(b)) return a.localeCompare(b);
   if (a === b) return 0;
   return a > b ? 1 : -1;
+};
+
+export const deepMerge = <T extends NestedObject>(...objects: T[]): T => {
+  return objects.reduce((acc, object) => {
+    Object.keys(object).forEach((key: keyof T) => {
+      if (isObject(acc[key]) && isObject(object[key])) {
+        acc[key] = deepMerge(acc[key] as T, object[key] as T) as T[keyof T];
+      } else if (Array.isArray(acc[key]) && Array.isArray(object[key])) {
+        acc[key] = object[key];
+        /**
+         * If we wanted to merge the arrays as well, we can use the following line,
+         * maybe rewrite this function as a configurable function.
+         * acc[key] = Array.from(new Set((acc[key] as unknown[]).concat(acc[key])));
+         */
+      } else {
+        acc[key] = object[key];
+      }
+    });
+    return acc;
+  }, {} as T);
 };
 
 export const getDataRange = (data: unknown[]): Range => {

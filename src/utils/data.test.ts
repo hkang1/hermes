@@ -1,3 +1,5 @@
+import { NestedObject } from 'src/types';
+
 import * as utils from './data';
 
 enum Type {
@@ -23,8 +25,8 @@ mapPopulated.set('Kenzo', true);
 const typeTests = [
   { type: Type.Boolean, value: false },
   { type: Type.Boolean, value: true },
-  { type: [ Type.Error, Type.Object ], value: new Error('this is an error') },
-  { type: [ Type.Error, Type.Object ], value: Error('this is another error') },
+  { type: Type.Error, value: new Error('this is an error') },
+  { type: Type.Error, value: Error('this is another error') },
   { type: Type.Map, value: new Map() },
   { type: Type.Map, value: mapPopulated },
   { type: Type.Null, value: null },
@@ -127,6 +129,49 @@ describe('data utilities', () => {
       expect(utils.comparePrimitive('Bcd', 'bcd')).toBe(1);
       expect(utils.comparePrimitive('abc', 'abc')).toBe(0);
       expect(utils.comparePrimitive('', '')).toBe(0);
+    });
+  });
+
+  describe('deepMerge', () => {
+    it('should merge objects, including deep properties', () => {
+      const a: NestedObject = {
+        a: { a0: 123, a1: 'abc', a2: true, a3: Date.now(), a4: null, a5: undefined },
+        b: { b0: 234, b1: 'def', b2: true, b3: Date.now(), b4: null, b5: undefined },
+        c: { c0: 345 },
+      };
+      const b: NestedObject = {
+        b: {
+          b0: 345,
+          b1: 'efg',
+          b3: new Date('2018-03-16T00:00:00'),
+        },
+      };
+      const c: NestedObject = { c: undefined };
+      const result = utils.deepMerge(a, b, c);
+      expect(result.a).toStrictEqual(a.a);
+      expect(result.b).toStrictEqual({
+        b0: 345,
+        b1: 'efg',
+        b2: true,
+        b3: new Date('2018-03-16T00:00:00'),
+        b4: null,
+        b5: undefined,
+      });
+      expect(result.c).toBeUndefined();
+    });
+
+    it('should not merge arrays', () => {
+      const a: NestedObject = {
+        a: [ 1, 2, 3 ],
+        b: [ 4, 5, 6 ],
+        c: [ 7, 8, 9 ],
+      };
+      const b: NestedObject = { b: [ 10, 11, 12 ] };
+      const c: NestedObject = { c: undefined };
+      const result = utils.deepMerge(a, b, c);
+      expect(result.a).toStrictEqual(a.a);
+      expect(result.b).toStrictEqual(b.b);
+      expect(result.c).toBeUndefined();
     });
   });
 
