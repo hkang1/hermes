@@ -1,4 +1,4 @@
-import { NestedObject, Primitive, Range, RecordKey } from '../types';
+import { NestedObject, Primitive, Range } from '../types';
 
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
