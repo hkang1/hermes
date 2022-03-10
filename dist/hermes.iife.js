@@ -8,14 +8,14 @@ var Hermes = (function (exports) {
    * Released under the MIT License.
    */
 
-  function isObject(o) {
+  function isObject$1(o) {
     return Object.prototype.toString.call(o) === '[object Object]';
   }
 
   function isPlainObject(o) {
     var ctor,prot;
 
-    if (isObject(o) === false) return false;
+    if (isObject$1(o) === false) return false;
 
     // If has modified constructor
     ctor = o.constructor;
@@ -23,7 +23,7 @@ var Hermes = (function (exports) {
 
     // If has modified prototype
     prot = ctor.prototype;
-    if (isObject(prot) === false) return false;
+    if (isObject$1(prot) === false) return false;
 
     // If constructor does not have an Object-specific method
     if (prot.hasOwnProperty('isPrototypeOf') === false) {
@@ -240,6 +240,13 @@ var Hermes = (function (exports) {
 
   const isError = (data) => data instanceof Error;
   const isNumber = (data) => typeof data === 'number';
+  const isMap = (data) => data instanceof Map;
+  const isObject = (data) => {
+      return typeof data === 'object' && data != null
+          && Object.getPrototypeOf(data) === Object.prototype
+          && !Array.isArray(data) && !isMap(data) && !isSet(data);
+  };
+  const isSet = (data) => data instanceof Set;
   const isString = (data) => typeof data === 'string';
   const clone = (data) => {
       return JSON.parse(JSON.stringify(data));
@@ -253,6 +260,27 @@ var Hermes = (function (exports) {
       if (a === b)
           return 0;
       return a > b ? 1 : -1;
+  };
+  const deepMerge = (...objects) => {
+      return objects.reduce((acc, object) => {
+          Object.keys(object).forEach((key) => {
+              if (isObject(acc[key]) && isObject(object[key])) {
+                  acc[key] = deepMerge(acc[key], object[key]);
+              }
+              else if (Array.isArray(acc[key]) && Array.isArray(object[key])) {
+                  acc[key] = object[key];
+                  /**
+                   * If we wanted to merge the arrays as well, we can use the following line,
+                   * maybe rewrite this function as a configurable function.
+                   * acc[key] = Array.from(new Set((acc[key] as unknown[]).concat(acc[key])));
+                   */
+              }
+              else {
+                  acc[key] = object[key];
+              }
+          });
+          return acc;
+      }, {});
   };
   const getDataRange = (data) => {
       return data.reduce((acc, x) => {
@@ -1330,7 +1358,7 @@ var Hermes = (function (exports) {
     generateDimensions: generateDimensions
   });
 
-  const customDeepmerge = deepmergeCustom({ mergeArrays: false });
+  deepmergeCustom({ mergeArrays: false });
   class Hermes {
       constructor(target, dimensions, config, data) {
           this.config = HERMES_CONFIG;
@@ -1437,7 +1465,7 @@ var Hermes = (function (exports) {
       }
       setConfig(config = {}, redraw = true) {
           // Set config early as setSize references it early.
-          this.config = customDeepmerge(HERMES_CONFIG, config);
+          this.config = deepMerge(HERMES_CONFIG, config);
           // Clear out previously setup resize observer.
           if (this.resizeObserver) {
               this.resizeObserver.unobserve(this.element);
