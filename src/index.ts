@@ -1,6 +1,3 @@
-import type { DeepMergeLeafURI } from 'deepmerge-ts';
-import { deepmergeCustom } from 'deepmerge-ts';
-
 import CategoricalScale from './classes/CategoricalScale';
 import HermesError from './classes/HermesError';
 import LinearScale from './classes/LinearScale';
@@ -21,10 +18,6 @@ export {
   ActionType, DimensionLayout, DimensionType,
   Direction, FocusType, LabelPlacement, PathType,
 } from './types';
-
-const customDeepmerge = deepmergeCustom<{
-  DeepMergeArraysURI: DeepMergeLeafURI; // <-- Needed for correct output type.
-}>({ mergeArrays: false });
 
 class Hermes {
   protected element: HTMLElement;
