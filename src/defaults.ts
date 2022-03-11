@@ -28,6 +28,8 @@ export const MITER_LIMIT = 10.0;
 export const STROKE_STYLE = 'black';
 export const TEXT_ALIGN = 'left';
 export const TEXT_BASELINE = 'middle';
+export const TRUNCATE_SIZE = 30;
+export const TRUNCATE_SUFFIX = '...';
 
 /**
  * Framework options defaults.

@@ -1,6 +1,175 @@
 var Hermes = (function (exports) {
     'use strict';
 
+    const ActionType = {
+        FilterCreate: 'filter-create',
+        FilterMove: 'filter-move',
+        FilterResizeAfter: 'filter-resize-after',
+        FilterResizeBefore: 'filter-resize-before',
+        LabelMove: 'label-move',
+        None: 'none',
+    };
+    const DimensionLayout = {
+        AxisEvenlySpaced: 'axis-evenly-spaced',
+        Equidistant: 'equidistant',
+    };
+    const DimensionType = {
+        Categorical: 'categorical',
+        Linear: 'linear',
+        Logarithmic: 'logarithmic',
+    };
+    const Direction = {
+        Horizontal: 'horizontal',
+        Vertical: 'vertical',
+    };
+    const FocusType = {
+        DimensionAxis: 'dimension-axis',
+        DimensionLabel: 'dimension-label',
+        Filter: 'filter',
+        FilterResize: 'filter-resize',
+    };
+    const LabelPlacement = {
+        After: 'after',
+        Before: 'before',
+    };
+    const PathType = {
+        Bezier: 'bezier',
+        Straight: 'straight',
+    };
+
+    /**
+     * Invalid defaults.
+     */
+    const INVALID_VALUE = Number.NaN;
+    const INVALID_POINT = { x: Number.NaN, y: Number.NaN };
+    const INVALID_RECT = { h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN };
+    const INVALID_ACTION = {
+        dimIndex: -1,
+        p0: INVALID_POINT,
+        p1: INVALID_POINT,
+        type: ActionType.None,
+    };
+    /**
+     * Style defaults.
+     */
+    const BEZIER_FACTOR = 0.3;
+    const DIRECTION = 'inherit';
+    const FONT = 'normal 12px san-serif';
+    const LINE_CAP = 'butt';
+    const LINE_DASH_OFFSET = 0.0;
+    const LINE_JOIN = 'round';
+    const LINE_WIDTH = 1.0;
+    const MITER_LIMIT = 10.0;
+    const STROKE_STYLE = 'black';
+    const TEXT_BASELINE = 'middle';
+    const TRUNCATE_SIZE = 30;
+    const TRUNCATE_SUFFIX = '...';
+    /**
+     * Framework options defaults.
+     */
+    const HERMES_CONFIG = {
+        debug: false,
+        direction: Direction.Horizontal,
+        hooks: {},
+        resizeThrottleDelay: 0,
+        style: {
+            axes: {
+                axis: {
+                    boundaryPadding: 15,
+                    lineWidth: 1,
+                    strokeStyle: 'rgba(147, 147, 147, 1.0)',
+                },
+                axisActve: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
+                axisHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
+                filter: {
+                    cornerRadius: 2,
+                    fillStyle: 'rgba(0, 0, 0, 1.0)',
+                    strokeStyle: 'rgba(255, 255, 255, 1.0)',
+                    width: 4,
+                },
+                filterActive: {
+                    cornerRadius: 3,
+                    fillStyle: 'rgba(255, 100, 0, 1.0)',
+                    width: 6,
+                },
+                filterHover: {
+                    cornerRadius: 2,
+                    fillStyle: 'rgba(200, 50, 0, 1.0)',
+                    width: 4,
+                },
+                label: {
+                    fillStyle: 'rgba(0, 0, 0, 1.0)',
+                    font: 'normal 11px sans-serif',
+                    lineWidth: 3,
+                    offset: 4,
+                    placement: LabelPlacement.After,
+                    strokeStyle: 'rgba(255, 255, 255, 1.0)',
+                },
+                labelActive: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
+                labelHover: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
+                tick: {
+                    length: 4,
+                    lineWidth: 1,
+                    strokeStyle: 'rgba(147, 147, 147, 1.0)',
+                },
+                tickActive: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
+                tickHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
+            },
+            data: {
+                default: {
+                    lineWidth: 1,
+                    strokeStyle: 'rgba(82, 144, 244, 1.0)',
+                },
+                filtered: {
+                    lineWidth: 1,
+                    strokeStyle: 'rgba(0, 0, 0, 0.05)',
+                },
+                path: {
+                    options: {},
+                    type: PathType.Straight,
+                },
+            },
+            dimension: {
+                label: {
+                    angle: undefined,
+                    boundaryPadding: 5,
+                    fillStyle: 'rgba(0, 0, 0, 1.0)',
+                    font: 'normal 11px sans-serif',
+                    lineWidth: 3,
+                    offset: 16,
+                    placement: LabelPlacement.Before,
+                    strokeStyle: 'rgba(255, 255, 255, 1.0)',
+                },
+                labelActive: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
+                labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
+                layout: DimensionLayout.AxisEvenlySpaced,
+            },
+            padding: [32, 48, 32, 48],
+        },
+    };
+    const FILTER = {
+        p0: Number.NaN,
+        p1: Number.NaN,
+        value0: Number.NaN,
+        value1: Number.NaN,
+    };
+    const IX = {
+        dimension: {
+            axis: 0,
+            bound: undefined,
+            boundOffset: undefined,
+            offset: 0,
+        },
+        filters: {
+            active: FILTER,
+            key: undefined,
+        },
+        shared: {
+            action: INVALID_ACTION,
+            focus: undefined,
+        },
+    };
+
     const isError = (data) => data instanceof Error;
     const isNumber = (data) => typeof data === 'number';
     const isMap = (data) => data instanceof Map;
@@ -115,44 +284,16 @@ var Hermes = (function (exports) {
         readable = readable.replace(/\.(e)/, '$1'); // e.g. 2.e5 => 2e5
         return readable;
     };
+    const truncate = (str, options = {}) => {
+        var _a, _b;
+        const size = (_a = options.size) !== null && _a !== void 0 ? _a : TRUNCATE_SIZE;
+        const suffix = (_b = options.suffix) !== null && _b !== void 0 ? _b : TRUNCATE_SUFFIX;
+        if (str.length <= size)
+            return str;
+        return `${str.substring(0, size)}${suffix}`;
+    };
     const value2str = (value) => {
         return isString(value) ? value : value.toString();
-    };
-
-    const ActionType = {
-        FilterCreate: 'filter-create',
-        FilterMove: 'filter-move',
-        FilterResizeAfter: 'filter-resize-after',
-        FilterResizeBefore: 'filter-resize-before',
-        LabelMove: 'label-move',
-        None: 'none',
-    };
-    const DimensionLayout = {
-        AxisEvenlySpaced: 'axis-evenly-spaced',
-        Equidistant: 'equidistant',
-    };
-    const DimensionType = {
-        Categorical: 'categorical',
-        Linear: 'linear',
-        Logarithmic: 'logarithmic',
-    };
-    const Direction = {
-        Horizontal: 'horizontal',
-        Vertical: 'vertical',
-    };
-    const FocusType = {
-        DimensionAxis: 'dimension-axis',
-        DimensionLabel: 'dimension-label',
-        Filter: 'filter',
-        FilterResize: 'filter-resize',
-    };
-    const LabelPlacement = {
-        After: 'after',
-        Before: 'before',
-    };
-    const PathType = {
-        Bezier: 'bezier',
-        Straight: 'straight',
     };
 
     /**
@@ -450,137 +591,6 @@ var Hermes = (function (exports) {
             this.tickPos = this.ticks.map(tick => this.valueToPos(tick));
         }
     }
-
-    /**
-     * Invalid defaults.
-     */
-    const INVALID_VALUE = Number.NaN;
-    const INVALID_POINT = { x: Number.NaN, y: Number.NaN };
-    const INVALID_RECT = { h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN };
-    const INVALID_ACTION = {
-        dimIndex: -1,
-        p0: INVALID_POINT,
-        p1: INVALID_POINT,
-        type: ActionType.None,
-    };
-    /**
-     * Style defaults.
-     */
-    const BEZIER_FACTOR = 0.3;
-    const DIRECTION = 'inherit';
-    const FONT = 'normal 12px san-serif';
-    const LINE_CAP = 'butt';
-    const LINE_DASH_OFFSET = 0.0;
-    const LINE_JOIN = 'round';
-    const LINE_WIDTH = 1.0;
-    const MITER_LIMIT = 10.0;
-    const STROKE_STYLE = 'black';
-    const TEXT_BASELINE = 'middle';
-    /**
-     * Framework options defaults.
-     */
-    const HERMES_CONFIG = {
-        debug: false,
-        direction: Direction.Horizontal,
-        hooks: {},
-        resizeThrottleDelay: 0,
-        style: {
-            axes: {
-                axis: {
-                    boundaryPadding: 15,
-                    lineWidth: 1,
-                    strokeStyle: 'rgba(147, 147, 147, 1.0)',
-                },
-                axisActve: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
-                axisHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
-                filter: {
-                    cornerRadius: 2,
-                    fillStyle: 'rgba(0, 0, 0, 1.0)',
-                    strokeStyle: 'rgba(255, 255, 255, 1.0)',
-                    width: 4,
-                },
-                filterActive: {
-                    cornerRadius: 3,
-                    fillStyle: 'rgba(255, 100, 0, 1.0)',
-                    width: 6,
-                },
-                filterHover: {
-                    cornerRadius: 2,
-                    fillStyle: 'rgba(200, 50, 0, 1.0)',
-                    width: 4,
-                },
-                label: {
-                    fillStyle: 'rgba(0, 0, 0, 1.0)',
-                    font: 'normal 11px sans-serif',
-                    lineWidth: 3,
-                    offset: 4,
-                    placement: LabelPlacement.After,
-                    strokeStyle: 'rgba(255, 255, 255, 1.0)',
-                },
-                labelActive: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
-                labelHover: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
-                tick: {
-                    length: 4,
-                    lineWidth: 1,
-                    strokeStyle: 'rgba(147, 147, 147, 1.0)',
-                },
-                tickActive: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
-                tickHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
-            },
-            data: {
-                default: {
-                    lineWidth: 1,
-                    strokeStyle: 'rgba(82, 144, 244, 1.0)',
-                },
-                filtered: {
-                    lineWidth: 1,
-                    strokeStyle: 'rgba(0, 0, 0, 0.05)',
-                },
-                path: {
-                    options: {},
-                    type: PathType.Straight,
-                },
-            },
-            dimension: {
-                label: {
-                    angle: undefined,
-                    boundaryPadding: 5,
-                    fillStyle: 'rgba(0, 0, 0, 1.0)',
-                    font: 'normal 11px sans-serif',
-                    lineWidth: 3,
-                    offset: 16,
-                    placement: LabelPlacement.Before,
-                    strokeStyle: 'rgba(255, 255, 255, 1.0)',
-                },
-                labelActive: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
-                labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
-                layout: DimensionLayout.AxisEvenlySpaced,
-            },
-            padding: [32, 48, 32, 48],
-        },
-    };
-    const FILTER = {
-        p0: Number.NaN,
-        p1: Number.NaN,
-        value0: Number.NaN,
-        value1: Number.NaN,
-    };
-    const IX = {
-        dimension: {
-            axis: 0,
-            bound: undefined,
-            boundOffset: undefined,
-            offset: 0,
-        },
-        filters: {
-            active: FILTER,
-            key: undefined,
-        },
-        shared: {
-            action: INVALID_ACTION,
-            focus: undefined,
-        },
-    };
 
     const distance = (pointA, pointB) => {
         return Math.sqrt((pointB.x - pointA.x) ** 2 + (pointB.y - pointA.y) ** 2);
@@ -1268,6 +1278,7 @@ var Hermes = (function (exports) {
                 const data = this.data[key] || [];
                 const internal = {
                     ...dimension,
+                    labelTruncated: truncate(dimension.label),
                     range: undefined,
                     scale: new LinearScale(direction, 0, 100),
                 };
@@ -1370,7 +1381,7 @@ var Hermes = (function (exports) {
             _dsl.maxLengthCos = 0;
             _dsl.maxLengthSin = 0;
             this.dimensions.forEach((dimension, i) => {
-                const textSize = getTextSize(this.ctx, dimension.label, dimLabelStyle.font);
+                const textSize = getTextSize(this.ctx, dimension.labelTruncated, dimLabelStyle.font);
                 const _dlil = _.dims.list[i].label;
                 _dlil.w = textSize.w;
                 _dlil.h = textSize.h;
@@ -1983,7 +1994,7 @@ var Hermes = (function (exports) {
                 const x = bound.x + labelPoint.x;
                 const y = bound.y + labelPoint.y;
                 const style = { ..._s[i].label, ...dimTextStyle };
-                drawText(this.ctx, dimension.label, x, y, (_a = _dsl.rad) !== null && _a !== void 0 ? _a : 0, style);
+                drawText(this.ctx, dimension.labelTruncated, x, y, (_a = _dsl.rad) !== null && _a !== void 0 ? _a : 0, style);
             });
             // Draw dimension axes.
             const tickAdjust = axesStyle.label.angle == null && isHorizontal;

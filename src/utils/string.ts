@@ -1,3 +1,4 @@
+import { TRUNCATE_SIZE, TRUNCATE_SUFFIX } from '../defaults';
 import { Primitive } from '../types';
 
 import { isString } from './data';
@@ -39,6 +40,13 @@ export const str2value = (str: string): Primitive => {
   if (!isNaN(parsed)) return parsed;
 
   return str;
+};
+
+export const truncate = (str: string, options: { size?: number, suffix?: string } = {}): string => {
+  const size = options.size ?? TRUNCATE_SIZE;
+  const suffix = options.suffix ?? TRUNCATE_SUFFIX;
+  if (str.length <= size) return str;
+  return `${str.substring(0, size)}${suffix}`;
 };
 
 export const value2str = (value: Primitive): string => {

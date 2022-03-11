@@ -164,6 +164,7 @@ export interface LabelOptions extends StyleText {
   angle?: number;
   offset: number;
   placement: ELabelPlacement;
+  truncate?: number;
 }
 
 export interface PathOptions {
@@ -247,6 +248,7 @@ export interface Filters {
 }
 
 export interface InternalDimension extends Dimension {
+  labelTruncated: string;
   range?: Range;
   scale: CategoricalScale | LinearScale | LogScale;
 }
