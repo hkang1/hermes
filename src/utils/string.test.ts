@@ -73,6 +73,30 @@ describe('string utilities', () => {
     });
   });
 
+  describe('truncate', () => {
+    const long = 'The quick brown fox jumps over the lazy dog';
+    const short = 'fox';
+
+    it('should truncate with default options', () => {
+      expect(utils.truncate(long)).toBe('The quick brown fox jumps over...');
+    });
+
+    it('should leave short strings alone with default options', () => {
+      expect(utils.truncate(short)).toBe(short);
+      expect(utils.truncate('')).toBe('');
+    });
+
+    it('should truncate to a specific size', () => {
+      expect(utils.truncate(long, { size: 20 })).toBe('The quick brown fox ...');
+      expect(utils.truncate(long, { size: 10 })).toBe('The quick ...');
+    });
+
+    it('should trucate with custom suffix', () => {
+      expect(utils.truncate(long, { suffix: '*' })).toBe('The quick brown fox jumps over*');
+      expect(utils.truncate(long, { size: 4, suffix: '( ͡° ᴥ ͡°)' })).toBe('The ( ͡° ᴥ ͡°)');
+    });
+  });
+
   describe('value2str', () => {
     expect(utils.value2str(true)).toBe('true');
     expect(utils.value2str(false)).toBe('false');
