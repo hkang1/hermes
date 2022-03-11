@@ -514,7 +514,7 @@ var Hermes = (function (exports) {
                     font: 'normal 11px sans-serif',
                     lineWidth: 3,
                     offset: 4,
-                    placement: LabelPlacement.Before,
+                    placement: LabelPlacement.After,
                     strokeStyle: 'rgba(255, 255, 255, 1.0)',
                 },
                 labelActive: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
@@ -556,7 +556,7 @@ var Hermes = (function (exports) {
                 labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
                 layout: DimensionLayout.AxisEvenlySpaced,
             },
-            padding: [32, 16, 32, 16],
+            padding: [32, 48, 32, 48],
         },
     };
     const FILTER = {
