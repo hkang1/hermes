@@ -19,8 +19,8 @@ describe('string utilities', () => {
 
     it('should make short floating point numbers readable', () => {
       expect(utils.readableNumber(-1.234)).toBe('-1.234000');
-      expect(utils.readableNumber(1.2e12)).toBe('1200000000000');
-      expect(utils.readableNumber(1.2e24)).toBe('1.2e+24');
+      expect(utils.readableNumber(1.2e12)).toBe('1.200000e+12');
+      expect(utils.readableNumber(1.2e24)).toBe('1.200000e+24');
     });
 
     it('should limit large precision numbers to a default precision of 6', () => {
@@ -38,14 +38,25 @@ describe('string utilities', () => {
   });
 
   describe('readableTick', () => {
+    it('should remove the + plus sign after exponent sign', () => {
+      expect(utils.readableTick(1.8e+5)).toBe('1.8e5');
+      expect(utils.readableTick(2.345e+5)).toBe('2.345e5');
+    });
+
     it('should remove excess trailing zeroes at the end of a decimal', () => {
-      expect(utils.readableTick(0.75)).toBe('0.75');
-      expect(utils.readableTick(100000)).toBe('100000');
+      expect(utils.readableTick(0.75000000)).toBe('0.75');
+      expect(utils.readableTick(0.05050000)).toBe('0.0505');
     });
 
     it('should remove excess trailing zeroes at the end of a scientific number', () => {
-      expect(utils.readableTick(1e5)).toBe('100000');
-      expect(utils.readableTick(1e24)).toBe('1e+24');
+      expect(utils.readableTick(1.200000e-5)).toBe('1.2e-5');
+      expect(utils.readableTick(1.000e5)).toBe('1e5');
+      expect(utils.readableTick(1.0000e-24)).toBe('1e-24');
+    });
+
+    it('should remove excess trailing zeroes for large integers', () => {
+      expect(utils.readableTick(100000)).toBe('1e5');
+      expect(utils.readableTick(123456000000)).toBe('1.23456e11');
     });
   });
 
