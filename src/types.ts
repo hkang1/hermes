@@ -164,6 +164,7 @@ export interface LabelOptions extends StyleText {
   angle?: number;
   offset: number;
   placement: ELabelPlacement;
+  truncate?: number;
 }
 
 export interface PathOptions {
