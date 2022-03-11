@@ -1278,7 +1278,7 @@ var Hermes = (function (exports) {
                 const data = this.data[key] || [];
                 const internal = {
                     ...dimension,
-                    labelTruncated: truncate(dimension.label),
+                    labelTruncated: truncate(dimension.label, { size: this.config.style.dimension.label.truncate }),
                     range: undefined,
                     scale: new LinearScale(direction, 0, 100),
                 };
