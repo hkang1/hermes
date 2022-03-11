@@ -70,7 +70,6 @@ export const ActionType = {
 export const DimensionLayout = {
   AxisEvenlySpaced: 'axis-evenly-spaced',
   Equidistant: 'equidistant',
-  EvenlySpaced: 'evenly-spaced',
 } as const;
 
 export const DimensionType = {

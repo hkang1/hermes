@@ -118,7 +118,6 @@ declare namespace Hermes {
   export const DimensionLayout: {
     AxisEvenlySpaced: 'axis-evenly-spaced',
     Equidistant: 'equidistant',
-    EvenlySpaced: 'evenly-spaced',
   };
 
   export const DimensionType: {
