@@ -67,7 +67,7 @@ export const HERMES_CONFIG: t.Config = {
         font: 'normal 11px sans-serif',
         lineWidth: 3,
         offset: 4,
-        placement: t.LabelPlacement.Before,
+        placement: t.LabelPlacement.After,
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
       },
       labelActive: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
@@ -109,7 +109,7 @@ export const HERMES_CONFIG: t.Config = {
       labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },
-    padding: [ 32, 16, 32, 16 ],
+    padding: [ 32, 48, 32, 48 ],
   },
 };
 

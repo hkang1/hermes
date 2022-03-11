@@ -127,7 +127,6 @@ const ActionType = {
 const DimensionLayout = {
     AxisEvenlySpaced: 'axis-evenly-spaced',
     Equidistant: 'equidistant',
-    EvenlySpaced: 'evenly-spaced',
 };
 const DimensionType = {
     Categorical: 'categorical',
@@ -512,7 +511,7 @@ const HERMES_CONFIG = {
                 font: 'normal 11px sans-serif',
                 lineWidth: 3,
                 offset: 4,
-                placement: LabelPlacement.Before,
+                placement: LabelPlacement.After,
                 strokeStyle: 'rgba(255, 255, 255, 1.0)',
             },
             labelActive: { fillStyle: 'rgba(0, 0, 0, 1.0)' },
@@ -554,7 +553,7 @@ const HERMES_CONFIG = {
             labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
             layout: DimensionLayout.AxisEvenlySpaced,
         },
-        padding: [32, 16, 32, 16],
+        padding: [32, 48, 32, 48],
     },
 };
 const FILTER = {
@@ -1298,6 +1297,7 @@ class Hermes {
     }
     redraw() {
         this.calculate();
+        this.clear();
         if (this.config.debug)
             this.drawDebugOutline();
         this.draw();
@@ -1439,17 +1439,17 @@ class Hermes {
              * Figure out where the axis alignment center should be.
              * First, base it on the direction and dimension label placement.
              */
-            if (_dlil.lengthCos == null) {
-                _dlily.spaceBefore = (isHorizontal ? _dlil.w : _dlil.h) / 2;
-                _dlily.spaceAfter = _dlily.spaceBefore;
-            }
-            else if (isHorizontal) {
-                _dlily.spaceBefore = _dlil.lengthCos < 0 ? -_dlil.lengthCos : 0;
-                _dlily.spaceAfter = _dlil.lengthCos > 0 ? _dlil.lengthCos : 0;
+            if (isLabelAngled) {
+                _dlily.spaceBefore = isHorizontal
+                    ? (_dlil.lengthCos < 0 ? -_dlil.lengthCos : 0)
+                    : (_dlil.lengthSin > 0 ? _dlil.lengthSin : 0);
+                _dlily.spaceAfter = isHorizontal
+                    ? (_dlil.lengthCos > 0 ? _dlil.lengthCos : 0)
+                    : (_dlil.lengthSin < 0 ? -_dlil.lengthSin : 0);
             }
             else {
-                _dlily.spaceBefore = _dlil.lengthSin > 0 ? _dlil.lengthSin : 0;
-                _dlily.spaceAfter = _dlil.lengthSin < 0 ? -_dlil.lengthSin : 0;
+                _dlily.spaceBefore = (isHorizontal ? _dlil.lengthCos : _dlil.lengthSin) / 2;
+                _dlily.spaceAfter = (isHorizontal ? _dlil.lengthCos : _dlil.lengthSin) / 2;
             }
             /**
              * See if axes labels are long enough to shift the axis center.
@@ -1486,14 +1486,16 @@ class Hermes {
          * Calculate the gap spacing between the dimensions.
          */
         if (isHorizontal) {
-            _dsly.gap = dimCount > 1 ? (_l.drawRect.w - _dsly.totalBoundSpace) / (dimCount - 1) : 0;
+            const totalGapWidth = _l.drawRect.w - _dsly.totalBoundSpace;
+            _dsly.gap = dimCount > 1 ? Math.max(totalGapWidth, 0) / (dimCount - 1) : 0;
             _dsly.offset = _l.padding[3];
-            _dsly.space = _l.drawRect.w / dimCount;
+            _dsly.space = dimCount > 1 ? _l.drawRect.w / (dimCount - 1) : 0;
         }
         else {
-            _dsly.gap = dimCount > 1 ? (_l.drawRect.h - _dsly.totalBoundSpace) / (dimCount - 1) : 0;
+            const totalGapHeight = _l.drawRect.h - _dsly.totalBoundSpace;
+            _dsly.gap = dimCount > 1 ? Math.max(totalGapHeight, 0) / (dimCount - 1) : 0;
             _dsly.offset = _l.padding[0];
-            _dsly.space = _l.drawRect.h / dimCount;
+            _dsly.space = dimCount > 1 ? _l.drawRect.h / (dimCount - 1) : 0;
         }
         /**
          * Update the dimension bounding position.
@@ -1504,12 +1506,10 @@ class Hermes {
             const _dlily = _.dims.list[i].layout;
             if (isHorizontal) {
                 if (dimLayout === DimensionLayout.AxisEvenlySpaced) {
-                    _dlily.bound.x = _dsly.offset + i * _dsly.space + _dsly.space / 2 - _dlily.spaceBefore;
+                    _dlily.bound.x = traversed - _dlily.spaceBefore;
+                    traversed += _dsly.space;
                 }
                 else if (dimLayout === DimensionLayout.Equidistant) {
-                    _dlily.bound.x = _dsly.offset + i * _dsly.space + (_dsly.space - _dlily.bound.w) / 2;
-                }
-                else if (dimLayout === DimensionLayout.EvenlySpaced) {
                     _dlily.bound.x = traversed;
                     traversed += _dsly.gap + _dlily.bound.w;
                 }
@@ -1524,12 +1524,10 @@ class Hermes {
             }
             else {
                 if (dimLayout === DimensionLayout.AxisEvenlySpaced) {
-                    _dlily.bound.y = _dsly.offset + i * _dsly.space + _dsly.space / 2 - _dlily.spaceBefore;
+                    _dlily.bound.y = traversed - _dlily.spaceBefore;
+                    traversed += _dsly.space;
                 }
                 else if (dimLayout === DimensionLayout.Equidistant) {
-                    _dlily.bound.y = _dsly.offset + i * _dsly.space + (_dsly.space - _dlily.bound.h) / 2;
-                }
-                else if (dimLayout === DimensionLayout.EvenlySpaced) {
                     _dlily.bound.y = traversed;
                     traversed += _dsly.gap + _dlily.bound.h;
                 }
@@ -1900,11 +1898,14 @@ class Hermes {
         }
         this.canvas.style.cursor = cursor;
     }
+    clear() {
+        const { h, w } = this.size;
+        this.ctx.clearRect(0, 0, w, h);
+    }
     draw() {
         var _a;
         if (!this._)
             return;
-        const { h, w } = this.size;
         const _dl = this._.dims.list;
         const _dsa = this._.dims.shared.axes;
         const _dsl = this._.dims.shared.label;
@@ -1918,8 +1919,6 @@ class Hermes {
         const dimStyle = this.config.style.dimension;
         const isLabelBefore = dimStyle.label.placement === LabelPlacement.Before;
         const isAxesBefore = axesStyle.label.placement === LabelPlacement.Before;
-        // Clear previous canvas drawings.
-        this.ctx.clearRect(0, 0, w, h);
         // Draw data lines.
         const dimColorKey = (_a = dataStyle.colorScale) === null || _a === void 0 ? void 0 : _a.dimensionKey;
         for (let k = 0; k < this.dataCount; k++) {
@@ -2057,7 +2056,7 @@ class Hermes {
         drawLine(this.ctx, w - _l.padding[1], 0, w - _l.padding[1], h, paddingStyle);
         // Draw each dimension rough outline with bounding box.
         const dimStyle = { strokeStyle: '#999999' };
-        const boundStyle = { strokeStyle: '#dddddd' };
+        const boundStyle = { strokeStyle: '#ff0000' };
         const axisBoundaryStyle = { strokeStyle: '#eeeeee' };
         const labelPointStyle = { strokeStyle: '#0099cc' };
         const labelBoundaryStyle = { strokeStyle: '#ffcc00' };
