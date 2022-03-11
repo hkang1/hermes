@@ -63,6 +63,8 @@ const LINE_WIDTH = 1.0;
 const MITER_LIMIT = 10.0;
 const STROKE_STYLE = 'black';
 const TEXT_BASELINE = 'middle';
+const TRUNCATE_SIZE = 30;
+const TRUNCATE_SUFFIX = '...';
 /**
  * Framework options defaults.
  */
@@ -282,6 +284,14 @@ const readableTick = (num) => {
     readable = readable.replace(/(\.[0-9]+?)0+$/, '$1'); // e.g. 0.750000 => 0.75
     readable = readable.replace(/\.(e)/, '$1'); // e.g. 2.e5 => 2e5
     return readable;
+};
+const truncate = (str, options = {}) => {
+    var _a, _b;
+    const size = (_a = options.size) !== null && _a !== void 0 ? _a : TRUNCATE_SIZE;
+    const suffix = (_b = options.suffix) !== null && _b !== void 0 ? _b : TRUNCATE_SUFFIX;
+    if (str.length <= size)
+        return str;
+    return `${str.substring(0, size)}${suffix}`;
 };
 const value2str = (value) => {
     return isString(value) ? value : value.toString();
@@ -1269,6 +1279,7 @@ class Hermes {
             const data = this.data[key] || [];
             const internal = {
                 ...dimension,
+                labelTruncated: truncate(dimension.label),
                 range: undefined,
                 scale: new LinearScale(direction, 0, 100),
             };
@@ -1371,7 +1382,7 @@ class Hermes {
         _dsl.maxLengthCos = 0;
         _dsl.maxLengthSin = 0;
         this.dimensions.forEach((dimension, i) => {
-            const textSize = getTextSize(this.ctx, dimension.label, dimLabelStyle.font);
+            const textSize = getTextSize(this.ctx, dimension.labelTruncated, dimLabelStyle.font);
             const _dlil = _.dims.list[i].label;
             _dlil.w = textSize.w;
             _dlil.h = textSize.h;
@@ -1984,7 +1995,7 @@ class Hermes {
             const x = bound.x + labelPoint.x;
             const y = bound.y + labelPoint.y;
             const style = { ..._s[i].label, ...dimTextStyle };
-            drawText(this.ctx, dimension.label, x, y, (_a = _dsl.rad) !== null && _a !== void 0 ? _a : 0, style);
+            drawText(this.ctx, dimension.labelTruncated, x, y, (_a = _dsl.rad) !== null && _a !== void 0 ? _a : 0, style);
         });
         // Draw dimension axes.
         const tickAdjust = axesStyle.label.angle == null && isHorizontal;

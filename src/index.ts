@@ -12,6 +12,7 @@ import { getElement, getMousePoint } from './utils/dom';
 import { throttle } from './utils/event';
 import * as ix from './utils/interaction';
 import { distance, isPointInTriangle } from './utils/math';
+import { truncate } from './utils/string';
 import * as tester from './utils/tester';
 
 export {
@@ -186,6 +187,7 @@ class Hermes {
       const data = this.data[key] || [];
       const internal: t.InternalDimension = {
         ...dimension,
+        labelTruncated: truncate(dimension.label),
         range: undefined,
         scale: new LinearScale(direction, 0, 100),
       };
@@ -311,7 +313,7 @@ class Hermes {
     _dsl.maxLengthCos = 0;
     _dsl.maxLengthSin = 0;
     this.dimensions.forEach((dimension, i) => {
-      const textSize = canvas.getTextSize(this.ctx, dimension.label, dimLabelStyle.font);
+      const textSize = canvas.getTextSize(this.ctx, dimension.labelTruncated, dimLabelStyle.font);
       const _dlil = _.dims.list[i].label;
 
       _dlil.w = textSize.w;
@@ -985,7 +987,7 @@ class Hermes {
       const x = bound.x + labelPoint.x;
       const y = bound.y + labelPoint.y;
       const style = { ..._s[i].label, ...dimTextStyle };
-      canvas.drawText(this.ctx, dimension.label, x, y, _dsl.rad ?? 0, style);
+      canvas.drawText(this.ctx, dimension.labelTruncated, x, y, _dsl.rad ?? 0, style);
     });
 
     // Draw dimension axes.

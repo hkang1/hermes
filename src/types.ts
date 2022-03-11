@@ -248,6 +248,7 @@ export interface Filters {
 }
 
 export interface InternalDimension extends Dimension {
+  labelTruncated: string;
   range?: Range;
   scale: CategoricalScale | LinearScale | LogScale;
 }
