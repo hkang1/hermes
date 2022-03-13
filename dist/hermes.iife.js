@@ -1169,14 +1169,14 @@ var Hermes = (function (exports) {
             else {
                 this.canvas = canvases[0];
             }
-            // Setup initial canvas size.
-            const rect = this.element.getBoundingClientRect();
-            this.setSize(rect.width, rect.height);
             // Get canvas context.
             const ctx = this.canvas.getContext('2d');
             if (!ctx)
                 throw new HermesError('Unable to get context from target element.');
             this.ctx = ctx;
+            // Setup initial canvas size (must come after setting context).
+            const rect = this.element.getBoundingClientRect();
+            this.setSize(rect.width, rect.height);
             if (dimensions)
                 this.setDimensions(dimensions, false);
             if (config)
@@ -1314,11 +1314,20 @@ var Hermes = (function (exports) {
         setSize(w, h) {
             var _a, _b;
             const oldSize = { h: this.size.h, w: this.size.w };
-            this.canvas.width = w;
-            this.canvas.height = h;
-            this.size = { h, w };
+            const cssWidth = Math.round(w * devicePixelRatio);
+            const cssHeight = Math.round(h * devicePixelRatio);
+            // Increase actual canvas size.
+            this.canvas.width = Math.round(cssWidth * devicePixelRatio);
+            this.canvas.height = Math.round(cssHeight * devicePixelRatio);
+            // Scale all drawing calls.
+            this.ctx.scale(devicePixelRatio, devicePixelRatio);
+            // Scale everything down using CSS.
+            this.canvas.style.width = `${cssWidth}px`;
+            this.canvas.style.height = `${cssHeight}px`;
+            // Update record of size.
+            this.size = { h: cssHeight, w: cssWidth };
             // Make hook callback.
-            (_b = (_a = this.config.hooks).onResize) === null || _b === void 0 ? void 0 : _b.call(_a, { h, w }, oldSize);
+            (_b = (_a = this.config.hooks).onResize) === null || _b === void 0 ? void 0 : _b.call(_a, this.size, oldSize);
         }
         redraw() {
             this.calculate();

@@ -54,14 +54,14 @@ class Hermes {
       this.canvas = canvases[0];
     }
 
-    // Setup initial canvas size.
-    const rect = this.element.getBoundingClientRect();
-    this.setSize(rect.width, rect.height);
-
     // Get canvas context.
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new HermesError('Unable to get context from target element.');
     this.ctx = ctx;
+
+    // Setup initial canvas size (must come after setting context).
+    const rect = this.element.getBoundingClientRect();
+    this.setSize(rect.width, rect.height);
 
     if (dimensions) this.setDimensions(dimensions, false);
     if (config) this.setConfig(config, false);
@@ -232,12 +232,25 @@ class Hermes {
 
   public setSize(w: number, h: number): void {
     const oldSize = { h: this.size.h, w: this.size.w };
-    this.canvas.width = w;
-    this.canvas.height = h;
-    this.size = { h, w };
+    const cssWidth = Math.round(w * devicePixelRatio);
+    const cssHeight = Math.round(h * devicePixelRatio);
+
+    // Increase actual canvas size.
+    this.canvas.width = Math.round(cssWidth * devicePixelRatio);
+    this.canvas.height = Math.round(cssHeight * devicePixelRatio);
+
+    // Scale all drawing calls.
+    this.ctx.scale(devicePixelRatio, devicePixelRatio);
+
+    // Scale everything down using CSS.
+    this.canvas.style.width = `${cssWidth}px`;
+    this.canvas.style.height = `${cssHeight}px`;
+
+    // Update record of size.
+    this.size = { h: cssHeight, w: cssWidth };
 
     // Make hook callback.
-    this.config.hooks.onResize?.({ h, w }, oldSize);
+    this.config.hooks.onResize?.(this.size, oldSize);
   }
 
   public redraw(): void {
