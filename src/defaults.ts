@@ -46,23 +46,34 @@ export const HERMES_CONFIG: t.Config = {
         lineWidth: 1,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
-      axisActve: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
-      axisHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
+      axisActve: {
+        lineWidth: 3,
+        strokeStyle: 'rgba(79, 180, 246, 1.0)',
+      },
+      axisHover: {
+        lineWidth: 3,
+        strokeStyle: 'rgba(99, 200, 255, 1.0)',
+      },
       filter: {
         cornerRadius: 2,
-        fillStyle: 'rgba(0, 0, 0, 1.0)',
+        fillStyle: 'rgba(235, 100, 200, 1.0)',
         strokeStyle: 'rgba(255, 255, 255, 1.0)',
         width: 4,
       },
       filterActive: {
         cornerRadius: 3,
-        fillStyle: 'rgba(255, 100, 0, 1.0)',
+        fillStyle: 'rgba(255, 120, 220, 1.0)',
+        width: 8,
+      },
+      filterAxisHover: {
+        cornerRadius: 2,
+        fillStyle: 'rgba(235, 100, 200, 1.0)',
         width: 6,
       },
       filterHover: {
         cornerRadius: 2,
-        fillStyle: 'rgba(200, 50, 0, 1.0)',
-        width: 4,
+        fillStyle: 'rgba(235, 100, 200, 1.0)',
+        width: 8,
       },
       label: {
         fillStyle: 'rgba(0, 0, 0, 1.0)',
