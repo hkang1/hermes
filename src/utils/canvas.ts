@@ -292,21 +292,6 @@ export const getTextSize = (
   return { h, w };
 };
 
-export const setFont = (
-  ctx: CanvasRenderingContext2D,
-  font: string = DEFAULT.FONT,
-): void => {
-  const regexSize = new RegExp(/(-?\d*\.?\d+)px/);
-  const matches = font.match(regexSize);
-
-  if (matches?.length === 2) {
-    const size = Math.round(parseFloat(matches[1]) * devicePixelRatio);
-    ctx.font = font.replace(regexSize, `${size}px`);
-  } else {
-    ctx.font = font;
-  }
-};
-
 export const normalizePadding = (padding: t.Padding): [ number, number, number, number ] => {
   if (!Array.isArray(padding)) return [ padding, padding, padding, padding ];
   if (padding.length === 2) return [ padding[0], padding[1], padding[0], padding[1] ];
@@ -323,4 +308,19 @@ export const normalizeRad = (rad: number): number => {
  */
 export const roundPixel = (x: number): number => {
   return Math.round(x - 0.5) + 0.5;
+};
+
+export const setFont = (
+  ctx: CanvasRenderingContext2D,
+  font: string = DEFAULT.FONT,
+): void => {
+  const regexSize = new RegExp(/(-?\d*\.?\d+)px/);
+  const matches = font.match(regexSize);
+
+  if (matches?.length === 2) {
+    const size = Math.round(parseFloat(matches[1]) * devicePixelRatio);
+    ctx.font = font.replace(regexSize, `${size}px`);
+  } else {
+    ctx.font = font;
+  }
 };

@@ -845,17 +845,6 @@ const getTextSize = (ctx, text, font = FONT) => {
     const h = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     return { h, w };
 };
-const setFont = (ctx, font = FONT) => {
-    const regexSize = new RegExp(/(-?\d*\.?\d+)px/);
-    const matches = font.match(regexSize);
-    if ((matches === null || matches === void 0 ? void 0 : matches.length) === 2) {
-        const size = Math.round(parseFloat(matches[1]) * devicePixelRatio);
-        ctx.font = font.replace(regexSize, `${size}px`);
-    }
-    else {
-        ctx.font = font;
-    }
-};
 const normalizePadding = (padding) => {
     if (!Array.isArray(padding))
         return [padding, padding, padding, padding];
@@ -872,6 +861,17 @@ const normalizeRad = (rad) => {
  */
 const roundPixel = (x) => {
     return Math.round(x - 0.5) + 0.5;
+};
+const setFont = (ctx, font = FONT) => {
+    const regexSize = new RegExp(/(-?\d*\.?\d+)px/);
+    const matches = font.match(regexSize);
+    if ((matches === null || matches === void 0 ? void 0 : matches.length) === 2) {
+        const size = Math.round(parseFloat(matches[1]) * devicePixelRatio);
+        ctx.font = font.replace(regexSize, `${size}px`);
+    }
+    else {
+        ctx.font = font;
+    }
 };
 
 const hex2rgb = (hex) => {
