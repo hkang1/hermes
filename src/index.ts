@@ -560,7 +560,11 @@ class Hermes {
         _ixsa.type === t.ActionType.FilterResizeAfter ||
         _ixsa.type === t.ActionType.FilterResizeBefore
       ) && _ixsa.dimIndex === i;
-      const isAxisFocused = _ixsf?.type === t.FocusType.DimensionAxis && _ixsf?.dimIndex === i;
+      const isAxisFocused = (
+        _ixsf?.type === t.FocusType.DimensionAxis ||
+        _ixsf?.type === t.FocusType.Filter ||
+        _ixsf?.type === t.FocusType.FilterResize
+      ) && _ixsf?.dimIndex === i;
 
       _s[i] = _s[i] || {};
       _s[i].label = {
@@ -593,10 +597,13 @@ class Hermes {
           _ixsf?.dimIndex === i &&
           _ixsf?.filterIndex === j
         );
+        const isFilterAxisHover = isAxisActive || (isAxisFocused && !isFilterFocused);
+        const isFilterHover = isFilterFocused && _ixsa.filterIndex === undefined;
         const isFilterActive = _ixsa.dimIndex === i && _ixsa.filterIndex === j;
         return {
           ..._osa.filter,
-          ...(!isFilterActive && isFilterFocused && !isActive ? _osa.filterHover : {}),
+          ...(isFilterAxisHover ? _osa.filterAxisHover : {}),
+          ...(isFilterHover ? _osa.filterHover : {}),
           ...(isFilterActive ? _osa.filterActive : {}),
         };
       });

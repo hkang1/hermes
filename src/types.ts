@@ -205,6 +205,7 @@ export interface Config {
       axisHover: StyleLine;
       filter: FilterOptions;
       filterActive: FilterOptions;
+      filterAxisHover: FilterOptions;
       filterHover: FilterOptions;
       label: LabelOptions;
       labelActive: StyleText;

@@ -79,23 +79,34 @@ var Hermes = (function (exports) {
                     lineWidth: 1,
                     strokeStyle: 'rgba(147, 147, 147, 1.0)',
                 },
-                axisActve: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
-                axisHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
+                axisActve: {
+                    lineWidth: 3,
+                    strokeStyle: 'rgba(79, 180, 246, 1.0)',
+                },
+                axisHover: {
+                    lineWidth: 3,
+                    strokeStyle: 'rgba(99, 200, 255, 1.0)',
+                },
                 filter: {
                     cornerRadius: 2,
-                    fillStyle: 'rgba(0, 0, 0, 1.0)',
+                    fillStyle: 'rgba(235, 100, 200, 1.0)',
                     strokeStyle: 'rgba(255, 255, 255, 1.0)',
                     width: 4,
                 },
                 filterActive: {
                     cornerRadius: 3,
-                    fillStyle: 'rgba(255, 100, 0, 1.0)',
+                    fillStyle: 'rgba(255, 120, 220, 1.0)',
+                    width: 8,
+                },
+                filterAxisHover: {
+                    cornerRadius: 2,
+                    fillStyle: 'rgba(235, 100, 200, 1.0)',
                     width: 6,
                 },
                 filterHover: {
                     cornerRadius: 2,
-                    fillStyle: 'rgba(200, 50, 0, 1.0)',
-                    width: 4,
+                    fillStyle: 'rgba(235, 100, 200, 1.0)',
+                    width: 8,
                 },
                 label: {
                     fillStyle: 'rgba(0, 0, 0, 1.0)',
@@ -1605,7 +1616,9 @@ var Hermes = (function (exports) {
                     _ixsa.type === ActionType.FilterMove ||
                     _ixsa.type === ActionType.FilterResizeAfter ||
                     _ixsa.type === ActionType.FilterResizeBefore) && _ixsa.dimIndex === i;
-                const isAxisFocused = (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionAxis && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
+                const isAxisFocused = ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionAxis ||
+                    (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter ||
+                    (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.FilterResize) && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
                 _s[i] = _s[i] || {};
                 _s[i].label = {
                     ..._osd.label,
@@ -1631,10 +1644,13 @@ var Hermes = (function (exports) {
                     const isFilterFocused = (((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter || (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.FilterResize) &&
                         (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i &&
                         (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.filterIndex) === j);
+                    const isFilterAxisHover = isAxisActive || (isAxisFocused && !isFilterFocused);
+                    const isFilterHover = isFilterFocused && _ixsa.filterIndex === undefined;
                     const isFilterActive = _ixsa.dimIndex === i && _ixsa.filterIndex === j;
                     return {
                         ..._osa.filter,
-                        ...(!isFilterActive && isFilterFocused && !isActive ? _osa.filterHover : {}),
+                        ...(isFilterAxisHover ? _osa.filterAxisHover : {}),
+                        ...(isFilterHover ? _osa.filterHover : {}),
                         ...(isFilterActive ? _osa.filterActive : {}),
                     };
                 });
