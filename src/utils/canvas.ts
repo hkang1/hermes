@@ -216,8 +216,9 @@ export const drawText = (
 
   ctx.save();
 
+  setFont(ctx, style.font);
+
   ctx.direction = style.direction || DEFAULT.DIRECTION;
-  ctx.font = style.font || DEFAULT.FONT;
   ctx.textAlign = style.textAlign || (inwards ? 'right' : 'left');
   ctx.textBaseline = style.textBaseline || DEFAULT.TEXT_BASELINE;
 
@@ -284,7 +285,7 @@ export const getTextSize = (
   text: string,
   font: string = DEFAULT.FONT,
 ): t.Size => {
-  ctx.font = font;
+  setFont(ctx, font);
   const metrics = ctx.measureText(text);
   const w = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
   const h = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
@@ -307,4 +308,19 @@ export const normalizeRad = (rad: number): number => {
  */
 export const roundPixel = (x: number): number => {
   return Math.round(x - 0.5) + 0.5;
+};
+
+export const setFont = (
+  ctx: CanvasRenderingContext2D,
+  font: string = DEFAULT.FONT,
+): void => {
+  const regexSize = new RegExp(/(-?\d*\.?\d+)px/);
+  const matches = font.match(regexSize);
+
+  if (matches?.length === 2) {
+    const size = Math.round(parseFloat(matches[1]) * devicePixelRatio);
+    ctx.font = font.replace(regexSize, `${size}px`);
+  } else {
+    ctx.font = font;
+  }
 };

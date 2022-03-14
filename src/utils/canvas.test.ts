@@ -509,4 +509,25 @@ describe('canvas utilities', () => {
       expect(utils.roundPixel(1.0)).toBe(1.5);
     });
   });
+
+  describe('setFont', () => {
+    beforeEach(() => {
+      ctx = getContext();
+    });
+
+    it('should adjust canvas font sizes based on `pixelDeviceRatio`', () => {
+      window.devicePixelRatio = 3;
+      utils.setFont(ctx, 'normal 12px san-serif');
+      expect(ctx.font).toBe('36px san-serif');
+
+      window.devicePixelRatio = 1.5;
+      utils.setFont(ctx, 'bold 16px serif');
+      expect(ctx.font).toBe('bold 24px serif');
+    });
+
+    it('should return the original canvas font when font px is missing', () => {
+      utils.setFont(ctx, 'caption');
+      expect(ctx.font).toBe('10px sans-serif');
+    });
+  });
 });

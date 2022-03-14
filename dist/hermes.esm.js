@@ -793,8 +793,8 @@ const drawText = (ctx, text, x, y, rad, style = {}) => {
     const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
     const rotate = -rad - (inwards ? Math.PI : 0);
     ctx.save();
+    setFont(ctx, style.font);
     ctx.direction = style.direction || DIRECTION;
-    ctx.font = style.font || FONT;
     ctx.textAlign = style.textAlign || (inwards ? 'right' : 'left');
     ctx.textBaseline = style.textBaseline || TEXT_BASELINE;
     if (rotate % 2 * Math.PI !== 0) {
@@ -835,7 +835,7 @@ const getTextBoundary = (x, y, w, h, rad, offsetX = 0, offsetY = 0, padding = 0)
     return boundary;
 };
 const getTextSize = (ctx, text, font = FONT) => {
-    ctx.font = font;
+    setFont(ctx, font);
     const metrics = ctx.measureText(text);
     const w = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
     const h = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
@@ -857,6 +857,17 @@ const normalizeRad = (rad) => {
  */
 const roundPixel = (x) => {
     return Math.round(x - 0.5) + 0.5;
+};
+const setFont = (ctx, font = FONT) => {
+    const regexSize = new RegExp(/(-?\d*\.?\d+)px/);
+    const matches = font.match(regexSize);
+    if ((matches === null || matches === void 0 ? void 0 : matches.length) === 2) {
+        const size = Math.round(parseFloat(matches[1]) * devicePixelRatio);
+        ctx.font = font.replace(regexSize, `${size}px`);
+    }
+    else {
+        ctx.font = font;
+    }
 };
 
 const hex2rgb = (hex) => {
@@ -1166,14 +1177,14 @@ class Hermes {
         else {
             this.canvas = canvases[0];
         }
-        // Setup initial canvas size.
-        const rect = this.element.getBoundingClientRect();
-        this.setSize(rect.width, rect.height);
         // Get canvas context.
         const ctx = this.canvas.getContext('2d');
         if (!ctx)
             throw new HermesError('Unable to get context from target element.');
         this.ctx = ctx;
+        // Setup initial canvas size (must come after setting context).
+        const rect = this.element.getBoundingClientRect();
+        this.setSize(rect.width, rect.height);
         if (dimensions)
             this.setDimensions(dimensions, false);
         if (config)
@@ -1311,11 +1322,20 @@ class Hermes {
     setSize(w, h) {
         var _a, _b;
         const oldSize = { h: this.size.h, w: this.size.w };
-        this.canvas.width = w;
-        this.canvas.height = h;
-        this.size = { h, w };
+        const cssWidth = Math.round(w * devicePixelRatio);
+        const cssHeight = Math.round(h * devicePixelRatio);
+        // Increase actual canvas size.
+        this.canvas.width = Math.round(cssWidth * devicePixelRatio);
+        this.canvas.height = Math.round(cssHeight * devicePixelRatio);
+        // Scale all drawing calls.
+        this.ctx.scale(devicePixelRatio, devicePixelRatio);
+        // Scale everything down using CSS.
+        this.canvas.style.width = `${cssWidth}px`;
+        this.canvas.style.height = `${cssHeight}px`;
+        // Update record of size.
+        this.size = { h: cssHeight, w: cssWidth };
         // Make hook callback.
-        (_b = (_a = this.config.hooks).onResize) === null || _b === void 0 ? void 0 : _b.call(_a, { h, w }, oldSize);
+        (_b = (_a = this.config.hooks).onResize) === null || _b === void 0 ? void 0 : _b.call(_a, this.size, oldSize);
     }
     redraw() {
         this.calculate();
