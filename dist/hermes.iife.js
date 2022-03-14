@@ -81,11 +81,11 @@ var Hermes = (function (exports) {
                 },
                 axisActve: {
                     lineWidth: 3,
-                    strokeStyle: 'rgba(79, 180, 246, 1.0)',
+                    strokeStyle: 'rgba(99, 200, 255, 1.0)',
                 },
                 axisHover: {
                     lineWidth: 3,
-                    strokeStyle: 'rgba(99, 200, 255, 1.0)',
+                    strokeStyle: 'rgba(79, 180, 246, 1.0)',
                 },
                 filter: {
                     cornerRadius: 2,
@@ -123,8 +123,8 @@ var Hermes = (function (exports) {
                     lineWidth: 1,
                     strokeStyle: 'rgba(147, 147, 147, 1.0)',
                 },
-                tickActive: { strokeStyle: 'rgba(255, 100, 0, 1.0)' },
-                tickHover: { strokeStyle: 'rgba(147, 147, 147, 1.0)' },
+                tickActive: { strokeStyle: 'rgba(99, 200, 255, 1.0)' },
+                tickHover: { strokeStyle: 'rgba(79, 180, 246, 1.0)' },
             },
             data: {
                 default: {
@@ -151,8 +151,8 @@ var Hermes = (function (exports) {
                     placement: LabelPlacement.Before,
                     strokeStyle: 'rgba(255, 255, 255, 1.0)',
                 },
-                labelActive: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
-                labelHover: { fillStyle: 'rgba(82, 144, 244, 1.0)' },
+                labelActive: { fillStyle: 'rgba(99, 200, 255, 1.0)' },
+                labelHover: { fillStyle: 'rgba(79, 180, 246, 1.0)' },
                 layout: DimensionLayout.AxisEvenlySpaced,
             },
             padding: [32, 48, 32, 48],
