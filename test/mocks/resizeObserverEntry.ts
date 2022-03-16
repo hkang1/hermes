@@ -3,8 +3,8 @@ const resizeObserverEntry = (
   width = 1000,
   height = 500,
 ): ResizeObserverEntry => ({
-  borderBoxSize: [],
-  contentBoxSize: [],
+  borderBoxSize: [ { blockSize: height, inlineSize: width } ],
+  contentBoxSize: [ { blockSize: height, inlineSize: width } ],
   contentRect: {
     bottom: 0,
     height,
@@ -16,6 +16,7 @@ const resizeObserverEntry = (
     x: 0,
     y: 0,
   },
+  devicePixelContentBoxSize: [ { blockSize: height, inlineSize: width } ],
   target,
 });
 

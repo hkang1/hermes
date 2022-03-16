@@ -45,7 +45,7 @@ declare class Hermes {
   setConfig(config: Hermes.RecursivePartial<Hermes.Config>, redraw?: boolean): void;
   setData(data: Hermes.Data, redraw?: boolean): void;
   setDimensions(dimensions: Hermes.Dimension[], redraw?: boolean): void;
-  setSize(w: number, h: number): void;
+  setSize(w: number, h: number, redraw?: boolean): void;
   redraw(): void;
   destroy(): void;
 }

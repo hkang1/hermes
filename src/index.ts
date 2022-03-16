@@ -59,10 +59,6 @@ class Hermes {
     if (!ctx) throw new HermesError('Unable to get context from target element.');
     this.ctx = ctx;
 
-    // Setup initial canvas size (must come after setting context).
-    const rect = this.element.getBoundingClientRect();
-    this.setSize(rect.width, rect.height);
-
     if (dimensions) this.setDimensions(dimensions, false);
     if (config) this.setConfig(config, false);
     if (data) this.setData(data, false);
@@ -230,27 +226,30 @@ class Hermes {
     if (redraw) this.redraw();
   }
 
-  public setSize(w: number, h: number): void {
+  public setSize(w: number, h: number, redraw = true): void {
     const oldSize = { h: this.size.h, w: this.size.w };
-    const cssWidth = Math.round(w * devicePixelRatio);
-    const cssHeight = Math.round(h * devicePixelRatio);
+    const width = Math.round(w * devicePixelRatio);
+    const height = Math.round(h * devicePixelRatio);
 
     // Increase actual canvas size.
-    this.canvas.width = Math.round(cssWidth * devicePixelRatio);
-    this.canvas.height = Math.round(cssHeight * devicePixelRatio);
+    this.canvas.width = width;
+    this.canvas.height = height;
 
     // Scale all drawing calls.
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(devicePixelRatio, devicePixelRatio);
 
     // Scale everything down using CSS.
-    this.canvas.style.width = `${cssWidth}px`;
-    this.canvas.style.height = `${cssHeight}px`;
+    this.canvas.style.width = `${w}px`;
+    this.canvas.style.height = `${h}px`;
 
     // Update record of size.
-    this.size = { h: cssHeight, w: cssWidth };
+    this.size = { h: height, w: width };
 
     // Make hook callback.
     this.config.hooks.onResize?.(this.size, oldSize);
+
+    if (redraw) this.redraw();
   }
 
   public redraw(): void {
@@ -1135,14 +1134,12 @@ class Hermes {
   }
 
   protected handleResize(entries: ResizeObserverEntry[]): void {
-    if (entries.length === 0) return;
+    const entry = entries.find(entry => entry.target === this.element);
+    if (!entry) return;
 
-    const { width: w1, height: h1 } = entries[0].contentRect;
-    const { w: w0, h: h0 } = this.size;
-    if (w0 === w1 && h0 === h1) return;
+    const { width: w, height: h } = entry.contentRect;
 
-    this.setSize(w1, h1);
-    this.redraw();
+    this.setSize(w, h);
   }
 
   protected handleDoubleClick(): void {
