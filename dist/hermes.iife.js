@@ -796,7 +796,7 @@ var Hermes = (function (exports) {
         const inwards = normalizedRad > Math.PI / 2 && normalizedRad <= 3 * Math.PI / 2;
         const rotate = -rad - (inwards ? Math.PI : 0);
         ctx.save();
-        setFont(ctx, style.font);
+        ctx.font = style.font || FONT;
         ctx.direction = style.direction || DIRECTION;
         ctx.textAlign = style.textAlign || (inwards ? 'right' : 'left');
         ctx.textBaseline = style.textBaseline || TEXT_BASELINE;
@@ -838,7 +838,7 @@ var Hermes = (function (exports) {
         return boundary;
     };
     const getTextSize = (ctx, text, font = FONT) => {
-        setFont(ctx, font);
+        ctx.font = font;
         const metrics = ctx.measureText(text);
         const w = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
         const h = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
@@ -860,17 +860,6 @@ var Hermes = (function (exports) {
      */
     const roundPixel = (x) => {
         return Math.round(x - 0.5) + 0.5;
-    };
-    const setFont = (ctx, font = FONT) => {
-        const regexSize = new RegExp(/(-?\d*\.?\d+)px/);
-        const matches = font.match(regexSize);
-        if ((matches === null || matches === void 0 ? void 0 : matches.length) === 2) {
-            const size = Math.round(parseFloat(matches[1]) * devicePixelRatio);
-            ctx.font = font.replace(regexSize, `${size}px`);
-        }
-        else {
-            ctx.font = font;
-        }
     };
 
     const hex2rgb = (hex) => {
@@ -1327,9 +1316,6 @@ var Hermes = (function (exports) {
             // Increase actual canvas size.
             this.canvas.width = width;
             this.canvas.height = height;
-            // Scale all drawing calls.
-            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-            this.ctx.scale(devicePixelRatio, devicePixelRatio);
             // Scale everything down using CSS.
             this.canvas.style.width = `${w}px`;
             this.canvas.style.height = `${h}px`;
