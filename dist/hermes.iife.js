@@ -929,7 +929,9 @@ var Hermes = (function (exports) {
      */
     const getMousePoint = (e, element) => {
         const rect = element.getBoundingClientRect();
-        return { x: e.clientX - rect.x, y: e.clientY - rect.y };
+        const x = (e.clientX - rect.x) * devicePixelRatio;
+        const y = (e.clientY - rect.y) * devicePixelRatio;
+        return { x, y };
     };
 
     const throttle = (fn, delay) => {
