@@ -232,3 +232,8 @@ Option to provide a hook that gets called for any filter changes. The callback i
 #### data
 #### dimension
 #### padding
+
+# Special Thanks
+
+- Leon Sorokin's [uPlot](https://github.com/leeoniya/uPlot) was a great source of inspiration and a lot of the setup work and deployment steps of Hermes are modeled after it. Leon has also provided some great guidance on some technical improvements.
+- Alex Johnson provided some great feedback during development to improve the overall the user experience of Hermes.
