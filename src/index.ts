@@ -235,10 +235,6 @@ class Hermes {
     this.canvas.width = width;
     this.canvas.height = height;
 
-    // Scale all drawing calls.
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    this.ctx.scale(devicePixelRatio, devicePixelRatio);
-
     // Scale everything down using CSS.
     this.canvas.style.width = `${w}px`;
     this.canvas.style.height = `${h}px`;
