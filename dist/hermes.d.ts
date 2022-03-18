@@ -176,6 +176,7 @@ declare namespace Hermes {
   export interface Dimension {
     categories?: Primitive[];
     dataOnEdge?: boolean;
+    disableDrag?: boolean;
     key: string;
     label: string;
     logBase?: number;

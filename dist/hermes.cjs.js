@@ -1104,12 +1104,14 @@ const dimensionSamples = [
 const metricDimensionSamples = [
     {
         dataOnEdge: false,
+        disableDrag: true,
         key: 'accuracy',
         label: 'Accuracy',
         type: DimensionType.Linear,
     },
     {
         dataOnEdge: false,
+        disableDrag: true,
         key: 'loss',
         label: 'Loss',
         type: DimensionType.Linear,
@@ -1698,10 +1700,10 @@ class Hermes {
         for (let i = 0; i < this._.dims.list.length; i++) {
             const key = this.dimensions[i].key;
             const layout = this._.dims.list[i].layout;
-            // Check to see if a dimension label was targeted.
+            // Check to see if a dimension label was targeted and that it is draggable.
             const labelBoundary = layout.labelBoundary;
-            if (isPointInTriangle(point, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
-                isPointInTriangle(point, labelBoundary[2], labelBoundary[3], labelBoundary[0])) {
+            if ((isPointInTriangle(point, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
+                isPointInTriangle(point, labelBoundary[2], labelBoundary[3], labelBoundary[0])) && this.dimensions[i].disableDrag !== true) {
                 return { dimIndex: i, type: FocusType.DimensionLabel };
             }
             // Check to see if a dimension axis was targeted.
@@ -1747,8 +1749,11 @@ class Hermes {
              * 1. dimension drag type is triggered by the label
              * 2. dimension being dragged isn't being the dimension getting compared to (i)
              * 3. dimension is within a distance threshold
+             * 4. dimension is draggable (swappable)
              */
-            if (_ixsa.dimIndex !== i && Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
+            if (_ixsa.dimIndex !== i &&
+                this.dimensions[i].disableDrag !== true &&
+                Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
                 // Swap dragging dimension with the dimension it intersects with.
                 const oldIndex = _ixsa.dimIndex;
                 const newIndex = i;
