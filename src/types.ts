@@ -198,8 +198,11 @@ export interface Config {
     onFilterResize?: (filter: Filter) => void,
     onReset?: () => void;
     onResize?: (newSize: Size, oldSize: Size) => void;
-  },
-  resizeThrottleDelay: number;
+  };
+  interactions: {
+    throttleDelayMouseMove: number;
+    throttleDelayResize: number;
+  };
   style: {
     axes: {
       axis: AxisOptions,

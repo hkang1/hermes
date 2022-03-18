@@ -38,7 +38,10 @@ export const HERMES_CONFIG: t.Config = {
   debug: false,
   direction: t.Direction.Horizontal,
   hooks: {},
-  resizeThrottleDelay: 0,
+  interactions: {
+    throttleDelayMouseMove: 50,
+    throttleDelayResize: 0,
+  },
   style: {
     axes: {
       axis: {
