@@ -19,7 +19,7 @@ describe('Hermes Hooks', () => {
     spyGetTextSize.mockClear();
   });
 
-  it.skip('should call `onDimensionMove` when dimensions get dragged', () => {
+  it('should call `onDimensionMove` when dimensions get dragged', () => {
     const onDimensionMove = jest.fn();
     const config: t.RecursivePartial<t.Config> = { hooks: { onDimensionMove } };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);

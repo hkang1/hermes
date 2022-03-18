@@ -47,7 +47,7 @@ export class HermesTester extends Hermes {
      * The ResizeObserver doesn't trigger properly in jsdom.
      * Instead we capture a resize event to fire off the handler.
      */
-    const size = { h: 500, w: 1000 };
+    const size = { h: DEFAULT_HEIGHT, w: DEFAULT_WIDTH };
     const resize = () => {
       this.handleResize([ resizeObserverEntry(this.element, size.w++, size.h++) ]);
     };
