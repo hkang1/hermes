@@ -78,7 +78,7 @@ describe('string utilities', () => {
     const short = 'fox';
 
     it('should truncate with default options', () => {
-      expect(utils.truncate(long)).toBe('The quick brown fox jumps over...');
+      expect(utils.truncate(long)).toBe('The quick brown fox jump...');
     });
 
     it('should leave short strings alone with default options', () => {
@@ -92,7 +92,7 @@ describe('string utilities', () => {
     });
 
     it('should trucate with custom suffix', () => {
-      expect(utils.truncate(long, { suffix: '*' })).toBe('The quick brown fox jumps over*');
+      expect(utils.truncate(long, { suffix: '*' })).toBe('The quick brown fox jump*');
       expect(utils.truncate(long, { size: 4, suffix: '( ͡° ᴥ ͡°)' })).toBe('The ( ͡° ᴥ ͡°)');
     });
   });
