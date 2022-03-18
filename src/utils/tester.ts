@@ -95,12 +95,14 @@ export const dimensionSamples: t.Dimension[] = [
 export const metricDimensionSamples: t.Dimension[] = [
   {
     dataOnEdge: false,
+    disableDrag: true,
     key: 'accuracy',
     label: 'Accuracy',
     type: t.DimensionType.Linear,
   },
   {
     dataOnEdge: false,
+    disableDrag: true,
     key: 'loss',
     label: 'Loss',
     type: t.DimensionType.Linear,
