@@ -88,6 +88,42 @@ describe('Hermes Config', () => {
   });
 
   describe('style', () => {
+    describe('axes', () => {
+      describe('label', () => {
+        it('should render label after in horizontal layout', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Horizontal,
+            style: { axes: { label: { placement: t.LabelPlacement.After } } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+
+        it('should render label after in vertical layout', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Vertical,
+            style: { axes: { label: { placement: t.LabelPlacement.After } } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+
+        it('should render label at an angle in horizontal layout', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Horizontal,
+            style: { axes: { label: { angle: Math.PI / 4 } } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+
+        it('should render label at an angle in vertical layout', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Vertical,
+            style: { axes: { label: { angle: Math.PI / 4 } } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+      });
+    });
+
     describe('dimension', () => {
       describe('label', () => {
         it('should render label after in horizontal layout', () => {
