@@ -51,14 +51,14 @@ describe('Hermes Config', () => {
     });
   });
 
-  describe('resizeThrottleDelay', () => {
+  describe('interactions', () => {
     it('should call `onResize` only once during a throttle period', () => {
       jest.useFakeTimers();
 
       const onResize = jest.fn();
       const config: t.RecursivePartial<t.Config> = {
         hooks: { onResize },
-        resizeThrottleDelay: 100,
+        interactions: { throttleDelayResize: 100 },
       };
       const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
