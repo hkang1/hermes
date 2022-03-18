@@ -41,6 +41,30 @@ describe('Hermes Hooks', () => {
     utils.hermesTeardown(setup);
   });
 
+  it('should throttle `onDimensionMove` when dimensions get dragged', () => {
+    jest.useFakeTimers();
+
+    const onDimensionMove = jest.fn();
+    const config: t.RecursivePartial<t.Config> = { hooks: { onDimensionMove } };
+    const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
+
+    expect(onDimensionMove).not.toHaveBeenCalled();
+
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 961, clientY: 38 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
+
+    // Advance throttle timer for mouse move.
+    jest.runOnlyPendingTimers();
+
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
+
+    expect(onDimensionMove).toHaveBeenCalled();
+
+    utils.hermesTeardown(setup);
+
+    jest.useRealTimers();
+  });
+
   it('should not call `onDimensionMove` when non-draggable dimensions are dragged', () => {
     const onDimensionMove = jest.fn();
     const config: t.RecursivePartial<t.Config> = { ...sharedConfig, hooks: { onDimensionMove } };

@@ -62,6 +62,7 @@ export class HermesTester extends Hermes {
     if (config) dispatchResizeEvent(this.element);
   }
 
+  public getConfig(): t.Config { return this.config; }
   public getCtx(): CanvasRenderingContext2D { return this.ctx; }
   public getData(): t.Data { return this.data; }
   public getDataCount(): number { return this.dataCount; }
