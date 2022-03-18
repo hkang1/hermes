@@ -72,7 +72,10 @@ const HERMES_CONFIG = {
     debug: false,
     direction: Direction.Horizontal,
     hooks: {},
-    resizeThrottleDelay: 0,
+    interactions: {
+        throttleDelayMouseMove: 50,
+        throttleDelayResize: 0,
+    },
     style: {
         axes: {
             axis: {
@@ -961,8 +964,12 @@ const getMousePoint = (e, element) => {
 const throttle = (fn, delay) => {
     let timer;
     return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn(...args), delay);
+        if (timer == null) {
+            timer = setTimeout(() => {
+                fn(...args);
+                timer = undefined;
+            }, delay);
+        }
     };
 };
 
@@ -1211,7 +1218,9 @@ class Hermes {
         // Add mouse event handlers.
         this.element.addEventListener('dblclick', this.handleDoubleClick.bind(this));
         this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
-        window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        window.addEventListener('mousemove', this.config.interactions.throttleDelayMouseMove === 0
+            ? this.handleMouseMove.bind(this)
+            : throttle((e) => this.handleMouseMove.bind(this)(e), this.config.interactions.throttleDelayMouseMove));
         window.addEventListener('mouseup', this.handleMouseUp.bind(this));
         if (dimensions || config || data)
             this.redraw();
@@ -1283,9 +1292,9 @@ class Hermes {
             this.resizeObserver = undefined;
         }
         // Add resize observer to detect target element resizing.
-        this.resizeObserver = new ResizeObserver(this.config.resizeThrottleDelay === 0
+        this.resizeObserver = new ResizeObserver(this.config.interactions.throttleDelayResize === 0
             ? this.handleResize.bind(this)
-            : throttle(entries => this.handleResize.bind(this)(entries), this.config.resizeThrottleDelay));
+            : throttle(entries => this.handleResize.bind(this)(entries), this.config.interactions.throttleDelayResize));
         this.resizeObserver.observe(this.element);
         if (redraw)
             this.redraw();

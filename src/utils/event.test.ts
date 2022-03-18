@@ -1,19 +1,21 @@
 import * as utils from './event';
 
 describe('event utilities', () => {
-  describe('throttle', () => {
-    beforeAll(() => jest.useFakeTimers());
+  beforeAll(() => jest.useFakeTimers());
 
-    afterAll(() => jest.useRealTimers());
+  afterAll(() => jest.useRealTimers());
 
-    it('should create a throttle function', () => {
+  describe('debounce', () => {
+    it('should create a debounced function', () => {
       const fn = jest.fn();
-      const count = 100;
-      const interval = 1000;
-      const delay = interval / count;
-      const throttledFn = utils.throttle(fn, delay);
+      const count = 1000;
+      const delay = 100;
+      const increment = 10;
+      const debouncedFn = utils.debounce(fn, delay);
+
       for (let i = 0; i < count; i++) {
-        throttledFn();
+        debouncedFn();
+        jest.advanceTimersByTime(increment);
       }
 
       // At this point `fn` should not have been called.
@@ -24,6 +26,26 @@ describe('event utilities', () => {
 
       // Check that the function has only been called once.
       expect(fn).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('throttle', () => {
+    it('should create a throttled function', () => {
+      const fn = jest.fn();
+      const count = 1000;
+      const delay = 100;
+      const increment = 10;
+      const throttledFn = utils.throttle(fn, delay);
+
+      // At this point `fn` should not have been called.
+      expect(fn).not.toHaveBeenCalled();
+
+      for (let i = 0; i < count; i++) {
+        throttledFn();
+        jest.advanceTimersByTime(increment);
+      }
+
+      expect(fn).toHaveBeenCalledTimes(count / increment);
     });
   });
 });

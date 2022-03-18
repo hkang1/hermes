@@ -66,7 +66,15 @@ class Hermes {
     // Add mouse event handlers.
     this.element.addEventListener('dblclick', this.handleDoubleClick.bind(this));
     this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.addEventListener(
+      'mousemove',
+      this.config.interactions.throttleDelayMouseMove === 0
+        ? this.handleMouseMove.bind(this)
+        : throttle(
+          (e) => this.handleMouseMove.bind(this)(e as MouseEvent),
+          this.config.interactions.throttleDelayMouseMove,
+        ),
+    );
     window.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
     if (dimensions || config || data) this.redraw();
@@ -146,11 +154,11 @@ class Hermes {
 
     // Add resize observer to detect target element resizing.
     this.resizeObserver = new ResizeObserver(
-      this.config.resizeThrottleDelay === 0
+      this.config.interactions.throttleDelayResize === 0
         ? this.handleResize.bind(this)
         : throttle(
           entries => this.handleResize.bind(this)(entries as ResizeObserverEntry[]),
-          this.config.resizeThrottleDelay,
+          this.config.interactions.throttleDelayResize,
         ),
     );
     this.resizeObserver.observe(this.element);

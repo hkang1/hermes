@@ -53,15 +53,16 @@ export class HermesTester extends Hermes {
     };
     this.element.addEventListener(
       'resize',
-      this.config.resizeThrottleDelay === 0
+      this.config.interactions.throttleDelayResize === 0
         ? resize
-        : throttle(() => resize(), this.config.resizeThrottleDelay),
+        : throttle(() => resize(), this.config.interactions.throttleDelayResize),
     );
 
     // We fire a resize event to simulate the ResizeObserver.observe() behavior.
     if (config) dispatchResizeEvent(this.element);
   }
 
+  public getConfig(): t.Config { return this.config; }
   public getCtx(): CanvasRenderingContext2D { return this.ctx; }
   public getData(): t.Data { return this.data; }
   public getDataCount(): number { return this.dataCount; }
