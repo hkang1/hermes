@@ -129,6 +129,7 @@ export interface DataOptions {
 export interface Dimension {
   categories?: Primitive[];
   dataOnEdge?: boolean;
+  disableDrag?: boolean;
   filters?: Filter[];
   key: string;
   label: string;
