@@ -74,7 +74,7 @@ const HERMES_CONFIG = {
     hooks: {},
     interactions: {
         throttleDelayMouseMove: 50,
-        throttleDelayResize: 0,
+        throttleDelayResize: 50,
     },
     style: {
         axes: {
@@ -1778,7 +1778,7 @@ class Hermes {
                 // Update the drag dimension's index
                 _ixsa.dimIndex = newIndex;
                 // Make hook callback.
-                (_b = (_a = this.config.hooks).onDimensionMove) === null || _b === void 0 ? void 0 : _b.call(_a, tempDim, oldIndex, newIndex);
+                (_b = (_a = this.config.hooks).onDimensionMove) === null || _b === void 0 ? void 0 : _b.call(_a, tempDim, newIndex, oldIndex);
             }
         }
     }

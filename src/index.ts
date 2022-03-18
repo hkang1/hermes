@@ -718,7 +718,7 @@ class Hermes {
         _ixsa.dimIndex = newIndex;
 
         // Make hook callback.
-        this.config.hooks.onDimensionMove?.(tempDim, oldIndex, newIndex);
+        this.config.hooks.onDimensionMove?.(tempDim, newIndex, oldIndex);
       }
     }
   }

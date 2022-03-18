@@ -40,7 +40,7 @@ export const HERMES_CONFIG: t.Config = {
   hooks: {},
   interactions: {
     throttleDelayMouseMove: 50,
-    throttleDelayResize: 0,
+    throttleDelayResize: 50,
   },
   style: {
     axes: {
