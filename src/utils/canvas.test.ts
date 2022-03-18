@@ -466,34 +466,16 @@ describe('canvas utilities', () => {
 
   describe('normalizePadding', () => {
     it.each`
-      padding           | expected
-      ${[ 1, 2, 3, 4 ]} | ${[ 0.75, 1.5, 2.25, 3 ]}
-      ${[ 1, 2 ]}       | ${[ 0.75, 1.5, 0.75, 1.5 ]}
-      ${3}              | ${[ 2.25, 2.25, 2.25, 2.25 ]}
-    `('should normalize padding with default scaling', ({ padding, expected }) => {
-      expect(utils.normalizePadding(padding)).toStrictEqual(expected);
-    });
-
-    it.each`
-      padding           | scaleFactor | expected
-      ${[ 1, 2, 3, 4 ]} | ${0}        | ${[ 1, 2, 3, 4 ]}
-      ${[ 1, 2, 3, 4 ]} | ${1.5}      | ${[ 1.5, 3, 4.5, 6 ]}
-      ${[ 1, 2 ]}       | ${0}        | ${[ 1, 2, 1, 2 ]}
-      ${[ 1, 2 ]}       | ${1.5}      | ${[ 1.5, 3, 1.5, 3 ]}
-      ${3}              | ${0}        | ${[ 3, 3, 3, 3 ]}
-      ${3}              | ${1.5}      | ${[ 4.5, 4.5, 4.5, 4.5 ]}
-    `('should normalize padding with custom scaling', ({ padding, scaleFactor, expected }) => {
-      expect(utils.normalizePadding(padding, scaleFactor)).toStrictEqual(expected);
-    });
-
-    it.each`
       padding           | devicePixelRatio | expected
+      ${[ 1, 2, 3, 4 ]} | ${1}             | ${[ 1, 2, 3, 4 ]}
       ${[ 1, 2, 3, 4 ]} | ${2}             | ${[ 1.5, 3, 4.5, 6 ]}
-      ${[ 1, 2, 3, 4 ]} | ${3}             | ${[ 2.25, 4.5, 6.75, 9 ]}
+      ${[ 1, 2, 3, 4 ]} | ${3}             | ${[ 1.75, 3.5, 5.25, 7 ]}
+      ${[ 1, 2 ]}       | ${1}             | ${[ 1, 2, 1, 2 ]}
       ${[ 1, 2 ]}       | ${2}             | ${[ 1.5, 3, 1.5, 3 ]}
-      ${[ 1, 2 ]}       | ${3}             | ${[ 2.25, 4.5, 2.25, 4.5 ]}
+      ${[ 1, 2 ]}       | ${3}             | ${[ 1.75, 3.5, 1.75, 3.5 ]}
+      ${3}              | ${1}             | ${[ 3, 3, 3, 3 ]}
       ${3}              | ${2}             | ${[ 4.5, 4.5, 4.5, 4.5 ]}
-      ${3}              | ${3}             | ${[ 6.75, 6.75, 6.75, 6.75 ]}
+      ${3}              | ${3}             | ${[ 5.25, 5.25, 5.25, 5.25 ]}
     `(
       'should normalize padding with various devicePixelRatio',
       ({ padding, devicePixelRatio, expected }) => {

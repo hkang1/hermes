@@ -26,9 +26,9 @@ describe('Hermes Hooks', () => {
 
     expect(onDimensionMove).not.toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 969, clientY: 38 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 575, clientY: 38 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 575, clientY: 38 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 961, clientY: 38 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
 
     expect(onDimensionMove).toHaveBeenCalled();
 
@@ -44,9 +44,9 @@ describe('Hermes Hooks', () => {
     expect(onFilterChange).not.toHaveBeenCalled();
     expect(onFilterCreate).not.toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 443, clientY: 123 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 443, clientY: 246 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 443, clientY: 246 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
     expect(onFilterChange).toHaveBeenCalled();
     expect(onFilterCreate).toHaveBeenCalled();
@@ -61,9 +61,9 @@ describe('Hermes Hooks', () => {
 
     expect(onFilterCreate).not.toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 443, clientY: 123 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 443, clientY: 246 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 443, clientY: 246 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
     expect(onFilterCreate).toHaveBeenCalled();
 
@@ -79,15 +79,15 @@ describe('Hermes Hooks', () => {
     expect(onFilterCreate).not.toHaveBeenCalled();
     expect(onFilterMove).not.toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 443, clientY: 123 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 443, clientY: 246 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 443, clientY: 246 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
     expect(onFilterCreate).toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 443, clientY: 200 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 443, clientY: 250 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 443, clientY: 250 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 200 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 250 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 250 });
 
     expect(onFilterMove).toHaveBeenCalled();
 
@@ -103,14 +103,14 @@ describe('Hermes Hooks', () => {
     expect(onFilterCreate).not.toHaveBeenCalled();
     expect(onFilterRemove).not.toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 443, clientY: 123 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 443, clientY: 246 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 443, clientY: 246 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
     expect(onFilterCreate).toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 443, clientY: 200 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 443, clientY: 200 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 200 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 200 });
 
     expect(onFilterRemove).toHaveBeenCalled();
 
@@ -126,15 +126,15 @@ describe('Hermes Hooks', () => {
     expect(onFilterCreate).not.toHaveBeenCalled();
     expect(onFilterResize).not.toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 443, clientY: 123 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 443, clientY: 246 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 443, clientY: 246 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
     expect(onFilterCreate).toHaveBeenCalled();
 
-    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 443, clientY: 123 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 443, clientY: 100 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 443, clientY: 100 });
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 100 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 100 });
 
     expect(onFilterResize).toHaveBeenCalled();
 

@@ -25,7 +25,6 @@ export const LINE_DASH_OFFSET = 0.0;
 export const LINE_JOIN: CanvasLineJoin = 'round';
 export const LINE_WIDTH = 1.0;
 export const MITER_LIMIT = 10.0;
-export const PADDING_SCALE = 0.75;
 export const STROKE_STYLE = 'black';
 export const TEXT_ALIGN = 'left';
 export const TEXT_BASELINE = 'middle';
