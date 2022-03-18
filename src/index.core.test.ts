@@ -60,6 +60,32 @@ describe('Hermes Core', () => {
       expect(hermes).toBeUndefined();
     });
 
+    it('should use existing canvas in element', () => {
+      const elementId = 'canvas-already';
+      const element = document.createElement('div');
+      element.id = elementId;
+      document.body.appendChild(element);
+
+      const canvas = document.createElement('canvas');
+      element.appendChild(canvas);
+
+      let hermes: utils.HermesTester | undefined;
+      let error: HermesError | undefined;
+
+      try {
+        hermes = new utils.HermesTester(`#${elementId}`, utils.DEFAULT_DIMENSIONS);
+      } catch (e) {
+        error = e as HermesError;
+      }
+
+      expect(error).toBeUndefined();
+      expect(hermes).toBeInstanceOf(Hermes);
+      expect(hermes?.getCanvas()).toBe(canvas);
+
+      hermes?.destroy();
+      document.body.removeChild(element);
+    });
+
     it('should fail if unable to get canvas 2d context', () => {
       // Save original `canvas.getContext`.
       const getContext = HTMLCanvasElement.prototype.getContext;
@@ -163,6 +189,47 @@ describe('Hermes Core', () => {
         const check1 = utils.HermesTester.validateDimensions(invalidDimensions);
         expect(check1.valid).toBeFalse();
       });
+    });
+  });
+
+  describe('setConfig', () => {
+    let spyRedraw: jest.SpyInstance<void, []>;
+    let setup: utils.HermesSetup;
+
+    beforeEach(() => {
+      setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, {}, utils.DEFAULT_DATA);
+
+      if (!setup.hermes) throw new Error('Hermes not initialized.');
+
+      spyRedraw = jest.spyOn(setup.hermes, 'redraw');
+    });
+
+    afterEach(() => {
+      utils.hermesTeardown(setup);
+    });
+
+    it('should set config', () => {
+      expect(setup.hermes.getConfig().debug).toBeFalse();
+
+      setup.hermes.setConfig({ debug: true });
+
+      expect(setup.hermes.getConfig().debug).toBeTrue();
+    });
+
+    it('should set config and redraw', () => {
+      expect(spyRedraw).not.toHaveBeenCalled();
+
+      setup.hermes.setConfig({ debug: true });
+
+      expect(spyRedraw).toHaveBeenCalled();
+    });
+
+    it('should set config and not redraw', () => {
+      expect(spyRedraw).not.toHaveBeenCalled();
+
+      setup.hermes.setConfig({ debug: true }, false);
+
+      expect(spyRedraw).not.toHaveBeenCalled();
     });
   });
 

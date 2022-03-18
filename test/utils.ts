@@ -20,8 +20,10 @@ export const DEFAULT_DATA = tester.generateData(DEFAULT_DIMENSIONS, DATA_COUNT);
 export const DEFAULT_EVENT_INIT = { bubbles: true, cancelable: true, view: window };
 
 /**
- * Test Wrapper Classes and Related Functions
+ * Test Interfaces and Types
  */
+
+export type TestArg = t.Primitive | undefined;
 
 export interface HermesSetup {
   element: HTMLElement;
@@ -33,6 +35,10 @@ export interface HermesSetupWithError {
   error?: HermesError;
   hermes?: HermesTester;
 }
+
+/**
+ * Test Wrapper Classes and Related Functions
+ */
 
 export class HermesTester extends Hermes {
   constructor(
@@ -62,6 +68,7 @@ export class HermesTester extends Hermes {
     if (config) dispatchResizeEvent(this.element);
   }
 
+  public getCanvas(): HTMLCanvasElement { return this.canvas; }
   public getConfig(): t.Config { return this.config; }
   public getCtx(): CanvasRenderingContext2D { return this.ctx; }
   public getData(): t.Data { return this.data; }
@@ -149,4 +156,25 @@ export const getContext = (): CanvasRenderingContext2D => {
   }
 
   return ctx;
+};
+
+/**
+ * Helper Functions for Generating Test Table
+ */
+
+export const addOptionsToTable = (table: TestArg[][], options: TestArg[]): TestArg[][] => {
+  return table.length === 0
+    ? options.map(option => ([ option ]))
+    : options.reduce((acc, option) => {
+      table.forEach(row => acc.push([ ...row, option ]));
+      return acc;
+    }, [] as TestArg[][]);
+};
+
+export const optionsToTable = (options: Record<t.RecordKey, TestArg[]>): TestArg[][] => {
+  let table: TestArg[][] = [];
+  Object.values(options).forEach(value => {
+    table = addOptionsToTable(table, value);
+  });
+  return table;
 };
