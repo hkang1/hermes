@@ -7,7 +7,8 @@ import LogScale from './classes/LogScale';
  */
 
 export type NestedObject = Record<RecordKey, unknown>;
-export type Padding = number | [ number, number ] | [ number, number, number, number ];
+export type Padding = number | [ number, number ] | PaddingNormalized;
+export type PaddingNormalized = [ number, number, number, number ]
 export type Primitive = boolean | number | string;
 export type Range<T = number> = [ T, T ];
 export type RecordKey = string | number | symbol;
