@@ -65,7 +65,7 @@ export class HermesTester extends Hermes {
     );
 
     // We fire a resize event to simulate the ResizeObserver.observe() behavior.
-    if (config) dispatchResizeEvent(this.element);
+    dispatchResizeEvent(this.element);
   }
 
   public getCanvas(): HTMLCanvasElement { return this.canvas; }

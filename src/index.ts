@@ -1221,9 +1221,8 @@ class Hermes {
     if (!this._) return;
 
     const point = getMousePoint(e, this.element);
-    const _ixs = this.ix.shared;
-    _ixs.action.p1 = point;
-    _ixs.focus = this.getFocusByPoint(point);
+    this.ix.shared.action.p1 = point;
+    this.ix.shared.focus = this.getFocusByPoint(point);
 
     // Update dimension dragging via label.
     this.updateActiveLabel();
@@ -1238,10 +1237,13 @@ class Hermes {
   }
 
   protected handleMouseUp(e: MouseEvent): void {
-    if (!this._ || this.ix.shared.action.type === t.ActionType.None) return;
+    if (!this._) return;
 
     const point = getMousePoint(e, this.element);
     this.ix.shared.action.p1 = point;
+
+    // Update dimension dragging via label.
+    this.updateActiveLabel();
 
     // Update active filter upon release event.
     this.updateActiveFilter(e);
