@@ -89,36 +89,56 @@ describe('Hermes Config', () => {
 
   describe('style', () => {
     describe('dimension', () => {
-      it('should render label after in horizontal layout', () => {
-        setup.hermes.setConfig({
-          direction: t.Direction.Horizontal,
-          style: { dimension: { label: { placement: t.LabelPlacement.After } } },
+      describe('label', () => {
+        it('should render label after in horizontal layout', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Horizontal,
+            style: { dimension: { label: { placement: t.LabelPlacement.After } } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
         });
-        expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+
+        it('should render label after in vertical layout', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Vertical,
+            style: { dimension: { label: { placement: t.LabelPlacement.After } } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+
+        it('should render label at an angle in horizontal layout', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Horizontal,
+            style: { dimension: { label: { angle: Math.PI / 4 } } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+
+        it('should render label at an angle in vertical layout', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Vertical,
+            style: { dimension: { label: { angle: Math.PI / 4 } } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
       });
 
-      it('should render label after in vertical layout', () => {
-        setup.hermes.setConfig({
-          direction: t.Direction.Vertical,
-          style: { dimension: { label: { placement: t.LabelPlacement.After } } },
+      describe('layout', () => {
+        it('should render with dimension layout `axis-evenly-spaced`', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Vertical,
+            style: { dimension: { layout: t.DimensionLayout.AxisEvenlySpaced } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
         });
-        expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
-      });
 
-      it('should render label at an angle in horizontal layout', () => {
-        setup.hermes.setConfig({
-          direction: t.Direction.Horizontal,
-          style: { dimension: { label: { angle: Math.PI / 4 } } },
+        it('should render with dimension layout `equidistant`', () => {
+          setup.hermes.setConfig({
+            direction: t.Direction.Vertical,
+            style: { dimension: { layout: t.DimensionLayout.Equidistant } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
         });
-        expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
-      });
-
-      it('should render label at an angle in vertical layout', () => {
-        setup.hermes.setConfig({
-          direction: t.Direction.Vertical,
-          style: { dimension: { label: { angle: Math.PI / 4 } } },
-        });
-        expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
       });
     });
 
