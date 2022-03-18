@@ -61,9 +61,10 @@ const LINE_DASH_OFFSET = 0.0;
 const LINE_JOIN = 'round';
 const LINE_WIDTH = 1.0;
 const MITER_LIMIT = 10.0;
+const PADDING_SCALE = 0.75;
 const STROKE_STYLE = 'black';
 const TEXT_BASELINE = 'middle';
-const TRUNCATE_SIZE = 30;
+const TRUNCATE_SIZE = 24;
 const TRUNCATE_SUFFIX = '...';
 /**
  * Framework options defaults.
@@ -156,7 +157,7 @@ const HERMES_CONFIG = {
             labelHover: { fillStyle: 'rgba(79, 180, 246, 1.0)' },
             layout: DimensionLayout.AxisEvenlySpaced,
         },
-        padding: [32, 48, 32, 48],
+        padding: [32, 64],
     },
 };
 const FILTER = {
@@ -845,12 +846,24 @@ const getTextSize = (ctx, text, font = FONT) => {
     const h = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     return { h, w };
 };
-const normalizePadding = (padding) => {
+/**
+ * Takes in a single number (padding on all sided), an array of two [ top/bottom, left/right ],
+ * or full padding array [ top, right, buttom, left ].
+ * The `scaleFactor` is a multiple that is multipled against the `devicePixelRatio`
+ * to help ensure the padding scales at a friendlier proportion relate to font size changes.
+ */
+const normalizePadding = (padding, scaleFactor = PADDING_SCALE) => {
+    const factor = scaleFactor ? scaleFactor * devicePixelRatio : 1;
     if (!Array.isArray(padding))
-        return [padding, padding, padding, padding];
+        return new Array(4).fill(padding * factor);
     if (padding.length === 2)
-        return [padding[0], padding[1], padding[0], padding[1]];
-    return padding;
+        return [
+            padding[0] * factor,
+            padding[1] * factor,
+            padding[0] * factor,
+            padding[1] * factor,
+        ];
+    return padding.map(p => p * factor);
 };
 const normalizeRad = (rad) => {
     return (rad + 2 * Math.PI) % (2 * Math.PI);
