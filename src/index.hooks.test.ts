@@ -192,15 +192,24 @@ describe('Hermes Hooks', () => {
     expect(onFilterCreate).not.toHaveBeenCalled();
     expect(onFilterResize).not.toHaveBeenCalled();
 
+    // Create the filter.
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
     expect(onFilterCreate).toHaveBeenCalled();
 
+    // Drag the upper part of the filter.
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 100 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 100 });
+
+    expect(onFilterResize).toHaveBeenCalled();
+
+    // Drag the lower part of the filter.
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 246 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 250 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 250 });
 
     expect(onFilterResize).toHaveBeenCalled();
 
