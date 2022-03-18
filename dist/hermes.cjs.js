@@ -61,7 +61,6 @@ const LINE_DASH_OFFSET = 0.0;
 const LINE_JOIN = 'round';
 const LINE_WIDTH = 1.0;
 const MITER_LIMIT = 10.0;
-const PADDING_SCALE = 0.75;
 const STROKE_STYLE = 'black';
 const TEXT_BASELINE = 'middle';
 const TRUNCATE_SIZE = 24;
@@ -849,11 +848,11 @@ const getTextSize = (ctx, text, font = FONT) => {
 /**
  * Takes in a single number (padding on all sided), an array of two [ top/bottom, left/right ],
  * or full padding array [ top, right, buttom, left ].
- * The `scaleFactor` is a multiple that is multipled against the `devicePixelRatio`
- * to help ensure the padding scales at a friendlier proportion relate to font size changes.
+ * A `factor` is applied, that is calculated based on `devicePixelRatio` to help ensure the
+ * padding scales at a friendlier proportion relative to font size changes.
  */
-const normalizePadding = (padding, scaleFactor = PADDING_SCALE) => {
-    const factor = scaleFactor ? scaleFactor * devicePixelRatio : 1;
+const normalizePadding = (padding) => {
+    const factor = devicePixelRatio <= 1 ? 1 : 2 - 0.5 ** (devicePixelRatio - 1);
     if (!Array.isArray(padding))
         return new Array(4).fill(padding * factor);
     if (padding.length === 2)
