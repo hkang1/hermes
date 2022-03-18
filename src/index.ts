@@ -631,12 +631,10 @@ class Hermes {
 
       // Check to see if a dimension label was targeted and that it is draggable.
       const labelBoundary = layout.labelBoundary;
-      if (
-        (
-          isPointInTriangle(point, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
-          isPointInTriangle(point, labelBoundary[2], labelBoundary[3], labelBoundary[0])
-        ) && this.dimensions[i].disableDrag !== true
-      ) {
+      if ((
+        isPointInTriangle(point, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
+        isPointInTriangle(point, labelBoundary[2], labelBoundary[3], labelBoundary[0])
+      ) && !this.dimensions[i].disableDrag) {
         return { dimIndex: i, type: t.FocusType.DimensionLabel };
       }
 
@@ -694,7 +692,7 @@ class Hermes {
        */
       if (
         _ixsa.dimIndex !== i &&
-        this.dimensions[i].disableDrag !== true &&
+        !this.dimensions[i].disableDrag &&
         Math.abs(axisDistance) < ix.DIMENSION_SWAP_THRESHOLD
       ) {
         // Swap dragging dimension with the dimension it intersects with.

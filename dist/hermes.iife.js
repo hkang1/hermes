@@ -1702,7 +1702,7 @@ var Hermes = (function (exports) {
                 // Check to see if a dimension label was targeted and that it is draggable.
                 const labelBoundary = layout.labelBoundary;
                 if ((isPointInTriangle(point, labelBoundary[0], labelBoundary[1], labelBoundary[2]) ||
-                    isPointInTriangle(point, labelBoundary[2], labelBoundary[3], labelBoundary[0])) && this.dimensions[i].disableDrag !== true) {
+                    isPointInTriangle(point, labelBoundary[2], labelBoundary[3], labelBoundary[0])) && !this.dimensions[i].disableDrag) {
                     return { dimIndex: i, type: FocusType.DimensionLabel };
                 }
                 // Check to see if a dimension axis was targeted.
@@ -1751,7 +1751,7 @@ var Hermes = (function (exports) {
                  * 4. dimension is draggable (swappable)
                  */
                 if (_ixsa.dimIndex !== i &&
-                    this.dimensions[i].disableDrag !== true &&
+                    !this.dimensions[i].disableDrag &&
                     Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
                     // Swap dragging dimension with the dimension it intersects with.
                     const oldIndex = _ixsa.dimIndex;
