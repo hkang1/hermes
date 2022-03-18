@@ -158,6 +158,13 @@ export interface InternalFilters {
   [key: DimensionKey]: InternalFilter[];
 }
 
+export interface InternalListeners {
+  dblclick: (e: MouseEvent) => void;
+  mousedown: (e: MouseEvent) => void;
+  mousemove: (e: MouseEvent) => void;
+  mouseup: (e: MouseEvent) => void;
+}
+
 export interface LabelMoveOptions extends LabelOptions {
   boundaryPadding: number;
 }

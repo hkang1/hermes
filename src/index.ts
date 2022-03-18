@@ -33,6 +33,7 @@ class Hermes {
   protected resizeObserver: ResizeObserver | undefined;
   protected size: t.Size = { h: 0, w: 0 };
   protected ix: t.IX = clone(DEFAULT.IX);
+  protected listeners: t.InternalListeners;
   protected _?: t.Internal = undefined;
 
   constructor(
@@ -64,18 +65,21 @@ class Hermes {
     if (data) this.setData(data, false);
 
     // Add mouse event handlers.
-    this.element.addEventListener('dblclick', this.handleDoubleClick.bind(this));
-    this.element.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    window.addEventListener(
-      'mousemove',
-      this.config.interactions.throttleDelayMouseMove === 0
+    this.listeners = {
+      dblclick: this.handleDoubleClick.bind(this),
+      mousedown: this.handleMouseDown.bind(this),
+      mousemove: this.config.interactions.throttleDelayMouseMove === 0
         ? this.handleMouseMove.bind(this)
         : throttle(
           (e) => this.handleMouseMove.bind(this)(e as MouseEvent),
           this.config.interactions.throttleDelayMouseMove,
         ),
-    );
-    window.addEventListener('mouseup', this.handleMouseUp.bind(this));
+      mouseup: this.handleMouseUp.bind(this),
+    };
+    this.element.addEventListener('dblclick', this.listeners.dblclick);
+    this.element.addEventListener('mousedown', this.listeners.mousedown);
+    window.addEventListener('mousemove', this.listeners.mousemove);
+    window.addEventListener('mouseup', this.listeners.mouseup);
 
     if (dimensions || config || data) this.redraw();
   }
@@ -266,10 +270,10 @@ class Hermes {
   public destroy(): void {
     // Remove observers and listeners.
     this.resizeObserver?.unobserve(this.element);
-    this.element.removeEventListener('dblclick', this.handleDoubleClick.bind(this));
-    this.element.removeEventListener('mousedown', this.handleMouseDown.bind(this));
-    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
-    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
+    this.element.removeEventListener('dblclick', this.listeners.dblclick);
+    this.element.removeEventListener('mousedown', this.listeners.mousedown);
+    window.removeEventListener('mousemove', this.listeners.mousemove);
+    window.removeEventListener('mouseup', this.listeners.mouseup);
 
     if (this.canvas && this.element.contains(this.canvas)) {
       this.element.removeChild(this.canvas);
