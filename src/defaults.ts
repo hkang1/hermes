@@ -25,10 +25,11 @@ export const LINE_DASH_OFFSET = 0.0;
 export const LINE_JOIN: CanvasLineJoin = 'round';
 export const LINE_WIDTH = 1.0;
 export const MITER_LIMIT = 10.0;
+export const PADDING_SCALE = 0.75;
 export const STROKE_STYLE = 'black';
 export const TEXT_ALIGN = 'left';
 export const TEXT_BASELINE = 'middle';
-export const TRUNCATE_SIZE = 30;
+export const TRUNCATE_SIZE = 24;
 export const TRUNCATE_SUFFIX = '...';
 
 /**
@@ -122,7 +123,7 @@ export const HERMES_CONFIG: t.Config = {
       labelHover: { fillStyle: 'rgba(79, 180, 246, 1.0)' },
       layout: t.DimensionLayout.AxisEvenlySpaced,
     },
-    padding: [ 32, 48, 32, 48 ],
+    padding: [ 32, 64 ],
   },
 };
 

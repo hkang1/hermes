@@ -465,18 +465,43 @@ describe('canvas utilities', () => {
   });
 
   describe('normalizePadding', () => {
-    it('should pass through number[4] padding', () => {
-      const padding: t.Padding = [ 1, 2, 3, 4 ];
-      expect(utils.normalizePadding(padding)).toStrictEqual(padding);
+    it.each`
+      padding           | expected
+      ${[ 1, 2, 3, 4 ]} | ${[ 0.75, 1.5, 2.25, 3 ]}
+      ${[ 1, 2 ]}       | ${[ 0.75, 1.5, 0.75, 1.5 ]}
+      ${3}              | ${[ 2.25, 2.25, 2.25, 2.25 ]}
+    `('should normalize padding with default scaling', ({ padding, expected }) => {
+      expect(utils.normalizePadding(padding)).toStrictEqual(expected);
     });
 
-    it('should normalize number[2] padding to number[4] padding', () => {
-      expect(utils.normalizePadding([ 1, 2 ])).toStrictEqual([ 1, 2, 1, 2 ]);
+    it.each`
+      padding           | scaleFactor | expected
+      ${[ 1, 2, 3, 4 ]} | ${0}        | ${[ 1, 2, 3, 4 ]}
+      ${[ 1, 2, 3, 4 ]} | ${1.5}      | ${[ 1.5, 3, 4.5, 6 ]}
+      ${[ 1, 2 ]}       | ${0}        | ${[ 1, 2, 1, 2 ]}
+      ${[ 1, 2 ]}       | ${1.5}      | ${[ 1.5, 3, 1.5, 3 ]}
+      ${3}              | ${0}        | ${[ 3, 3, 3, 3 ]}
+      ${3}              | ${1.5}      | ${[ 4.5, 4.5, 4.5, 4.5 ]}
+    `('should normalize padding with custom scaling', ({ padding, scaleFactor, expected }) => {
+      expect(utils.normalizePadding(padding, scaleFactor)).toStrictEqual(expected);
     });
 
-    it('should normalize number padding to number[4] padding', () => {
-      expect(utils.normalizePadding(3)).toStrictEqual([ 3, 3, 3, 3 ]);
-    });
+    it.each`
+      padding           | devicePixelRatio | expected
+      ${[ 1, 2, 3, 4 ]} | ${2}             | ${[ 1.5, 3, 4.5, 6 ]}
+      ${[ 1, 2, 3, 4 ]} | ${3}             | ${[ 2.25, 4.5, 6.75, 9 ]}
+      ${[ 1, 2 ]}       | ${2}             | ${[ 1.5, 3, 1.5, 3 ]}
+      ${[ 1, 2 ]}       | ${3}             | ${[ 2.25, 4.5, 2.25, 4.5 ]}
+      ${3}              | ${2}             | ${[ 4.5, 4.5, 4.5, 4.5 ]}
+      ${3}              | ${3}             | ${[ 6.75, 6.75, 6.75, 6.75 ]}
+    `(
+      'should normalize padding with various devicePixelRatio',
+      ({ padding, devicePixelRatio, expected }) => {
+        window.devicePixelRatio = devicePixelRatio;
+        expect(utils.normalizePadding(padding)).toStrictEqual(expected);
+        window.devicePixelRatio = 1;
+      },
+    );
   });
 
   describe('normalizeRad', () => {

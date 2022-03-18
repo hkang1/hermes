@@ -292,10 +292,25 @@ export const getTextSize = (
   return { h, w };
 };
 
-export const normalizePadding = (padding: t.Padding): [ number, number, number, number ] => {
-  if (!Array.isArray(padding)) return [ padding, padding, padding, padding ];
-  if (padding.length === 2) return [ padding[0], padding[1], padding[0], padding[1] ];
-  return padding;
+/**
+ * Takes in a single number (padding on all sided), an array of two [ top/bottom, left/right ],
+ * or full padding array [ top, right, buttom, left ].
+ * The `scaleFactor` is a multiple that is multipled against the `devicePixelRatio`
+ * to help ensure the padding scales at a friendlier proportion relate to font size changes.
+ */
+export const normalizePadding = (
+  padding: t.Padding,
+  scaleFactor = DEFAULT.PADDING_SCALE,
+): t.PaddingNormalized => {
+  const factor = scaleFactor ? scaleFactor * devicePixelRatio : 1;
+  if (!Array.isArray(padding)) return new Array(4).fill(padding * factor) as t.PaddingNormalized;
+  if (padding.length === 2) return [
+    padding[0] * factor,
+    padding[1] * factor,
+    padding[0] * factor,
+    padding[1] * factor,
+  ];
+  return padding.map(p => p * factor) as t.PaddingNormalized;
 };
 
 export const normalizeRad = (rad: number): number => {
