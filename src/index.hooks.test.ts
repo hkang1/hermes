@@ -48,6 +48,9 @@ describe('Hermes Hooks', () => {
     const config: t.RecursivePartial<t.Config> = { hooks: { onDimensionMove } };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    // Advance timer for resize event during initialization.
+    jest.runOnlyPendingTimers();
+
     expect(onDimensionMove).not.toHaveBeenCalled();
 
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 961, clientY: 38 });

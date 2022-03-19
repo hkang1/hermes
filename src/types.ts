@@ -197,7 +197,7 @@ export interface Config {
   debug: boolean;
   direction: EDirection;
   hooks: {
-    onDimensionMove?: (dimension: Dimension, index0: number, index1: number) => void;
+    onDimensionMove?: (dimension: Dimension, newIndex: number, oldIndex: number) => void;
     onFilterChange?: (filters: Filters) => void;
     onFilterCreate?: (filter: Filter) => void,
     onFilterMove?: (filter: Filter) => void,

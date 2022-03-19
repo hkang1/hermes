@@ -58,7 +58,7 @@ The `container` can be an HTML element passed in directly or a query selector th
 
 ## Hermes Data Format
 
-The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L216), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
+The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L221), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
 
 ```
 type Data = Record<DimensionKey, Primitive[]>;
@@ -76,23 +76,7 @@ const data = {
 
 ## Hermes Dimensions Definition
 
-The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L172-L180), where it is defined as:
-
-```
-interface Dimension {
-  categories?: Primitive[];
-  dataOnEdge?: boolean;
-  key: string;
-  label: string;
-  logBase?: number;
-  reverse?: boolean;
-  type: EDimensionType;
-}
-type Primitive = boolean | number | string
-type EDimensionType = 'categorical' | 'linear' | 'logarithmic'
-```
-
-A sample dimension definition might look like...
+The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L176-L185). A sample dimension definition might look like...
 
 ```
 const dimensions = [
@@ -159,48 +143,7 @@ The dimension axes are drawn vertically, the axis tick values increase from the 
 
 ## Hermes Config and Styles
 
-The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L224-L261) provides a more up-to-date definition of the config.
-
-```
-interface Config {
-  direction: EDirection;
-  hooks: {
-    onDimensionMove?: (dimension: Dimension, index0: number, index1: number) => void;
-    onFilterChange?: (filters: Filters) => void,
-    onFilterCreate?: (filter: Filter) => void,
-    onFilterMove?: (filter: Filter) => void,
-    onFilterRemove?: (filter: Filter) => void,
-    onFilterResize?: (filter: Filter) => void,
-    onReset?: () => void;
-    onResize?: (newSize: Size, oldSize: Size) => void;
-  },
-  resizeThrottleDelay: number;
-  style: {
-    axes: {
-      axis: AxisOptions,
-      axisActve: StyleLine;
-      axisHover: StyleLine;
-      filter: FilterOptions;
-      filterActive: FilterOptions;
-      filterHover: FilterOptions;
-      label: LabelOptions;
-      labelActive: StyleText;
-      labelHover: StyleText;
-      tick: TickOptions;
-      tickActive: StyleLine;
-      tickHover: StyleLine;
-    };
-    data: DataOptions;
-    dimension: {
-      label: LabelMoveOptions;
-      labelActive: StyleText;
-      labelHover: StyleText;
-      layout: EDimensionLayout;
-    };
-    padding: Padding;
-  };
-}
-```
+The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L229-L269) provides a more up-to-date definition of the config.
 
 ### General Config
 
@@ -208,25 +151,51 @@ interface Config {
 
 The direction the dimensions should be laid out. The direction can be set to `horizontal` or `vertical`. The `horizontal` direction will draw the dimensions across the canvas with vertical axes. The `vertical` direction will draw the dimensions top to bottom on the canvas with horizontal axes.
 
-#### resizeThrottleDelay (default: 0)
-
-The number of milliseconds to throttle the resizing. Resizing performs new calculations and redraws based on the new sizes. Depending on data and dimension count, this can slow the browser significantly. The default is set to `0` which means throttling is disabled.
-
 ### Hooks
 
-#### onDimensionMove
-#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L220-L222)) => void;
+#### onDimensionMove: (dimension: [Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L176-L185), newIndex: number, oldIndex: number) => void
 
-Option to provide a hook that gets called for any filter changes. The callback is specifically called on the `mouseup` event. The entire updated filters object is returned.
+Optional hook for when the order of dimensions changes via drag and drop. The callback is called during the drag and whenever dimensions required a swap, even before when the mouse is released. The data for the dimension that is dragged, the new index and the original index are returned.
 
-#### onFilterCreate
-#### onFilterMove
-#### onFilterRemove
-#### onFilterResize
-#### onReset
-#### onResize
+#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L225-L227)) => void
 
-### Style Options
+Optional hook for when any filter changes. The callback is specifically called on the `mouseup` event. The entire updated filters object is returned.
+
+#### onFilterCreate: (filter: Filter) => void
+
+Optional hook for when a filter is created. The newly create filter is returned.
+
+#### onFilterMove: (filter: Filter) => void
+
+Optional hook for when a filter is moved. The modified filter is returned.
+
+#### onFilterRemove: (filter: Filter) => void
+
+Optional hook for when a filter is removed via single click. Info for the removed filter is returned.
+
+#### onFilterResize: (filter: Filter) => void
+
+Optional hook for when a filter is resized. The modified filter is returned.
+
+#### onReset: () => void
+
+Optional hook for when the chart is reset via double click. The dimension order is reset back to the original order and the filters are cleared out.
+
+#### onResize: (newSize: Size, oldSize: Size) => void
+
+Optional hook for when the chart containing element is resized. The resize is detected using the [ResizeObserver API](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver), which observes the chart containing HTML element. When the element changes in size, this callback returns the new size and the original size.
+
+### Interactions
+
+#### throttleDelayMouseMove (default 50)
+
+The time interval in millisconds in which the mouse move event is allowed to propogate. For example, with the default 50ms, as the user moves the mouse cursor around, the mouse move event, the associated calculations and the rerenders are allowed to happen only every 50ms. The `mouseup` handler performs all of the `mousemove` event operations. So if this interval happens to be set to a very high number, where the `mouseup` event occurs before a throttle 
+
+#### throttleDelayResize (default: 50)
+
+The time interval in milliseconds in which the resize event is allowed to propagate. For example, with the default 50ms, as the user is changing the browser window that contains the chart, the resize event, the associated calculations and the rerenders are allowed to happen only every 50ms.
+
+### [Style Options](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L245-L268)
 
 #### axes
 #### data
