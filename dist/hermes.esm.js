@@ -1750,32 +1750,47 @@ class Hermes {
             x: isHorizontal ? _ixsa.p1.x - _ixsa.p0.x : 0,
             y: isHorizontal ? 0 : _ixsa.p1.y - _ixsa.p0.y,
         };
+        let newIndex = -1;
+        const dragPosition = _ixd.axis + _ixd.boundOffset[hKey];
         for (let i = 0; i < _dl.length; i++) {
+            if (_ixsa.dimIndex === i || this.dimensions[i].disableDrag)
+                continue;
             const layout = _dl[i].layout;
-            const bound = layout.bound;
-            const axisStart = layout.axisStart;
-            const axisDistance = (_ixd.axis + _ixd.boundOffset[hKey]) - (bound[hKey] + axisStart[hKey]);
-            /**
-             * Check that...
-             * 1. dimension drag type is triggered by the label
-             * 2. dimension being dragged isn't being the dimension getting compared to (i)
-             * 3. dimension is within a distance threshold
-             * 4. dimension is draggable (swappable)
-             */
-            if (_ixsa.dimIndex !== i &&
-                !this.dimensions[i].disableDrag &&
-                Math.abs(axisDistance) < DIMENSION_SWAP_THRESHOLD) {
-                // Swap dragging dimension with the dimension it intersects with.
-                const oldIndex = _ixsa.dimIndex;
-                const newIndex = i;
-                const tempDim = this.dimensions[oldIndex];
-                this.dimensions[oldIndex] = this.dimensions[newIndex];
-                this.dimensions[newIndex] = tempDim;
-                // Update the drag dimension's index
-                _ixsa.dimIndex = newIndex;
-                // Make hook callback.
-                (_b = (_a = this.config.hooks).onDimensionMove) === null || _b === void 0 ? void 0 : _b.call(_a, tempDim, newIndex, oldIndex);
+            const axisPosition = layout.bound[hKey] + layout.axisStart[hKey];
+            const axisDistance = Math.abs(dragPosition - axisPosition);
+            const isNearAxis = axisDistance < DIMENSION_SWAP_THRESHOLD;
+            // Drag dimension came before the i-th dimension before drag started.
+            if (_ixsa.dimIndex < i) {
+                if (dragPosition < axisPosition && !isNearAxis)
+                    break;
+                else
+                    newIndex = i;
             }
+            // Drag dimension came after the i-th dimension before drag started.
+            if (_ixsa.dimIndex > i) {
+                if (dragPosition < axisPosition || isNearAxis) {
+                    newIndex = i;
+                    break;
+                }
+            }
+        }
+        // Take out drag dimension and insert into new order position.
+        if (newIndex !== -1) {
+            const oldIndex = _ixsa.dimIndex;
+            const dragDimension = this.dimensions.splice(_ixsa.dimIndex, 1);
+            if (dragDimension.length === 0)
+                return;
+            const insertIndex = newIndex + (_ixsa.dimIndex < newIndex ? -1 : 0);
+            this.dimensions.splice(insertIndex, 0, dragDimension[0]);
+            // Swap dragging dimension with the dimension it intersects with.
+            // const oldIndex = _ixsa.dimIndex;
+            // const tempDim = this.dimensions[oldIndex];
+            // this.dimensions[oldIndex] = this.dimensions[newIndex];
+            // this.dimensions[newIndex] = tempDim;
+            // Update the drag dimension's index
+            _ixsa.dimIndex = newIndex;
+            // Make hook callback.
+            (_b = (_a = this.config.hooks).onDimensionMove) === null || _b === void 0 ? void 0 : _b.call(_a, dragDimension[0], newIndex, oldIndex);
         }
     }
     setActiveFilter(key, pos, value) {
