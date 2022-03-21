@@ -26,19 +26,43 @@ describe('Hermes Hooks', () => {
   });
 
   it('should call `onDimensionMove` when dimensions get dragged', () => {
+    jest.useFakeTimers();
+
     const onDimensionMove = jest.fn();
     const config: t.RecursivePartial<t.Config> = { ...sharedConfig, hooks: { onDimensionMove } };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
     expect(onDimensionMove).not.toHaveBeenCalled();
 
+    // Move dimension from right to left.
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 961, clientY: 38 });
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
 
-    expect(onDimensionMove).toHaveBeenCalled();
+    jest.runAllTimers();
+
+    expect(onDimensionMove).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'layer-split-factor' }),
+      4,
+      7,
+    );
+
+    // Move dimension from left to right.
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 321, clientY: 38 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
+
+    jest.runAllTimers();
+
+    expect(onDimensionMove).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'layer-dense-size' }),
+      4,
+      2,
+    );
 
     utils.hermesTeardown(setup);
+
+    jest.useRealTimers();
   });
 
   it('should throttle `onDimensionMove` when dimensions get dragged', () => {
