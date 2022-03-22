@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script src="../dist/hermes.iife.js"></script>
-    <link rel="stylesheet" href="default.css" />
+    <script src="lib/hermes.iife.js"></script>
+    <link rel="stylesheet" href="css/shared.css" />
   </head>
   <body>
     <div id="hermes"></div>
@@ -10,53 +10,6 @@
       const tester = Hermes.default.getTester();
       const dimensions = tester.generateDimensions(10, false);
       const data = tester.generateData(dimensions, 50);
-      const config = {
-        // debug: true,
-        direction: 'horizontal',
-        style: {
-          axes: {
-            axis: {
-              // color: 'rgba(0, 0, 0, 0.3)',
-            },
-            label: {
-              // angle: -Math.PI / 4,
-              // color: 'rgba(0, 0, 0, 1.0)',
-              placement: 'after',
-            },
-            tick: {
-              // color: 'rgba(0, 0, 0, 0.3)',
-            }
-          },
-          data: {
-            // colorScale: {
-            //   colors: [
-            //     // 'rgba(255, 0, 0, 0.7)',
-            //     // 'rgba(255, 127, 0, 0.7)',
-            //     // 'rgba(255, 255, 0, 0.7)',
-            //     // 'rgba(0, 255, 0, 0.7)',
-            //     // 'rgba(0, 0, 255, 0.7)',
-            //     // 'rgba(75, 0, 130, 0.7)',
-            //     // 'rgba(148, 0, 211, 0.7)',
-            //     'rgba(200, 50, 0, 0.7)',
-            //     'rgba(200, 150, 0, 0.7)',
-            //     'rgba(0, 150, 0, 0.7)',
-            //   ],
-            //   dimensionKey: dimensions[dimensions.length - 1].key,
-            // },
-            path: {
-              type: 'bezier',
-            },
-            width: 1,
-          },
-          dimension: {
-            label: {
-              // angle: Math.PI / 4,
-              // placement: 'before',
-            },
-            layout: 'axis-evenly-spaced',
-          },
-        },
-      };
       const hermes = new Hermes.default('#hermes', dimensions, {}, data);
     </script>
   </body>

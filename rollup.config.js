@@ -23,6 +23,13 @@ export default [
         format: 'iife',
         name: 'Hermes',
       },
+      {
+        esModule: false,
+        exports: 'named',
+        file: './demos/lib/hermes.iife.js',
+        format: 'iife',
+        name: 'Hermes',
+      },
     ],
     plugins: [ resolve(), commonjs() ],
   },
