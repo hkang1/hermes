@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="lib/hermes.iife.js"></script>
+    <link rel="stylesheet" href="css/shared.css" />
+  </head>
+  <body>
+    <div id="hermes"></div>
+    <script>
+      const tester = Hermes.default.getTester();
+      const dimensions = tester.generateDimensions(4, false);
+      const data = tester.generateData(dimensions, 50);
+      const config = {
+        direction: 'vertical',
+        style: {
+          dimension: {
+            label: {
+              placement: 'after',
+            },
+            layout: 'axis-evenly-spaced',
+          },
+        },
+      };
+      const hermes = new Hermes.default('#hermes', dimensions, config, data);
+    </script>
+  </body>
+</html>

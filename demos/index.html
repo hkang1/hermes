@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="css/shared.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Oswald:300,600|Roboto:300|Source+Code+Pro:300&display=swap" media="screen">
+  </head>
+  <body>
+    <main>
+      <h1>Hermes Parallel Coordinates Demos</h1>
+      <section>
+        <h2>What can you do in Hermes?</h2>
+        <p>
+          Here is the list of supported interactions:
+        </p>
+        <ul>
+          <li>Drag and drop the dimensions to change the order, by clicking on the dimension labels.</li>
+          <li>Hover over the dimension axes, then click and drag to create filters. You can have multiple filters on the same axis.</li>
+          <li>Click and drag existing filters to move and change the range of filtering along the axis.</li>
+          <li>Click and drag along the edges of the filters to resize an existing filter.</li>
+          <li>Single click on the filter without dragging to dismiss the clear out an existing filter.</li>
+          <li>Double click on the chart to reset the chart back to the original dimension order and clear out any filters.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Render in different directions</h2>
+
+        <h3>Standard Horizontal Layout</h3>
+
+        <div class="demo">
+          <div>
+            Default layout, styles and interactions for Hermes when no config is specified.
+            <a href="default.html">Demo Link</a>
+          </div>
+          <code>
+            { direction: 'horizontal' }
+          </code>
+        </div>
+
+        <h3>Vertical Layout</h3>
+        <div class="demo">
+          <div>
+            Chart rendered in a vertical direction.
+            <a href="direction-vertical.html">Demo Link</a>
+          </div>
+          <code>
+            { direction: 'vertical' }
+          </code>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
