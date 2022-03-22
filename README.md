@@ -4,7 +4,9 @@ A lightweight canvas-based parallel coordinates chart library.
 
 > [Parallel coordinates](https://en.wikipedia.org/wiki/Parallel_coordinates#:~:text=Parallel%20coordinates%20are%20a%20common,typically%20vertical%20and%20equally%20spaced.) are a common way of visualizing and analyzing high-dimensional datasets.
 
-Try out the [Live Demo](https://codepen.io/hoyoul/pen/yLPzoMe).
+Check out the list of [Demos](https://bejewelled-lamington-f97ebd.netlify.app/) to get an idea of the various capabilities and config options.
+
+Or try out the [Live Demo](https://codepen.io/hoyoul/pen/yLPzoMe) in a sandbox.
 
 # Screenshots
 
