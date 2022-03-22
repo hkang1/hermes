@@ -720,14 +720,8 @@ class Hermes {
       const dragDimension = this.dimensions.splice(_ixsa.dimIndex, 1);
       if (dragDimension.length === 0) return;
 
-      const insertIndex = newIndex + (_ixsa.dimIndex < newIndex ? -1 : 0);
-      this.dimensions.splice(insertIndex, 0, dragDimension[0]);
-
-      // Swap dragging dimension with the dimension it intersects with.
-      // const oldIndex = _ixsa.dimIndex;
-      // const tempDim = this.dimensions[oldIndex];
-      // this.dimensions[oldIndex] = this.dimensions[newIndex];
-      // this.dimensions[newIndex] = tempDim;
+      // Insert the extracted drag dimension into the dimensions list.
+      this.dimensions.splice(newIndex, 0, dragDimension[0]);
 
       // Update the drag dimension's index
       _ixsa.dimIndex = newIndex;
