@@ -1,3 +1,4 @@
+import getBoundingClientRect from 'test/mocks/getBoundingClientRect';
 import getTextSize from 'test/mocks/getTextSize';
 import * as utils from 'test/utils';
 
@@ -60,6 +61,38 @@ describe('Hermes Core', () => {
 
       expect(error?.message).toMatch(/selector did not match anything/i);
       expect(hermes).toBeUndefined();
+    });
+
+    it.each`
+      property    | value
+      ${'width'}  | ${0}
+      ${'height'} | ${0}
+    `('should fail if target element has $property of $value', ({ property, value }) => {
+      const elementId = 'super-hermes';
+      const element = document.createElement('div');
+      element.id = elementId;
+      document.body.appendChild(element);
+
+      const boundingRect = { ...utils.DEFAULT_BOUNDING_CLIENT_RECT, [property]: value };
+      const originalBoundingClientRect = Element.prototype.getBoundingClientRect;
+      Element.prototype.getBoundingClientRect = getBoundingClientRect(boundingRect);
+
+      let hermes: utils.HermesTester | undefined;
+      let error: HermesError | undefined;
+
+      try {
+        hermes = new utils.HermesTester(`#${elementId}`, utils.DEFAULT_DIMENSIONS);
+      } catch (e) {
+        error = e as HermesError;
+      }
+
+      expect(error?.message).toMatch(/width and height must both be greater than 0/i);
+      expect(hermes).toBeUndefined();
+
+      hermes?.destroy();
+      document.body.removeChild(element);
+
+      Element.prototype.getBoundingClientRect = originalBoundingClientRect;
     });
 
     it('should use existing canvas in element', () => {

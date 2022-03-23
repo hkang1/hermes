@@ -1191,6 +1191,10 @@ class Hermes {
         if (!element)
             throw new HermesError('Target element selector did not match anything.');
         this.element = element;
+        const rect = this.element.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+            throw new HermesError('Target element width and height must both be greater than 0px.');
+        }
         // Create a canvas and append it to the target element. Only if there isn't an existing one.
         const canvases = this.element.querySelectorAll('canvas');
         if (canvases.length === 0) {
