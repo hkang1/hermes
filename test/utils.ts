@@ -41,6 +41,8 @@ export interface HermesSetupWithError {
  */
 
 export class HermesTester extends Hermes {
+  protected resizeListener;
+
   constructor(
     target: HTMLElement | string,
     dimensions?: t.Dimension[],
@@ -49,23 +51,12 @@ export class HermesTester extends Hermes {
   ) {
     super(target, dimensions, config, data);
 
-    /**
-     * The ResizeObserver doesn't trigger properly in jsdom.
-     * Instead we capture a resize event to fire off the handler.
-     */
     const size = { h: DEFAULT_HEIGHT, w: DEFAULT_WIDTH };
-    const resize = () => {
+    this.resizeListener = () => {
       this.handleResize([ resizeObserverEntry(this.element, size.w++, size.h++) ]);
     };
-    this.element.addEventListener(
-      'resize',
-      this.config.interactions.throttleDelayResize === 0
-        ? resize
-        : throttle(() => resize(), this.config.interactions.throttleDelayResize),
-    );
 
-    // We fire a resize event to simulate the ResizeObserver.observe() behavior.
-    dispatchResizeEvent(this.element);
+    this.mockObservers();
   }
 
   public getCanvas(): HTMLCanvasElement { return this.canvas; }
@@ -74,6 +65,37 @@ export class HermesTester extends Hermes {
   public getData(): t.Data { return this.data; }
   public getDataCount(): number { return this.dataCount; }
   public drawDebugOutline(): void { super.drawDebugOutline(); }
+
+  public setConfig(config: t.RecursivePartial<t.Config> = {}, redraw = true): void {
+    super.setConfig(config, false);
+
+    // Re-add observers as config impacts the throttling of the observer handlers.
+    this.mockObservers();
+
+    if (redraw) this.redraw();
+  }
+
+  /**
+   * The ResizeObserver doesn't trigger properly in jsdom.
+   * Instead we capture a resize event to fire off the handler.
+   */
+  protected mockObservers(): void {
+    this.unmockObservers();
+
+    this.element.addEventListener(
+      'resize',
+      this.config.interactions.throttleDelayResize === 0
+        ? this.resizeListener
+        : throttle(() => this.resizeListener(), this.config.interactions.throttleDelayResize),
+    );
+
+    // We fire a resize event to simulate the ResizeObserver.observe() behavior.
+    dispatchResizeEvent(this.element);
+  }
+
+  protected unmockObservers(): void {
+    this.element.removeEventListener('resize', this.resizeListener);
+  }
 }
 
 export const hermesSetup = (

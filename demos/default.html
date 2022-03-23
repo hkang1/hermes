@@ -10,7 +10,7 @@
       const tester = Hermes.default.getTester();
       const dimensions = tester.generateDimensions(10, false);
       const data = tester.generateData(dimensions, 50);
-      const hermes = new Hermes.default('#hermes', dimensions, {}, data);
+      const hermes = new Hermes.default('#hermes', dimensions, undefined, data);
     </script>
   </body>
 </html>

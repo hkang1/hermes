@@ -38,14 +38,19 @@ declare class Hermes {
     options?: Hermes.RecursivePartial<Hermes.Config>,
     data?: Hermes.Data,
   );
+
   static getTester(): Hermes.Tester;
   static validateData(data: Hermes.Data): { count: number, valid: boolean };
   static validateDimension(dimension: Hermes.Dimension): { message: string, valid: boolean };
   static validateDimensions(dimensions: Hermes.Dimension[]): { message: string, valid: boolean };
+
   setConfig(config: Hermes.RecursivePartial<Hermes.Config>, redraw?: boolean): void;
   setData(data: Hermes.Data, redraw?: boolean): void;
   setDimensions(dimensions: Hermes.Dimension[], redraw?: boolean): void;
   setSize(w: number, h: number, redraw?: boolean): void;
+
+  disable(): void;
+  enable(): void;
   redraw(): void;
   destroy(): void;
 }
@@ -173,17 +178,6 @@ declare namespace Hermes {
     path: PathOptions;
   }
 
-  export interface Dimension {
-    categories?: Primitive[];
-    dataOnEdge?: boolean;
-    disableDrag?: boolean;
-    key: string;
-    label: string;
-    logBase?: number;
-    reverse?: boolean;
-    type: EDimensionType;
-  }
-
   export interface FilterOptions extends StyleRect {
     width: number;
   }
@@ -219,6 +213,17 @@ declare namespace Hermes {
    */
 
   export type Data = Record<DimensionKey, Primitive[]>;
+
+  export interface Dimension {
+    categories?: Primitive[];
+    dataOnEdge?: boolean;
+    disableDrag?: boolean;
+    key: string;
+    label: string;
+    logBase?: number;
+    reverse?: boolean;
+    type: EDimensionType;
+  }
 
   export type Filter = Range<Primitive>;
 

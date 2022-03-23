@@ -2,6 +2,15 @@ import * as utils from 'test/utils';
 
 import * as t from './types';
 
+const testSetConfig = (
+  setup: utils.HermesSetup,
+  config: t.RecursivePartial<t.Config> = {},
+  redraw = true,
+) => {
+  setup.hermes.setConfig(config, redraw);
+  jest.runOnlyPendingTimers();
+};
+
 describe('Hermes Config', () => {
   const tester = utils.HermesTester.getTester();
   const idempotentDimensions = tester.generateDimensions(10, false);
@@ -9,11 +18,13 @@ describe('Hermes Config', () => {
   let setup: utils.HermesSetup;
 
   beforeEach(() => {
-    setup = utils.hermesSetup(idempotentDimensions, {}, idempotentData);
+    jest.useFakeTimers();
+    setup = utils.hermesSetup(idempotentDimensions, undefined, idempotentData);
   });
 
   afterEach(() => {
     utils.hermesTeardown(setup);
+    jest.useRealTimers();
   });
 
   describe('direction', () => {
@@ -41,6 +52,7 @@ describe('Hermes Config', () => {
 
       // `redraw` should trigger drawing of the debug outlines.
       setup.hermes.redraw();
+      jest.runOnlyPendingTimers();
       expect(spyDrawDebugOutline).toHaveBeenCalled();
 
       // Clear out mock.
@@ -62,28 +74,24 @@ describe('Hermes Config', () => {
 
   describe('interactions', () => {
     it('should call `onResize` only once during a throttle period', () => {
-      jest.useFakeTimers();
-
       const onResize = jest.fn();
+      const resizeCount = 100;
       const config: t.RecursivePartial<t.Config> = {
         hooks: { onResize },
         interactions: { throttleDelayResize: 100 },
       };
       const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+      // Expect chart creation to call resize once.
       jest.runOnlyPendingTimers();
-
       expect(onResize).toHaveBeenCalled();
 
-      new Array(100).fill(null).forEach(() => utils.dispatchResizeEvent(setup.element));
-
+      // Expect a series of `resizeCount` calls get throttled down.
+      new Array(resizeCount).fill(null).forEach(() => utils.dispatchResizeEvent(setup.element));
       jest.runOnlyPendingTimers();
-
-      expect(onResize).toHaveBeenCalledTimes(2);
+      expect(onResize.mock.calls.length).toBeLessThan(resizeCount);
 
       utils.hermesTeardown(setup);
-
-      jest.useRealTimers();
     });
   });
 
@@ -91,7 +99,7 @@ describe('Hermes Config', () => {
     describe('axes', () => {
       describe('label', () => {
         it('should render label after in horizontal layout', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
             direction: t.Direction.Horizontal,
             style: { axes: { label: { placement: t.LabelPlacement.After } } },
           });
@@ -99,7 +107,7 @@ describe('Hermes Config', () => {
         });
 
         it('should render label after in vertical layout', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
             direction: t.Direction.Vertical,
             style: { axes: { label: { placement: t.LabelPlacement.After } } },
           });
@@ -107,7 +115,7 @@ describe('Hermes Config', () => {
         });
 
         it('should render label at an angle in horizontal layout', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
             direction: t.Direction.Horizontal,
             style: { axes: { label: { angle: Math.PI / 4 } } },
           });
@@ -115,7 +123,7 @@ describe('Hermes Config', () => {
         });
 
         it('should render label at an angle in vertical layout', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
             direction: t.Direction.Vertical,
             style: { axes: { label: { angle: Math.PI / 4 } } },
           });
@@ -127,7 +135,8 @@ describe('Hermes Config', () => {
     describe('dimension', () => {
       describe('label', () => {
         it('should render label after in horizontal layout', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
+
             direction: t.Direction.Horizontal,
             style: { dimension: { label: { placement: t.LabelPlacement.After } } },
           });
@@ -135,7 +144,8 @@ describe('Hermes Config', () => {
         });
 
         it('should render label after in vertical layout', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
+
             direction: t.Direction.Vertical,
             style: { dimension: { label: { placement: t.LabelPlacement.After } } },
           });
@@ -143,7 +153,8 @@ describe('Hermes Config', () => {
         });
 
         it('should render label at an angle in horizontal layout', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
+
             direction: t.Direction.Horizontal,
             style: { dimension: { label: { angle: Math.PI / 4 } } },
           });
@@ -151,7 +162,8 @@ describe('Hermes Config', () => {
         });
 
         it('should render label at an angle in vertical layout', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
+
             direction: t.Direction.Vertical,
             style: { dimension: { label: { angle: Math.PI / 4 } } },
           });
@@ -161,7 +173,8 @@ describe('Hermes Config', () => {
 
       describe('layout', () => {
         it('should render with dimension layout `axis-evenly-spaced`', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
+
             direction: t.Direction.Vertical,
             style: { dimension: { layout: t.DimensionLayout.AxisEvenlySpaced } },
           });
@@ -169,7 +182,8 @@ describe('Hermes Config', () => {
         });
 
         it('should render with dimension layout `equidistant`', () => {
-          setup.hermes.setConfig({
+          testSetConfig(setup, {
+
             direction: t.Direction.Vertical,
             style: { dimension: { layout: t.DimensionLayout.Equidistant } },
           });
@@ -180,17 +194,17 @@ describe('Hermes Config', () => {
 
     describe('padding', () => {
       it('should render padding with 1 number', () => {
-        setup.hermes.setConfig({ style: { padding: 16 } });
+        testSetConfig(setup, { style: { padding: 16 } });
         expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
       });
 
       it('should render padding with [ top/bottom, left/right ]', () => {
-        setup.hermes.setConfig({ style: { padding: [ 16, 8 ] } });
+        testSetConfig(setup, { style: { padding: [ 16, 8 ] } });
         expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
       });
 
       it('should render padding with [ top, bottom, left, right ]', () => {
-        setup.hermes.setConfig({ style: { padding: [ 4, 8, 16, 32 ] } });
+        testSetConfig(setup, { style: { padding: [ 4, 8, 16, 32 ] } });
         expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
       });
     });
