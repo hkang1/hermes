@@ -1214,7 +1214,9 @@ var Hermes = (function (exports) {
                 this.setConfig(config, false);
             if (data)
                 this.setData(data, false);
-            // Add mouse event handlers.
+            if (dimensions || config || data)
+                this.redraw();
+            // Define listeners up front, but don't start listening yet.
             this.listeners = {
                 dblclick: this.handleDoubleClick.bind(this),
                 mousedown: this.handleMouseDown.bind(this),
@@ -1223,12 +1225,8 @@ var Hermes = (function (exports) {
                     : throttle((e) => this.handleMouseMove.bind(this)(e), this.config.interactions.throttleDelayMouseMove),
                 mouseup: this.handleMouseUp.bind(this),
             };
-            this.element.addEventListener('dblclick', this.listeners.dblclick);
-            this.element.addEventListener('mousedown', this.listeners.mousedown);
-            window.addEventListener('mousemove', this.listeners.mousemove);
-            window.addEventListener('mouseup', this.listeners.mouseup);
-            if (dimensions || config || data)
-                this.redraw();
+            // Enable chart
+            this.enable();
         }
         static getTester() {
             return tester;
@@ -1291,16 +1289,8 @@ var Hermes = (function (exports) {
         setConfig(config = {}, redraw = true) {
             // Set config early as setSize references it early.
             this.config = deepMerge(HERMES_CONFIG, config);
-            // Clear out previously setup resize observer.
-            if (this.resizeObserver) {
-                this.resizeObserver.unobserve(this.element);
-                this.resizeObserver = undefined;
-            }
-            // Add resize observer to detect target element resizing.
-            this.resizeObserver = new ResizeObserver(this.config.interactions.throttleDelayResize === 0
-                ? this.handleResize.bind(this)
-                : throttle(entries => this.handleResize.bind(this)(entries), this.config.interactions.throttleDelayResize));
-            this.resizeObserver.observe(this.element);
+            // Re-add observers as config impacts the throttling of the observer handlers.
+            this.addObservers();
             if (redraw)
                 this.redraw();
         }
@@ -1368,7 +1358,21 @@ var Hermes = (function (exports) {
             if (redraw)
                 this.redraw();
         }
+        disable() {
+            this.removeListeners();
+            this.removeObservers();
+            // Clear out any intermediate focus or interactive states.
+            this.ix = clone(IX);
+            this.updateCursor();
+            this.redraw();
+        }
+        enable() {
+            this.addListeners();
+            this.addObservers();
+        }
         redraw() {
+            if (this.size.w === 0 && this.size.h === 0)
+                return;
             this.calculate();
             this.clear();
             if (this.config.debug)
@@ -1376,16 +1380,40 @@ var Hermes = (function (exports) {
             this.draw();
         }
         destroy() {
-            var _a;
-            // Remove observers and listeners.
-            (_a = this.resizeObserver) === null || _a === void 0 ? void 0 : _a.unobserve(this.element);
+            this.removeListeners();
+            this.removeObservers();
+            if (this.canvas && this.element.contains(this.canvas)) {
+                this.element.removeChild(this.canvas);
+            }
+        }
+        addListeners() {
+            this.element.addEventListener('dblclick', this.listeners.dblclick);
+            this.element.addEventListener('mousedown', this.listeners.mousedown);
+            window.addEventListener('mousemove', this.listeners.mousemove);
+            window.addEventListener('mouseup', this.listeners.mouseup);
+        }
+        addObservers() {
+            // Clear out previously setup resize observer.
+            if (this.resizeObserver) {
+                this.resizeObserver.unobserve(this.element);
+                this.resizeObserver = undefined;
+            }
+            // Define and add resize observer.
+            this.resizeObserver = new ResizeObserver(this.config.interactions.throttleDelayResize === 0
+                ? this.handleResize.bind(this)
+                : throttle(entries => this.handleResize.bind(this)(entries), this.config.interactions.throttleDelayResize));
+            this.resizeObserver.observe(this.element);
+        }
+        removeListeners() {
             this.element.removeEventListener('dblclick', this.listeners.dblclick);
             this.element.removeEventListener('mousedown', this.listeners.mousedown);
             window.removeEventListener('mousemove', this.listeners.mousemove);
             window.removeEventListener('mouseup', this.listeners.mouseup);
-            if (this.canvas && this.element.contains(this.canvas)) {
-                this.element.removeChild(this.canvas);
-            }
+        }
+        removeObservers() {
+            var _a;
+            (_a = this.resizeObserver) === null || _a === void 0 ? void 0 : _a.unobserve(this.element);
+            this.resizeObserver = undefined;
         }
         calculate() {
             this.calculateLayout();
