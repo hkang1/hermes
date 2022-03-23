@@ -18,20 +18,21 @@ describe('Hermes Hooks', () => {
   };
 
   beforeAll(() => {
+    jest.useFakeTimers();
     spyGetTextSize = jest.spyOn(canvas, 'getTextSize').mockImplementation(getTextSize);
   });
 
   afterAll(() => {
     spyGetTextSize.mockClear();
+    jest.useRealTimers();
   });
 
   it('should call `onDimensionMove` when dimensions get dragged', () => {
-    jest.useFakeTimers();
-
     const onDimensionMove = jest.fn();
     const config: t.RecursivePartial<t.Config> = { ...sharedConfig, hooks: { onDimensionMove } };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onDimensionMove).not.toHaveBeenCalled();
 
     // Move dimension from right to left.
@@ -39,8 +40,7 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
 
-    jest.runAllTimers();
-
+    jest.runOnlyPendingTimers();
     expect(onDimensionMove).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'layer-split-factor' }),
       4,
@@ -52,8 +52,7 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
 
-    jest.runAllTimers();
-
+    jest.runOnlyPendingTimers();
     expect(onDimensionMove).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'layer-dense-size' }),
       4,
@@ -61,20 +60,14 @@ describe('Hermes Hooks', () => {
     );
 
     utils.hermesTeardown(setup);
-
-    jest.useRealTimers();
   });
 
   it('should throttle `onDimensionMove` when dimensions get dragged', () => {
-    jest.useFakeTimers();
-
     const onDimensionMove = jest.fn();
     const config: t.RecursivePartial<t.Config> = { hooks: { onDimensionMove } };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
-    // Advance timer for resize event during initialization.
     jest.runOnlyPendingTimers();
-
     expect(onDimensionMove).not.toHaveBeenCalled();
 
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 961, clientY: 38 });
@@ -85,11 +78,10 @@ describe('Hermes Hooks', () => {
 
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
 
+    jest.runOnlyPendingTimers();
     expect(onDimensionMove).toHaveBeenCalled();
 
     utils.hermesTeardown(setup);
-
-    jest.useRealTimers();
   });
 
   it('should not call `onDimensionMove` when non-draggable dimensions are dragged', () => {
@@ -97,6 +89,7 @@ describe('Hermes Hooks', () => {
     const config: t.RecursivePartial<t.Config> = { ...sharedConfig, hooks: { onDimensionMove } };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onDimensionMove).not.toHaveBeenCalled();
 
     // Dragging a non-draggable dimension.
@@ -104,6 +97,7 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
 
+    jest.runOnlyPendingTimers();
     expect(onDimensionMove).not.toHaveBeenCalled();
 
     // Dragging a draggable dimension over a non-draggable dimension.
@@ -111,6 +105,7 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 1217, clientY: 38 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 1217, clientY: 38 });
 
+    jest.runOnlyPendingTimers();
     expect(onDimensionMove).not.toHaveBeenCalled();
 
     utils.hermesTeardown(setup);
@@ -125,6 +120,7 @@ describe('Hermes Hooks', () => {
     };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onFilterChange).not.toHaveBeenCalled();
     expect(onFilterCreate).not.toHaveBeenCalled();
 
@@ -132,6 +128,7 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterChange).toHaveBeenCalled();
     expect(onFilterCreate).toHaveBeenCalled();
 
@@ -143,12 +140,14 @@ describe('Hermes Hooks', () => {
     const config: t.RecursivePartial<t.Config> = { ...sharedConfig, hooks: { onFilterCreate } };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onFilterCreate).not.toHaveBeenCalled();
 
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 123 });
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterCreate).toHaveBeenCalled();
 
     utils.hermesTeardown(setup);
@@ -163,6 +162,7 @@ describe('Hermes Hooks', () => {
     };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onFilterCreate).not.toHaveBeenCalled();
     expect(onFilterMove).not.toHaveBeenCalled();
 
@@ -170,12 +170,14 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterCreate).toHaveBeenCalled();
 
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 200 });
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 250 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 250 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterMove).toHaveBeenCalled();
 
     utils.hermesTeardown(setup);
@@ -190,6 +192,7 @@ describe('Hermes Hooks', () => {
     };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onFilterCreate).not.toHaveBeenCalled();
     expect(onFilterRemove).not.toHaveBeenCalled();
 
@@ -197,11 +200,13 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterCreate).toHaveBeenCalled();
 
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 200 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 200 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterRemove).toHaveBeenCalled();
 
     utils.hermesTeardown(setup);
@@ -216,6 +221,7 @@ describe('Hermes Hooks', () => {
     };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onFilterCreate).not.toHaveBeenCalled();
     expect(onFilterResize).not.toHaveBeenCalled();
 
@@ -224,6 +230,7 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 246 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 246 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterCreate).toHaveBeenCalled();
 
     // Drag the upper part of the filter.
@@ -231,6 +238,7 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 100 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 100 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterResize).toHaveBeenCalled();
 
     // Drag the lower part of the filter.
@@ -238,6 +246,7 @@ describe('Hermes Hooks', () => {
     utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 250 });
     utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 250 });
 
+    jest.runOnlyPendingTimers();
     expect(onFilterResize).toHaveBeenCalled();
 
     utils.hermesTeardown(setup);
@@ -248,10 +257,12 @@ describe('Hermes Hooks', () => {
     const config: t.RecursivePartial<t.Config> = { ...sharedConfig, hooks: { onReset } };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onReset).not.toHaveBeenCalled();
 
     utils.dispatchMouseEvent('dblclick', setup.element);
 
+    jest.runOnlyPendingTimers();
     expect(onReset).toHaveBeenCalled();
 
     utils.hermesTeardown(setup);
@@ -265,10 +276,12 @@ describe('Hermes Hooks', () => {
     };
     const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
 
+    jest.runOnlyPendingTimers();
     expect(onResize).toHaveBeenCalled();
 
     utils.dispatchResizeEvent(setup.element);
 
+    jest.runOnlyPendingTimers();
     expect(onResize).toHaveBeenCalledTimes(2);
 
     utils.hermesTeardown(setup);

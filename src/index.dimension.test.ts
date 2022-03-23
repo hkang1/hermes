@@ -39,6 +39,14 @@ for (let a = 0; a < OPTIONS.categories.length; a++) {
 describe('Hermes Dimension', () => {
   const tester = utils.HermesTester.getTester();
 
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   for (let i = 0; i < DIMENSIONS_OPTIONS.length; i += utils.DIMENSION_COUNT) {
     const start = i;
     const stop = i + utils.DIMENSION_COUNT - 1;
@@ -59,6 +67,7 @@ describe('Hermes Dimension', () => {
       const setup = utils.hermesSetup(dimensions, config, data);
       const ctx = setup.hermes?.getCtx();
 
+      jest.runOnlyPendingTimers();
       expect(ctx.__getDrawCalls()).toMatchSnapshot();
 
       utils.hermesTeardown(setup);
@@ -70,6 +79,7 @@ describe('Hermes Dimension', () => {
       const setup = utils.hermesSetup(dimensions, config, data);
       const ctx = setup.hermes?.getCtx();
 
+      jest.runOnlyPendingTimers();
       expect(ctx.__getDrawCalls()).toMatchSnapshot();
 
       utils.hermesTeardown(setup);

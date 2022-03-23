@@ -1,7 +1,9 @@
+import getTextSize from 'test/mocks/getTextSize';
 import * as utils from 'test/utils';
 
 import HermesError from './classes/HermesError';
 import * as t from './types';
+import * as canvas from './utils/canvas';
 import { clone } from './utils/data';
 
 import Hermes from './index';
@@ -288,6 +290,61 @@ describe('Hermes Core', () => {
 
       const setData = () => setup.hermes?.setData(invalidData);
       expect(setData).toThrowWithMessage(HermesError, /data for .* is missing/i);
+    });
+  });
+
+  describe('disable', () => {
+    let spyGetTextSize: jest.SpyInstance<t.Size, [
+      ctx: CanvasRenderingContext2D,
+      text: string,
+      font?: string | undefined
+    ]>;
+
+    beforeAll(() => {
+      jest.useFakeTimers();
+      spyGetTextSize = jest.spyOn(canvas, 'getTextSize').mockImplementation(getTextSize);
+    });
+
+    afterAll(() => {
+      spyGetTextSize.mockClear();
+      jest.useRealTimers();
+    });
+
+    it('should prevent any interactions when disabled', () => {
+      const onDimensionMove = jest.fn();
+      const config: t.RecursivePartial<t.Config> = {
+        hooks: { onDimensionMove },
+        interactions: {
+          throttleDelayMouseMove: 0,
+          throttleDelayResize: 0,
+        },
+      };
+      const setup = utils.hermesSetup(utils.DEFAULT_DIMENSIONS, config, utils.DEFAULT_DATA);
+
+      jest.runOnlyPendingTimers();
+      expect(onDimensionMove).not.toHaveBeenCalled();
+
+      // Disable interactions.
+      setup.hermes.disable();
+
+      // Move dimension from right to left.
+      utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 961, clientY: 38 });
+      utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
+      utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
+
+      jest.runOnlyPendingTimers();
+      expect(onDimensionMove).not.toHaveBeenCalled();
+
+      // Enable interactions
+      setup.hermes.enable();
+
+      // Move dimension from right to left.
+      utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 961, clientY: 38 });
+      utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 577, clientY: 38 });
+      utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 577, clientY: 38 });
+
+      jest.runOnlyPendingTimers();
+      expect(onDimensionMove).toHaveBeenCalled();
     });
   });
 
