@@ -19,6 +19,18 @@ export const DEFAULT_DATA = tester.generateData(DEFAULT_DIMENSIONS, DATA_COUNT);
 
 export const DEFAULT_EVENT_INIT = { bubbles: true, cancelable: true, view: window };
 
+export const DEFAULT_BOUNDING_CLIENT_RECT = {
+  bottom: 0,
+  height: 400,
+  left: 0,
+  right: 0,
+  toJSON: jest.fn(),
+  top: 0,
+  width: 200,
+  x: 50,
+  y: 100,
+};
+
 /**
  * Test Interfaces and Types
  */
