@@ -60,7 +60,7 @@ The `container` can be an HTML element passed in directly or a query selector th
 
 ## Hermes Data Format
 
-The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L221), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
+The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L215), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
 
 ```
 type Data = Record<DimensionKey, Primitive[]>;
@@ -78,7 +78,7 @@ const data = {
 
 ## Hermes Dimensions Definition
 
-The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L176-L185). A sample dimension definition might look like...
+The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L217-L226). A sample dimension definition might look like...
 
 ```
 const dimensions = [
@@ -145,7 +145,7 @@ The dimension axes are drawn vertically, the axis tick values increase from the 
 
 ## Hermes Config and Styles
 
-The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L229-L269) provides a more up-to-date definition of the config.
+The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L234-L275) provides a more up-to-date definition of the config.
 
 ### General Config
 
@@ -155,11 +155,11 @@ The direction the dimensions should be laid out. The direction can be set to `ho
 
 ### Hooks
 
-#### onDimensionMove: (dimension: [Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L176-L185), newIndex: number, oldIndex: number) => void
+#### onDimensionMove: (dimension: [Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L217-L226), newIndex: number, oldIndex: number) => void
 
 Optional hook for when the order of dimensions changes via drag and drop. The callback is called during the drag and whenever dimensions required a swap, even before when the mouse is released. The data for the dimension that is dragged, the new index and the original index are returned.
 
-#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L225-L227)) => void
+#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L230-L232)) => void
 
 Optional hook for when any filter changes. The callback is specifically called on the `mouseup` event. The entire updated filters object is returned.
 
@@ -197,7 +197,7 @@ The time interval in millisconds in which the mouse move event is allowed to pro
 
 The time interval in milliseconds in which the resize event is allowed to propagate. For example, with the default 50ms, as the user is changing the browser window that contains the chart, the resize event, the associated calculations and the rerenders are allowed to happen only every 50ms.
 
-### [Style Options](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L245-L268)
+### [Style Options](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L250-L273)
 
 #### axes
 #### data

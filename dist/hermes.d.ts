@@ -178,17 +178,6 @@ declare namespace Hermes {
     path: PathOptions;
   }
 
-  export interface Dimension {
-    categories?: Primitive[];
-    dataOnEdge?: boolean;
-    disableDrag?: boolean;
-    key: string;
-    label: string;
-    logBase?: number;
-    reverse?: boolean;
-    type: EDimensionType;
-  }
-
   export interface FilterOptions extends StyleRect {
     width: number;
   }
@@ -224,6 +213,17 @@ declare namespace Hermes {
    */
 
   export type Data = Record<DimensionKey, Primitive[]>;
+
+  export interface Dimension {
+    categories?: Primitive[];
+    dataOnEdge?: boolean;
+    disableDrag?: boolean;
+    key: string;
+    label: string;
+    logBase?: number;
+    reverse?: boolean;
+    type: EDimensionType;
+  }
 
   export type Filter = Range<Primitive>;
 
