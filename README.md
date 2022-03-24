@@ -37,48 +37,26 @@ Support for vertical layout with a simple config change of layout from `horizont
   - Ticks: font, color, position, angle (active and hover styles)
 - Fast render times.
 
-# Future Features
-
-- Support for event hooks.
-
 # API
 
 `Hermes` is a class. To use render the chart, simply create a new instance of `Hermes` and pass in the necessary parameters.
 
 ```
 new Hermes(
-  container: HTMLElement | string,
-  data: Hermes.Data,
-  dimensions: Hermes.Dimension[],
-  config?: Partial<Hermes.Config>,
+  target: HTMLElement | string,
+  dimensions?: Hermes.Dimension[],
+  config?: RecursivePartial<Hermes.Config>,
+  data?: Hermes.Data,
 );
 ```
 
-## Hermes Container
+## Hermes Target 
 
-The `container` can be an HTML element passed in directly or a query selector that matches an element. For example you can pass in `#hermes` and Hermes will look for the element with the `id` attribute set to `hermes` and use that as a container for the chart rendering.
+The `target` can be an HTML element passed in directly or a query selector that matches an element. For example you can pass in `#hermes` and Hermes will look for the element with the `id` attribute set to `hermes` and use that as a container for the chart rendering.
 
-## Hermes Data Format
+## Hermes Dimension
 
-The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L215), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
-
-```
-type Data = Record<DimensionKey, Primitive[]>;
-```
-
-A sample data input might look like...
-
-```
-const data = {
-  'weight': [ 155, 29, 6, 109 ],
-  'gender': [ 'm', 'm', 'u', 'f' ],
-  'is-adult': [ true, false, false, true ],
-};
-```
-
-## Hermes Dimensions Definition
-
-The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L217-L226). A sample dimension definition might look like...
+The list of dimension defines the behavior of each axis on the chart. A sample dimension definition might look like...
 
 ```
 const dimensions = [
@@ -102,19 +80,37 @@ const dimensions = [
 ];
 ```
 
-### key
+## Hermes Data Format
+
+The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L215), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
+
+```
+type Data = Record<DimensionKey, Primitive[]>;
+```
+
+A sample data input might look like...
+
+```
+const data = {
+  'weight': [ 155, 29, 6, 109 ],
+  'gender': [ 'm', 'm', 'u', 'f' ],
+  'is-adult': [ true, false, false, true ],
+};
+```
+
+### key: string
 
 This is a required unique identifier for the defined dimension. This is used internally for dimension ordering and when filters are created for a corresponding dimension.
 
-### label
+### label: string
 
 The string label to display on the chart for the dimension.
 
-### type
+### type: 'categorical' | 'linear' | 'logarithmic'
 
-This field specifies the dimension scale type. The 3 possible values are `categorical`, `linear` or `logarithmic`. The corresponding TypeScript references are `Hermes.DimensionType.Categorical`, `Hermes.DimensionType.Linear` and `Hermes.DimensionType.Logarithmic`.
+This field specifies the dimension scale type. The 3 scale types corresponds to the TypeScript enum of `Hermes.DimensionType.Categorical`, `Hermes.DimensionType.Linear` and `Hermes.DimensionType.Logarithmic`.
 
-### categories (optional)
+### categories: [Primitive](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L66)\[\] (optional)
 
 If the [dimension scale type](#type) is set to `categorical`, this field needs to be defined. The data for categorical dimensions need to match a value in the `categories` list. Some examples of `categories`:
 
@@ -129,17 +125,17 @@ categories: [ 1, 2, 4, 8, 16 ]
 categories: [ 'slow', 'medium', 'fast' ]
 ```
 
-### dataOnEdge (optional)
+### dataOnEdge: boolean (optional)
 
 If unspecified, `dataOnEdge` defaults to `true`. When `true`, the dimension scale ranges from the minimum data value to the maximum data value. For example, if for dimension `loss` had data values ranging from `2.1` to `5.4`, the dimension scale will show `2.1` to `5.4`.
 
 If disabled and set to `false`, Hermes will try to find the nearest *nice* number for the extremes on the scale. The extremes are still based on the data value range. So for the same `loss` example above, the dimension scale will instead show `2.0` to `5.5` or something similar.
 
-### logBase (optional)
+### logBase: whole number (optional)
 
 If the [dimension scale type](#type) is set to `logarithmic`, `logBase` can be set to determine what logarithmic base you wish the scale to be set. If this value is not provided, it defaults to `logBase` of 10. Common log base values are 2 and 10.
 
-### reverse (optional)
+### reverse: boolean (optional)
 
 The dimension axes are drawn vertically, the axis tick values increase from the bottom up. When drawn horizontally, the axis tick values increase from left to right. Setting the `reverse` to `true` will reverse the direction of the axis tick along the axes.
 
@@ -149,7 +145,7 @@ The config provides control over the chart behavior, rendering, style and the ab
 
 ### General Config
 
-#### direction (default: 'horizontal')
+#### direction: 'horizontal' **default** | 'vertical'
 
 The direction the dimensions should be laid out. The direction can be set to `horizontal` or `vertical`. The `horizontal` direction will draw the dimensions across the canvas with vertical axes. The `vertical` direction will draw the dimensions top to bottom on the canvas with horizontal axes.
 
@@ -197,12 +193,46 @@ The time interval in millisconds in which the mouse move event is allowed to pro
 
 The time interval in milliseconds in which the resize event is allowed to propagate. For example, with the default 50ms, as the user is changing the browser window that contains the chart, the resize event, the associated calculations and the rerenders are allowed to happen only every 50ms.
 
-### [Style Options](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L250-L273)
+### Style Options
 
 #### axes
-#### data
+
+##### axis: [AxisOptions]()
+##### axisActve: [StyleLine]()
+##### axisHover: [StyleLine]()
+##### filter: [FilterOptions]()
+##### filterActive: [FilterOptions]()
+##### filterHover: [FilterOptions]()
+##### label: [LabelOptions]()
+##### labelActive: [StyleText]()
+##### labelHover: [StyleText]()
+##### tick: [TickOptions]()
+##### tickActive: [StyleLine]()
+##### tickHover: [StyleLine]()
+
+#### data: [DataOptions]()
+
 #### dimension
-#### padding
+
+##### label: [LabelMoveOptions]()
+##### labelActive: [StyleText]()
+##### labelHover: [StyleText]()
+##### layout: [EDimensionLayout]()
+
+#### padding: number | number[2] | number [4]
+
+The padding between the edge of the chart container and the chart content, such as the labels, axes and axis labels. The padding can be a single number, a list of two numbers or a list of 4 numbers.
+
+```
+// 8px on all four sides ([ 8, 8, 8, 8 ]).
+padding: 8
+
+// Padding of 16px on top and bottom and 8px on the left and right ([ 16, 8, 16, 8 ]).
+padding: [ 16, 8 ]
+
+// padding of 32px on top, 16px on the right, 8px on bottom, and 4px on the left.
+padding: [ 32, 16, 8, 4 ]
+```
 
 # Special Thanks
 
