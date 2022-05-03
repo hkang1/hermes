@@ -1232,6 +1232,9 @@ var Hermes = (function (exports) {
             // Enable chart
             this.enable();
         }
+        static deepMerge(...objects) {
+            return deepMerge(...objects);
+        }
         static getTester() {
             return tester;
         }

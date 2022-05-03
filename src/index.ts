@@ -87,6 +87,10 @@ class Hermes {
     this.enable();
   }
 
+  static deepMerge<T extends t.NestedObject>(...objects: T[]): T {
+    return deepMerge(...objects);
+  }
+
   static getTester(): tester.Tester {
     return tester;
   }

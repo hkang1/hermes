@@ -1229,6 +1229,9 @@ class Hermes {
         // Enable chart
         this.enable();
     }
+    static deepMerge(...objects) {
+        return deepMerge(...objects);
+    }
     static getTester() {
         return tester;
     }

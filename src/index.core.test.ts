@@ -160,6 +160,19 @@ describe('Hermes Core', () => {
     });
   });
 
+  describe('deepMerge', () => {
+    it('should have `deepMerge` defined statically', () => {
+      expect(utils.HermesTester.deepMerge).not.toBeUndefined();
+    });
+
+    it('should perform deep merge', () => {
+      const a: t.NestedObject = { a: { b: 1, c: { d: 2 } } };
+      const b: t.NestedObject = { a: { c: { d: 3, e: 4 } }, f: 5 };
+      const c = { a: { b: 1, c: { d: 3, e: 4 } }, f: 5 };
+      expect(utils.HermesTester.deepMerge(a, b)).toStrictEqual(c);
+    });
+  });
+
   describe('getTester', () => {
     it('should have `generateData` defined in tester', () => {
       const tester = utils.HermesTester.getTester();
