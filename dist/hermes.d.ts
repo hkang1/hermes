@@ -39,6 +39,7 @@ declare class Hermes {
     data?: Hermes.Data,
   );
 
+  static deepMerge<T extends Hermes.NestedObject>(...objects: T[]): T;
   static getTester(): Hermes.Tester;
   static validateData(data: Hermes.Data): { count: number, valid: boolean };
   static validateDimension(dimension: Hermes.Dimension): { message: string, valid: boolean };
@@ -62,6 +63,7 @@ declare namespace Hermes {
    * TYPES
    */
 
+  export type NestedObject = Record<RecordKey, unknown>;
   export type Padding = number | [ number, number ] | [ number, number, number, number ];
   export type Primitive = boolean | number | string;
   export type Range<T = number> = [ T, T ];
