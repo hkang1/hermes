@@ -60,7 +60,12 @@ class LogScale extends NiceScale {
   }
 
   protected calculate(): void {
-    this.log = this.logBase === 10 ? Math.log10 : this.logBase === 2 ? Math.log2 : Math.log;
+    this.log =
+      this.logBase === 10
+        ? Math.log10
+        : this.logBase === 2
+          ? Math.log2
+          : (x) => Math.log(x) / Math.log(this.logBase);
     this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
 
     this.minExpExact = this.log(this.minValue) / this.denominator;
