@@ -581,6 +581,12 @@ class LogScale extends NiceScale {
         this.calculate();
     }
     percentToValue(percent) {
+        if (percent === 0) {
+            return this.reverse ? Infinity : -Infinity;
+        }
+        if (percent === 1) {
+            return this.reverse ? -Infinity : Infinity;
+        }
         const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
         const exp = (this.reverse ? 1 - percent : percent) * this.rangeExp() + minExp;
         return this.logBase ** exp;
