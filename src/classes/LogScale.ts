@@ -6,8 +6,11 @@ import NiceScale from './NiceScale';
 
 export const DEFAULT_LOG_BASE = 10;
 
+const basedLog = (base: number) => (x: number) => {
+  return Math.log(x) / Math.log(base);
+};
+
 class LogScale extends NiceScale {
-  protected denominator: number;
   protected log: (x: number) => number;
   protected maxExp: number = Number.NaN;
   protected maxExpExact: number = Number.NaN;
@@ -22,8 +25,7 @@ class LogScale extends NiceScale {
     config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
     super(direction, minValue, maxValue, config);
-    this.denominator = 1;
-    this.log = Math.log;
+    this.log = basedLog(logBase);
     this.logBase = logBase;
   }
 
@@ -44,7 +46,7 @@ class LogScale extends NiceScale {
 
   public valueToPercent(value: Primitive): number {
     if (!isNumber(value)) return 0;
-    const exp = this.log(value) / this.denominator;
+    const exp = this.log(value);
     const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
     const maxExp = this.dataOnEdge ? this.maxExpExact : this.maxExp;
     const percent = (exp - minExp) / (maxExp - minExp);
@@ -60,18 +62,31 @@ class LogScale extends NiceScale {
   }
 
   protected calculate(): void {
-    this.log =
-      this.logBase === 10
-        ? Math.log10
-        : this.logBase === 2
-          ? Math.log2
-          : (x) => Math.log(x) / Math.log(this.logBase);
-    this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
 
-    this.minExpExact = this.log(this.minValue) / this.denominator;
-    this.maxExpExact = this.log(this.maxValue) / this.denominator;
+    this.log = basedLog(this.logBase);
+    this.minExpExact = this.log(this.minValue);
+    this.maxExpExact = this.log(this.maxValue);
     this.minExp = Math.floor(this.minExpExact);
     this.maxExp = Math.ceil(this.maxExpExact);
+
+    /**
+     * debugging code, comment changes in data.ts
+     * and uncomment some lines below
+     *
+     * minExp bad -> graph crashes
+     * minExp good, minExpExact bad
+     *   -> graph is all black and lines disappear
+     * minExp good, minExpExact good
+     *   -> all blue colors, lines at end of scale
+     *         (i.e. not actually good)
+     */
+
+    // const goodMinExpExact = this.log(Math.max(Number.EPSILON, this.minValue));
+    // const goodMinExp = Math.floor(goodMinExpExact);
+
+    // this.minExpExact = goodMinExpExact;
+    // this.minExp = goodMinExp;
+
     this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
     this.tickSpacing = 1;
 

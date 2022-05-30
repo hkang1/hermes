@@ -228,8 +228,12 @@ var Hermes = (function (exports) {
             return acc;
         }, {});
     };
-    const getDataRange = (data) => {
-        return data.reduce((acc, x) => {
+    const getDataRange = (data, dimensionType) => {
+        return data
+            .filter((x) => dimensionType === DimensionType.Logarithmic
+            ? isNumber(x) && isFinite(Math.log(x))
+            : isNumber(x) && isFinite(x))
+            .reduce((acc, x) => {
             if (isNumber(x)) {
                 if (x > acc[1])
                     acc[1] = x;
@@ -359,6 +363,7 @@ var Hermes = (function (exports) {
             this.axisLength = 1;
             this.maxTicks = 1;
             this.dataOnEdge = DEFAULT_DATA_ON_EDGE;
+            this.clampFinite = (x) => Math.min(Math.max(x, Number.MIN_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
             this.max = maxValue;
             this.min = minValue;
             if (config.dataOnEdge != null)
@@ -402,6 +407,7 @@ var Hermes = (function (exports) {
             this.maxValue = maxValue;
             this.max = maxValue;
             this.min = minValue;
+            this.range = maxValue - minValue;
             if (calculate)
                 this.calculate();
         }
@@ -556,6 +562,9 @@ var Hermes = (function (exports) {
     }
 
     const DEFAULT_LOG_BASE = 10;
+    const basedLog = (base) => (x) => {
+        return Math.log(x) / Math.log(base);
+    };
     class LogScale extends NiceScale {
         constructor(direction, minValue, maxValue, logBase = DEFAULT_LOG_BASE, config = {}) {
             super(direction, minValue, maxValue, config);
@@ -567,8 +576,7 @@ var Hermes = (function (exports) {
             this.maxExpExact = Number.NaN;
             this.minExp = Number.NaN;
             this.minExpExact = Number.NaN;
-            this.denominator = 1;
-            this.log = Math.log;
+            this.log = basedLog(logBase);
             this.logBase = logBase;
         }
         setLogBase(logBase = DEFAULT_LOG_BASE) {
@@ -586,7 +594,7 @@ var Hermes = (function (exports) {
         valueToPercent(value) {
             if (!isNumber(value))
                 return 0;
-            const exp = this.log(value) / this.denominator;
+            const exp = this.log(value);
             const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
             const maxExp = this.dataOnEdge ? this.maxExpExact : this.maxExp;
             const percent = (exp - minExp) / (maxExp - minExp);
@@ -599,17 +607,26 @@ var Hermes = (function (exports) {
             return this.dataOnEdge ? this.maxExpExact - this.minExpExact : this.maxExp - this.minExp;
         }
         calculate() {
-            this.log =
-                this.logBase === 10
-                    ? Math.log10
-                    : this.logBase === 2
-                        ? Math.log2
-                        : (x) => Math.log(x) / Math.log(this.logBase);
-            this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
-            this.minExpExact = this.log(this.minValue) / this.denominator;
-            this.maxExpExact = this.log(this.maxValue) / this.denominator;
+            this.log = basedLog(this.logBase);
+            this.minExpExact = this.log(this.minValue);
+            this.maxExpExact = this.log(this.maxValue);
             this.minExp = Math.floor(this.minExpExact);
             this.maxExp = Math.ceil(this.maxExpExact);
+            /**
+             * debugging code, comment changes in data.ts
+             * and uncomment some lines below
+             *
+             * minExp bad -> graph crashes
+             * minExp good, minExpExact bad
+             *   -> graph is all black and lines disappear
+             * minExp good, minExpExact good
+             *   -> all blue colors, lines at end of scale
+             *         (i.e. not actually good)
+             */
+            // const goodMinExpExact = this.log(Math.max(Number.EPSILON, this.minValue));
+            // const goodMinExp = Math.floor(goodMinExpExact);
+            // this.minExpExact = goodMinExpExact;
+            // this.minExp = goodMinExp;
             this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
             this.tickSpacing = 1;
             /**
@@ -1365,7 +1382,7 @@ var Hermes = (function (exports) {
                 };
                 if (dimension.type === DimensionType.Linear ||
                     dimension.type === DimensionType.Logarithmic) {
-                    internal.range = getDataRange(data);
+                    internal.range = getDataRange(data, dimension.type);
                     if (dimension.type === DimensionType.Linear) {
                         internal.scale = new LinearScale(direction, internal.range[0], internal.range[1], dimension);
                     }

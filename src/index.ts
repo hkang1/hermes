@@ -200,7 +200,7 @@ class Hermes {
         dimension.type === t.DimensionType.Linear ||
         dimension.type === t.DimensionType.Logarithmic
       ) {
-        internal.range = getDataRange(data);
+        internal.range = getDataRange(data, dimension.type);
         if (dimension.type === t.DimensionType.Linear) {
           internal.scale = new LinearScale(
             direction,

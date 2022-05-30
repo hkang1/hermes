@@ -57,6 +57,9 @@ abstract class NiceScale {
     this.calculate();
   }
 
+  public clampFinite = (x: number): number =>
+    Math.min(Math.max(x, Number.MIN_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
+
   public setMinMaxValues(minValue: number, maxValue: number, calculate = true): void {
     /*
      * Handle the 0 range scale by padding each end of the common min/max value,

@@ -1,4 +1,6 @@
-import { NestedObject, Primitive, RandomNumberOptions, Range } from '../types';
+import {
+  DimensionType, EDimensionType, NestedObject, Primitive, RandomNumberOptions, Range,
+} from '../types';
 
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
@@ -47,14 +49,19 @@ export const deepMerge = <T extends NestedObject>(...objects: T[]): T => {
   }, {} as T);
 };
 
-export const getDataRange = (data: unknown[]): Range => {
-  return data.reduce((acc: Range, x) => {
-    if (isNumber(x)) {
-      if (x > acc[1]) acc[1] = x;
-      if (x < acc[0]) acc[0] = x;
-    }
-    return acc;
-  }, [ Infinity, -Infinity ]);
+export const getDataRange = (data: unknown[], dimensionType: EDimensionType): Range => {
+  return data
+    .filter((x) =>
+      dimensionType === DimensionType.Logarithmic
+        ? isNumber(x) && isFinite(Math.log(x))
+        : isNumber(x) && isFinite(x))
+    .reduce((acc: Range, x) => {
+      if (isNumber(x)) {
+        if (x > acc[1]) acc[1] = x;
+        if (x < acc[0]) acc[0] = x;
+      }
+      return acc;
+    }, [ Infinity, -Infinity ]);
 };
 
 export const idempotentItem = <T = unknown>(list: T[], index: number): T => {
