@@ -1396,7 +1396,7 @@ class Hermes {
                 dimension.type === DimensionType.Logarithmic) {
                 [internal.finiteRange, internal.actualRange] = getDataRange(data, dimension.type);
                 if (dimension.type === DimensionType.Linear) {
-                    internal.scale = new LinearScale(direction, internal.finiteRange[0], internal.finiteRange[1], dimension);
+                    internal.scale = new LinearScale(direction, internal.actualRange[0], internal.actualRange[1], dimension);
                 }
                 else if (dimension.type === DimensionType.Logarithmic) {
                     internal.scale = new LogScale(direction, internal.finiteRange[0], internal.finiteRange[1], internal.actualRange[0], internal.actualRange[1], dimension.logBase, dimension);

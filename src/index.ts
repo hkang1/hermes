@@ -205,8 +205,8 @@ class Hermes {
         if (dimension.type === t.DimensionType.Linear) {
           internal.scale = new LinearScale(
             direction,
-            internal.finiteRange[0],
-            internal.finiteRange[1],
+            internal.actualRange[0],
+            internal.actualRange[1],
             dimension,
           );
         } else if (dimension.type === t.DimensionType.Logarithmic) {
