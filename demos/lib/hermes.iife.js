@@ -368,7 +368,6 @@ var Hermes = (function (exports) {
             this.axisLength = 1;
             this.maxTicks = 1;
             this.dataOnEdge = DEFAULT_DATA_ON_EDGE;
-            this.clampFinite = (x) => Math.min(Math.max(x, Number.MIN_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
             this.max = maxValue;
             this.min = minValue;
             if (config.dataOnEdge != null)
