@@ -49,19 +49,21 @@ export const deepMerge = <T extends NestedObject>(...objects: T[]): T => {
   }, {} as T);
 };
 
-export const getDataRange = (data: unknown[], dimensionType: EDimensionType): Range => {
+export const getDataRange = (data: unknown[], dimensionType: EDimensionType): [Range, Range] => {
+  const isFiniteOnScale = (x: number) => dimensionType === DimensionType.Logarithmic
+    ? isFinite(Math.log(x))
+    : isFinite(x);
   return data
-    .filter((x) =>
-      dimensionType === DimensionType.Logarithmic
-        ? isNumber(x) && isFinite(Math.log(x))
-        : isNumber(x) && isFinite(x))
-    .reduce((acc: Range, x) => {
-      if (isNumber(x)) {
-        if (x > acc[1]) acc[1] = x;
-        if (x < acc[0]) acc[0] = x;
+    .filter(isNumber)
+    .reduce(([ finiteRange, actualRange ]: [Range, Range], x) => {
+      if (isFiniteOnScale(x)) {
+        if (x > finiteRange[1]) finiteRange[1] = x;
+        if (x < finiteRange[0]) finiteRange[0] = x;
       }
-      return acc;
-    }, [ Infinity, -Infinity ]);
+      if (x > actualRange[1]) actualRange[1] = x;
+      if (x < actualRange[0]) actualRange[0] = x;
+      return [ finiteRange, actualRange ];
+    }, [ [ Infinity, -Infinity ], [ Infinity, -Infinity ] ]);
 };
 
 export const idempotentItem = <T = unknown>(list: T[], index: number): T => {

@@ -229,19 +229,24 @@ var Hermes = (function (exports) {
         }, {});
     };
     const getDataRange = (data, dimensionType) => {
+        const isFiniteOnScale = (x) => dimensionType === DimensionType.Logarithmic
+            ? isFinite(Math.log(x))
+            : isFinite(x);
         return data
-            .filter((x) => dimensionType === DimensionType.Logarithmic
-            ? isNumber(x) && isFinite(Math.log(x))
-            : isNumber(x) && isFinite(x))
-            .reduce((acc, x) => {
-            if (isNumber(x)) {
-                if (x > acc[1])
-                    acc[1] = x;
-                if (x < acc[0])
-                    acc[0] = x;
+            .filter(isNumber)
+            .reduce(([finiteRange, actualRange], x) => {
+            if (isFiniteOnScale(x)) {
+                if (x > finiteRange[1])
+                    finiteRange[1] = x;
+                if (x < finiteRange[0])
+                    finiteRange[0] = x;
             }
-            return acc;
-        }, [Infinity, -Infinity]);
+            if (x > actualRange[1])
+                actualRange[1] = x;
+            if (x < actualRange[0])
+                actualRange[0] = x;
+            return [finiteRange, actualRange];
+        }, [[Infinity, -Infinity], [Infinity, -Infinity]]);
     };
     const idempotentItem = (list, index) => {
         return list[index % list.length];
@@ -566,11 +571,13 @@ var Hermes = (function (exports) {
         return Math.log(x) / Math.log(base);
     };
     class LogScale extends NiceScale {
-        constructor(direction, minValue, maxValue, logBase = DEFAULT_LOG_BASE, config = {}) {
-            super(direction, minValue, maxValue, config);
+        constructor(direction, finiteMin, finiteMax, actualMin, actualMax, logBase = DEFAULT_LOG_BASE, config = {}) {
+            super(direction, finiteMin, finiteMax, config);
             this.direction = direction;
-            this.minValue = minValue;
-            this.maxValue = maxValue;
+            this.finiteMin = finiteMin;
+            this.finiteMax = finiteMax;
+            this.actualMin = actualMin;
+            this.actualMax = actualMax;
             this.logBase = logBase;
             this.maxExp = Number.NaN;
             this.maxExpExact = Number.NaN;
@@ -578,6 +585,8 @@ var Hermes = (function (exports) {
             this.minExpExact = Number.NaN;
             this.log = basedLog(logBase);
             this.logBase = logBase;
+            this.actualMax = actualMax;
+            this.actualMin = actualMin;
         }
         setLogBase(logBase = DEFAULT_LOG_BASE) {
             this.logBase = logBase;
@@ -585,10 +594,10 @@ var Hermes = (function (exports) {
         }
         percentToValue(percent) {
             if (percent === 0) {
-                return this.reverse ? Infinity : -Infinity;
+                return this.reverse ? this.actualMax : this.actualMin;
             }
             if (percent === 1) {
-                return this.reverse ? -Infinity : Infinity;
+                return this.reverse ? this.actualMin : this.actualMax;
             }
             const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
             const exp = (this.reverse ? 1 - percent : percent) * this.rangeExp() + minExp;
@@ -1382,18 +1391,19 @@ var Hermes = (function (exports) {
                 const data = this.data[key] || [];
                 const internal = {
                     ...dimension,
+                    actualRange: undefined,
+                    finiteRange: undefined,
                     labelTruncated: truncate(dimension.label, { size: this.config.style.dimension.label.truncate }),
-                    range: undefined,
                     scale: new LinearScale(direction, 0, 100),
                 };
                 if (dimension.type === DimensionType.Linear ||
                     dimension.type === DimensionType.Logarithmic) {
-                    internal.range = getDataRange(data, dimension.type);
+                    [internal.finiteRange, internal.actualRange] = getDataRange(data, dimension.type);
                     if (dimension.type === DimensionType.Linear) {
-                        internal.scale = new LinearScale(direction, internal.range[0], internal.range[1], dimension);
+                        internal.scale = new LinearScale(direction, internal.finiteRange[0], internal.finiteRange[1], dimension);
                     }
                     else if (dimension.type === DimensionType.Logarithmic) {
-                        internal.scale = new LogScale(direction, internal.range[0], internal.range[1], dimension.logBase, dimension);
+                        internal.scale = new LogScale(direction, internal.finiteRange[0], internal.finiteRange[1], internal.actualRange[0], internal.actualRange[1], dimension.logBase, dimension);
                     }
                 }
                 else if (dimension.type === DimensionType.Categorical) {

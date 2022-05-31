@@ -19,14 +19,19 @@ class LogScale extends NiceScale {
 
   constructor(
     protected direction: EDirection,
-    protected minValue: number,
-    protected maxValue: number,
+    protected finiteMin: number,
+    protected finiteMax: number,
+    protected actualMin: number,
+    protected actualMax: number,
     protected logBase: number = DEFAULT_LOG_BASE,
     config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
-    super(direction, minValue, maxValue, config);
+    super(direction, finiteMin, finiteMax, config);
     this.log = basedLog(logBase);
     this.logBase = logBase;
+    this.actualMax = actualMax;
+    this.actualMin = actualMin;
+
   }
 
   public setLogBase(logBase: number = DEFAULT_LOG_BASE): void {
@@ -36,10 +41,10 @@ class LogScale extends NiceScale {
 
   public percentToValue(percent: number): number {
     if (percent === 0) {
-      return this.reverse ? Infinity : -Infinity;
+      return this.reverse ? this.actualMax : this.actualMin;
     }
     if (percent === 1) {
-      return this.reverse ? -Infinity : Infinity;
+      return this.reverse ? this.actualMin : this.actualMax;
     }
     const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
     const exp = (this.reverse ? 1 - percent : percent) * this.rangeExp() + minExp;
