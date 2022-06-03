@@ -99,6 +99,24 @@ describe('NiceScale class', () => {
     expect(mockCalculate).toHaveBeenCalled();
   });
 
+  it('should handle min and max values being the same and greater than 0', () => {
+    const { maxValue, minValue } = scale.testSetMinMaxValues(100, 100);
+    expect(minValue).toBeCloseTo(50);
+    expect(maxValue).toBeCloseTo(150);
+  });
+
+  it('should handle min and max values being the same and greater than 0', () => {
+    const { maxValue, minValue } = scale.testSetMinMaxValues(0, 0);
+    expect(minValue).toBe(-1);
+    expect(maxValue).toBe(1);
+  });
+
+  it('should handle min and max values being the same and less than 0', () => {
+    const { maxValue, minValue } = scale.testSetMinMaxValues(-100, -100);
+    expect(minValue).toBeCloseTo(-150);
+    expect(maxValue).toBeCloseTo(-50);
+  });
+
   it('should return nice numbers', () => {
     expect(scale.testNiceNum(1.5, true)).toBe(2);
     expect(scale.testNiceNum(1.5, false)).toBe(2);

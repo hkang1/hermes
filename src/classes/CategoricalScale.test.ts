@@ -67,9 +67,9 @@ describe('CategoricalScale', () => {
 
     it('should calculate log values properly', () => {
       scale.testCalculate();
-      expect(scale.min).toBe(0);
-      expect(scale.max).toBe(0);
-      expect(scale.range).toBe(0);
+      expect(scale.min).toBe(-1);
+      expect(scale.max).toBe(1);
+      expect(scale.range).toBe(2);
       expect(scale.tickLabels).toStrictEqual([ 'abc', 'def', 'ghi', 'jkl', 'mno' ]);
       expect(scale.tickPadding).toBe(0);
       expect(scale.tickPos).toStrictEqual([ 0, 50, 100, 150, 200 ]);
@@ -120,9 +120,9 @@ describe('CategoricalScale', () => {
 
     it('should calculate log values properly', () => {
       scale.testCalculate();
-      expect(scale.min).toBe(0);
-      expect(scale.max).toBe(0);
-      expect(scale.range).toBe(0);
+      expect(scale.min).toBe(-1);
+      expect(scale.max).toBe(1);
+      expect(scale.range).toBe(2);
       expect(scale.tickLabels).toStrictEqual([ 'abc', 'def', 'ghi', 'jkl', 'mno' ]);
       expect(scale.tickPadding).toBe(0);
       expect(scale.tickPos).toStrictEqual([ 20, 60, 100, 140, 180 ]);
@@ -173,9 +173,9 @@ describe('CategoricalScale', () => {
 
     it('should calculate log values properly', () => {
       scale.testCalculate();
-      expect(scale.min).toBe(0);
-      expect(scale.max).toBe(0);
-      expect(scale.range).toBe(0);
+      expect(scale.min).toBe(-1);
+      expect(scale.max).toBe(1);
+      expect(scale.range).toBe(2);
       expect(scale.tickLabels).toStrictEqual([ 'mno', 'jkl', 'ghi', 'def', 'abc' ]);
       expect(scale.tickPadding).toBe(0);
       expect(scale.tickPos).toStrictEqual([ 0, 50, 100, 150, 200 ]);
@@ -226,9 +226,9 @@ describe('CategoricalScale', () => {
 
     it('should calculate log values properly', () => {
       scale.testCalculate();
-      expect(scale.min).toBe(0);
-      expect(scale.max).toBe(0);
-      expect(scale.range).toBe(0);
+      expect(scale.min).toBe(-1);
+      expect(scale.max).toBe(1);
+      expect(scale.range).toBe(2);
       expect(scale.tickLabels).toStrictEqual([ 'abc', 'def', 'ghi', 'jkl', 'mno' ]);
       expect(scale.tickPadding).toBe(0);
       expect(scale.tickPos).toStrictEqual([ 0, 50, 100, 150, 200 ]);

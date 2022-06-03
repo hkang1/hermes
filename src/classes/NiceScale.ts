@@ -82,6 +82,7 @@ abstract class NiceScale {
     this.maxValue = maxValue;
     this.max = maxValue;
     this.min = minValue;
+    this.range = maxValue - minValue;
 
     if (calculate) this.calculate();
   }
