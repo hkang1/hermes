@@ -362,13 +362,24 @@ class NiceScale {
     setMinMaxValues(minValue, maxValue, calculate = true) {
         /*
          * Handle the 0 range scale by padding each end of the common min/max value,
-         * based on the log base 2 of the min/max value.
+         * based on the log base 2 of the min/max value. If min/max are 0, set range to [ -1, 1 ].
          */
         if (minValue === maxValue) {
             const value = minValue;
-            const exp = Math.log2(value);
-            minValue = 2 ** (exp - 1);
-            maxValue = value + (value - minValue);
+            if (value === 0) {
+                minValue = -1;
+                maxValue = 1;
+            }
+            else if (value < 0) {
+                const exp = Math.log2(Math.abs(value));
+                maxValue = -(2 ** (exp - 1));
+                minValue = value - (maxValue - value);
+            }
+            else {
+                const exp = Math.log2(value);
+                minValue = 2 ** (exp - 1);
+                maxValue = value + (value - minValue);
+            }
         }
         this.minValue = minValue;
         this.maxValue = maxValue;
