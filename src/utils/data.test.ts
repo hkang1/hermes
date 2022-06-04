@@ -319,6 +319,21 @@ describe('data utilities', () => {
         expect(value).toBeLessThan(MAX);
       }
     });
+
+    it('should generate NaN', () => {
+      const value = utils.randomLogNumber(LOG_BASE, MAX, MIN, { includeNaN: 1.0 });
+      expect(value).toBeNaN();
+    });
+
+    it('should generate negative Infinity', () => {
+      const value = utils.randomLogNumber(LOG_BASE, MAX, MIN, { includeNegativeInfinity: 1.0 });
+      expect(value).toBe(-Infinity);
+    });
+
+    it('should generate positive Infinity', () => {
+      const value = utils.randomLogNumber(LOG_BASE, MAX, MIN, { includePositiveInfinity: 1.0 });
+      expect(value).toBe(Infinity);
+    });
   });
 
   describe('randomNumber', () => {
@@ -332,6 +347,21 @@ describe('data utilities', () => {
         expect(value).toBeLessThan(MAX);
         expect(Number.isInteger(value)).toBe(false);
       }
+    });
+
+    it('should generate NaN', () => {
+      const value = utils.randomNumber(MAX, MIN, { includeNaN: 1.0 });
+      expect(value).toBeNaN();
+    });
+
+    it('should generate negative Infinity', () => {
+      const value = utils.randomNumber(MAX, MIN, { includeNegativeInfinity: 1.0 });
+      expect(value).toBe(-Infinity);
+    });
+
+    it('should generate positive Infinity', () => {
+      const value = utils.randomNumber(MAX, MIN, { includePositiveInfinity: 1.0 });
+      expect(value).toBe(Infinity);
     });
   });
 });

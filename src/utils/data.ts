@@ -1,4 +1,4 @@
-import { NestedObject, Primitive, Range } from '../types';
+import { NestedObject, Primitive, RandomNumberOptions, Range } from '../types';
 
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
@@ -94,14 +94,37 @@ export const randomItem = <T = unknown>(list: T[]): T => {
   return list[randomInt(list.length)];
 };
 
-export const randomLogNumber = (base: number, max: number, min: number): number => {
+export const randomLogNumber = (
+  base: number,
+  max: number,
+  min: number,
+  options: RandomNumberOptions = {},
+): number => {
   const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
   const denominator = log === Math.log ? Math.log(base) : 1;
   const maxExp = log(max) / denominator;
   const minExp = log(min) / denominator;
-  return base ** randomNumber(maxExp, minExp);
+  const exp = randomNumber(maxExp, minExp, options);
+  if (isNaN(exp) || !isFinite(exp)) return exp;
+  return base ** exp;
 };
 
-export const randomNumber = (max: number, min: number): number => {
+export const randomNumber = (
+  max: number,
+  min: number,
+  options: RandomNumberOptions = {},
+): number => {
+  if (options.includeNaN != null) {
+    const probabilityNan = capDataRange(options.includeNaN, [ 0, 1 ]);
+    if (Math.random() < probabilityNan) return Number.NaN;
+  }
+  if (options.includeNegativeInfinity != null) {
+    const probabilityNegativeInfinity = capDataRange(options.includeNegativeInfinity, [ 0, 1 ]);
+    if (Math.random() < probabilityNegativeInfinity) return -Infinity;
+  }
+  if (options.includePositiveInfinity != null) {
+    const probabilityPositiveInfinity = capDataRange(options.includePositiveInfinity, [ 0, 1 ]);
+    if (Math.random() < probabilityPositiveInfinity) return Infinity;
+  }
   return Math.random() * (max - min) + min;
 };

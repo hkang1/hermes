@@ -109,7 +109,12 @@ export const metricDimensionSamples: t.Dimension[] = [
   },
 ];
 
-export const generateData = (dimensions: t.Dimension[], count: number, random = true): t.Data => {
+export const generateData = (
+  dimensions: t.Dimension[],
+  count: number,
+  random = true,
+  randomOptions: t.RandomNumberOptions = {},
+): t.Data => {
   return dimensions.reduce((acc, dimension) => {
     acc[dimension.key] = new Array(count).fill(null).map((_, index) => {
       if (dimension.type === t.DimensionType.Categorical) {
@@ -122,14 +127,14 @@ export const generateData = (dimensions: t.Dimension[], count: number, random = 
         const range = dimensionRanges[dimension.key];
         if (range) {
           return random
-            ? dataUtils.randomNumber(range[1], range[0])
+            ? dataUtils.randomNumber(range[1], range[0], randomOptions)
             : dataUtils.idempotentNumber(range[1], range[0], count, index);
         }
       } else if (dimension.type === t.DimensionType.Logarithmic) {
         const range = dimensionRanges[dimension.key];
         if (range && dimension.logBase) {
           return random
-            ? dataUtils.randomLogNumber(dimension.logBase, range[1], range[0])
+            ? dataUtils.randomLogNumber(dimension.logBase, range[1], range[0], randomOptions)
             : dataUtils.idempotentLogNumber(dimension.logBase, range[1], range[0], count, index);
         }
       }

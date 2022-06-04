@@ -183,6 +183,12 @@ export interface PathOptions {
   type: EPathType;
 }
 
+export interface RandomNumberOptions {
+  includeNaN?: number;
+  includeNegativeInfinity?: number;
+  includePositiveInfinity?: number;
+}
+
 export interface TickOptions extends StyleLine {
   length: number;
 }
