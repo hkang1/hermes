@@ -1,4 +1,4 @@
-import { NestedObject, Primitive, RandomNumberOptions, Range } from '../types';
+import { Data, NestedObject, Primitive, RandomNumberOptions, Range } from '../types';
 
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
@@ -127,4 +127,30 @@ export const randomNumber = (
     if (Math.random() < probabilityPositiveInfinity) return Infinity;
   }
   return Math.random() * (max - min) + min;
+};
+
+export const removeInfinityNanSeries = (data: Data): { count: number, data: Data } => {
+  const keys = Object.keys(data);
+  const indicesToRemove: Record<number, boolean> = {};
+  const filteredData: Data = {};
+  let count = 0;
+
+  // Find all the series indices to remove.
+  for (const key of keys) {
+    if (count === 0) count = data[key].length;
+    for (const [ index, value ] of data[key].entries()) {
+      if (!isNumber(value) || (!isNaN(value) && isFinite(value))) continue;
+      indicesToRemove[index] = true;
+    }
+  }
+
+  // Filter out all the series based on the remove indices.
+  for (const key of keys) {
+    filteredData[key] = data[key].filter((_, index) => !indicesToRemove[index]);
+  }
+
+  return {
+    count: count - Object.keys(indicesToRemove).length,
+    data: filteredData,
+  };
 };

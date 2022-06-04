@@ -285,6 +285,30 @@ const randomNumber = (max, min, options = {}) => {
     }
     return Math.random() * (max - min) + min;
 };
+const removeInfinityNanSeries = (data) => {
+    const keys = Object.keys(data);
+    const indicesToRemove = {};
+    const filteredData = {};
+    let count = 0;
+    // Find all the series indices to remove.
+    for (const key of keys) {
+        if (count === 0)
+            count = data[key].length;
+        for (const [index, value] of data[key].entries()) {
+            if (!isNumber(value) || (!isNaN(value) && isFinite(value)))
+                continue;
+            indicesToRemove[index] = true;
+        }
+    }
+    // Filter out all the series based on the remove indices.
+    for (const key of keys) {
+        filteredData[key] = data[key].filter((_, index) => !indicesToRemove[index]);
+    }
+    return {
+        count: count - Object.keys(indicesToRemove).length,
+        data: filteredData,
+    };
+};
 
 const readableNumber = (num, precision = 6) => {
     let readable = num.toString();
@@ -399,6 +423,7 @@ class NiceScale {
         this.maxValue = maxValue;
         this.max = maxValue;
         this.min = minValue;
+        this.range = maxValue - minValue;
         if (calculate)
             this.calculate();
     }
@@ -1336,8 +1361,9 @@ class Hermes {
         const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
         if (!dataValidation.valid)
             throw new HermesError(dataValidation.message);
-        this.data = data;
-        this.dataCount = dataValidation.count;
+        const filtered = removeInfinityNanSeries(data);
+        this.data = filtered.data;
+        this.dataCount = filtered.count;
         this.setDimensions(this.dimensionsOriginal, false);
         if (redraw)
             this.redraw();
