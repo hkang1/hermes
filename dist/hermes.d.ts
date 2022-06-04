@@ -201,8 +201,19 @@ declare namespace Hermes {
     type: EPathType;
   }
 
+  export interface RandomNumberOptions {
+    includeNaN?: number;
+    includeNegativeInfinity?: number;
+    includePositiveInfinity?: number;
+  }
+
   export interface Tester {
-    generateData: (dimensions: Dimension[], count: number, random?: boolean) => Data;
+    generateData: (
+      dimensions: Dimension[],
+      count: number,
+      random?: boolean,
+      randomOptions?: RandomNumberOptions
+    ) => Data;
     generateDimensions: (dimCount?: number, random?: boolean) => Dimension[];
   }
 
