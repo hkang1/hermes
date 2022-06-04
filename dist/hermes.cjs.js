@@ -261,14 +261,32 @@ const randomInt = (max, min = 0) => {
 const randomItem = (list) => {
     return list[randomInt(list.length)];
 };
-const randomLogNumber = (base, max, min) => {
+const randomLogNumber = (base, max, min, options = {}) => {
     const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
     const denominator = log === Math.log ? Math.log(base) : 1;
     const maxExp = log(max) / denominator;
     const minExp = log(min) / denominator;
-    return base ** randomNumber(maxExp, minExp);
+    const exp = randomNumber(maxExp, minExp, options);
+    if (isNaN(exp) || !isFinite(exp))
+        return exp;
+    return base ** exp;
 };
-const randomNumber = (max, min) => {
+const randomNumber = (max, min, options = {}) => {
+    if (options.includeNaN != null) {
+        const probabilityNan = capDataRange(options.includeNaN, [0, 1]);
+        if (Math.random() < probabilityNan)
+            return Number.NaN;
+    }
+    if (options.includeNegativeInfinity != null) {
+        const probabilityNegativeInfinity = capDataRange(options.includeNegativeInfinity, [0, 1]);
+        if (Math.random() < probabilityNegativeInfinity)
+            return -Infinity;
+    }
+    if (options.includePositiveInfinity != null) {
+        const probabilityPositiveInfinity = capDataRange(options.includePositiveInfinity, [0, 1]);
+        if (Math.random() < probabilityPositiveInfinity)
+            return Infinity;
+    }
     return Math.random() * (max - min) + min;
 };
 
@@ -1129,7 +1147,7 @@ const metricDimensionSamples = [
         type: DimensionType.Linear,
     },
 ];
-const generateData = (dimensions, count, random = true) => {
+const generateData = (dimensions, count, random = true, randomOptions = {}) => {
     return dimensions.reduce((acc, dimension) => {
         acc[dimension.key] = new Array(count).fill(null).map((_, index) => {
             if (dimension.type === DimensionType.Categorical) {
@@ -1143,7 +1161,7 @@ const generateData = (dimensions, count, random = true) => {
                 const range = dimensionRanges[dimension.key];
                 if (range) {
                     return random
-                        ? randomNumber(range[1], range[0])
+                        ? randomNumber(range[1], range[0], randomOptions)
                         : idempotentNumber(range[1], range[0], count, index);
                 }
             }
@@ -1151,7 +1169,7 @@ const generateData = (dimensions, count, random = true) => {
                 const range = dimensionRanges[dimension.key];
                 if (range && dimension.logBase) {
                     return random
-                        ? randomLogNumber(dimension.logBase, range[1], range[0])
+                        ? randomLogNumber(dimension.logBase, range[1], range[0], randomOptions)
                         : idempotentLogNumber(dimension.logBase, range[1], range[0], count, index);
                 }
             }
