@@ -364,4 +364,25 @@ describe('data utilities', () => {
       expect(value).toBe(Infinity);
     });
   });
+
+  describe('removeInfinityNanSeries', () => {
+    const DATA = {
+      accuracy: [ NaN, 0.97, 0.98, 0.99 ],
+      globalBatchSize: [ 2, 4, 8, 16 ],
+      learningRate: [ 0.1, 0.01, 0.001, -Infinity ],
+      loss: [ 0.4, Infinity, 0.2, 0.1 ],
+    };
+    const FILTERED_DATA = {
+      accuracy: [ 0.98 ],
+      globalBatchSize: [ 8 ],
+      learningRate: [ 0.001 ],
+      loss: [ 0.2 ],
+    };
+
+    it('should filter out NaN, Infinity and -Infinity', () => {
+      const filtered = utils.removeInfinityNanSeries(DATA);
+      expect(filtered.count).toBe(1);
+      expect(filtered.data).toStrictEqual(FILTERED_DATA);
+    });
+  });
 });
