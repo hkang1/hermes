@@ -1194,7 +1194,7 @@ var Hermes = (function (exports) {
             disableDrag: true,
             key: 'loss',
             label: 'Loss',
-            type: DimensionType.Linear,
+            type: DimensionType.Logarithmic,
         },
     ];
     const generateData = (dimensions, count, random = true, randomOptions = {}) => {
