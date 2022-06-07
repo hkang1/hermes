@@ -7,7 +7,7 @@ import * as DEFAULT from './defaults';
 import * as t from './types';
 import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
-import { capDataRange, clone, deepMerge, getDataRange, isNumber, removeInfinityNanSeries } from './utils/data';
+import { capDataRange, clone, deepMerge, getDataRange } from './utils/data';
 import { getElement, getMousePoint } from './utils/dom';
 import { throttle } from './utils/event';
 import * as ix from './utils/interaction';
@@ -167,9 +167,8 @@ class Hermes {
     const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
     if (!dataValidation.valid) throw new HermesError(dataValidation.message);
 
-    const filtered = removeInfinityNanSeries(data);
-    this.data = filtered.data;
-    this.dataCount = filtered.count;
+    this.data = data;
+    this.dataCount = dataValidation.count;
     this.setDimensions(this.dimensionsOriginal, false);
 
     if (redraw) this.redraw();
