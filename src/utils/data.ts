@@ -1,4 +1,13 @@
-import { Data, NestedObject, Primitive, RandomNumberOptions, Range } from '../types';
+import { 
+  ActualAndFiniteRanges,
+  Data,
+  DimensionType,
+  EDimensionType,
+  NestedObject,
+  Primitive,
+  RandomNumberOptions
+  Range,
+} from '../types';
 
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
@@ -47,14 +56,28 @@ export const deepMerge = <T extends NestedObject>(...objects: T[]): T => {
   }, {} as T);
 };
 
-export const getDataRange = (data: unknown[]): Range => {
-  return data.reduce((acc: Range, x) => {
-    if (isNumber(x)) {
-      if (x > acc[1]) acc[1] = x;
-      if (x < acc[0]) acc[0] = x;
-    }
-    return acc;
-  }, [ Infinity, -Infinity ]);
+export const getDataRange = (
+  data: unknown[],
+  dimensionType: EDimensionType,
+): ActualAndFiniteRanges => {
+  const isFiniteOnScale = (x: number) =>
+    dimensionType === DimensionType.Logarithmic ? isFinite(Math.log(x)) : isFinite(x);
+  const { actual, finite } : ActualAndFiniteRanges = data
+    .reduce(
+      (acc: ActualAndFiniteRanges, x: unknown) => {
+        if (isNumber(x)) {
+          if (isFiniteOnScale(x)) {
+            if (x < acc.finite[0]) acc.finite[0] = x;
+            if (x > acc.finite[1]) acc.finite[1] = x;
+          }
+          if (x < acc.actual[0]) acc.actual[0] = x;
+          if (x > acc.actual[1]) acc.actual[1] = x;
+        }
+        return acc;
+      },
+      { actual: [ Infinity, -Infinity ], finite: [ Number.MAX_VALUE, -Number.MAX_VALUE ] },
+    );
+  return { actual: actual.sort(), finite: finite.sort() };
 };
 
 export const idempotentItem = <T = unknown>(list: T[], index: number): T => {
