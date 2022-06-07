@@ -1,4 +1,4 @@
-import { NestedObject } from 'src/types';
+import { DimensionType, NestedObject } from '../types';
 
 import * as utils from './data';
 
@@ -264,12 +264,18 @@ describe('data utilities', () => {
   describe('getDataRange', () => {
     it('should get a range from a list of data', () => {
       const data = [ -123, 123, 0, 48 ];
-      expect(utils.getDataRange(data)).toStrictEqual([ -123, 123 ]);
+      expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({
+        actual: [ -123, 123 ],
+        finite: [ -123, 123 ],
+      });
     });
 
     it('should ignore non-numbers when getting a range', () => {
       const data = [ null, undefined, -123, 123, 0, Infinity, NaN ];
-      expect(utils.getDataRange(data)).toStrictEqual([ -123, Infinity ]);
+      expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({
+        actual: [ -123, Infinity ],
+        finite: [ -123, 123 ],
+      });
     });
   });
 

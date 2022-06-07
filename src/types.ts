@@ -199,6 +199,8 @@ export interface TickOptions extends StyleLine {
 
 export type Data = Record<DimensionKey, Primitive[]>;
 
+export type ActualAndFiniteRanges = { actual: Range; finite: Range }
+
 export interface Config {
   debug: boolean;
   direction: EDirection;
@@ -268,7 +270,8 @@ export interface Filters {
 
 export interface InternalDimension extends Dimension {
   labelTruncated: string;
-  range?: Range;
+  rangeActual?: Range;
+  rangeFinite?: Range;
   scale: CategoricalScale | LinearScale | LogScale;
 }
 
