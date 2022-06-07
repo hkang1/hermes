@@ -1,11 +1,11 @@
-import { 
+import {
   ActualAndFiniteRanges,
   Data,
   DimensionType,
   EDimensionType,
   NestedObject,
   Primitive,
-  RandomNumberOptions
+  RandomNumberOptions,
   Range,
 } from '../types';
 
