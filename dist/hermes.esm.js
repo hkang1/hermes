@@ -225,16 +225,25 @@ const deepMerge = (...objects) => {
         return acc;
     }, {});
 };
-const getDataRange = (data) => {
-    return data.reduce((acc, x) => {
+const getDataRange = (data, dimensionType) => {
+    const isFiniteOnScale = (x) => dimensionType === DimensionType.Logarithmic ? isFinite(Math.log(x)) : isFinite(x);
+    const { actual, finite } = data
+        .reduce((acc, x) => {
         if (isNumber(x)) {
-            if (x > acc[1])
-                acc[1] = x;
-            if (x < acc[0])
-                acc[0] = x;
+            if (isFiniteOnScale(x)) {
+                if (x < acc.finite[0])
+                    acc.finite[0] = x;
+                if (x > acc.finite[1])
+                    acc.finite[1] = x;
+            }
+            if (x < acc.actual[0])
+                acc.actual[0] = x;
+            if (x > acc.actual[1])
+                acc.actual[1] = x;
         }
         return acc;
-    }, [Infinity, -Infinity]);
+    }, { actual: [Infinity, -Infinity], finite: [Number.MAX_VALUE, -Number.MAX_VALUE] });
+    return { actual: actual.sort(), finite: finite.sort() };
 };
 const idempotentItem = (list, index) => {
     return list[index % list.length];
@@ -578,26 +587,38 @@ class LinearScale extends NiceScale {
 }
 
 const DEFAULT_LOG_BASE = 10;
+const basedLog = (base) => (x) => {
+    return Math.log(x) / Math.log(base);
+};
 class LogScale extends NiceScale {
-    constructor(direction, minValue, maxValue, logBase = DEFAULT_LOG_BASE, config = {}) {
-        super(direction, minValue, maxValue, config);
+    constructor(direction, finiteMin, finiteMax, actualMin, actualMax, logBase = DEFAULT_LOG_BASE, config = {}) {
+        super(direction, finiteMin, finiteMax, config);
         this.direction = direction;
-        this.minValue = minValue;
-        this.maxValue = maxValue;
+        this.finiteMin = finiteMin;
+        this.finiteMax = finiteMax;
+        this.actualMin = actualMin;
+        this.actualMax = actualMax;
         this.logBase = logBase;
         this.maxExp = Number.NaN;
         this.maxExpExact = Number.NaN;
         this.minExp = Number.NaN;
         this.minExpExact = Number.NaN;
-        this.denominator = 1;
-        this.log = Math.log;
+        this.log = basedLog(logBase);
         this.logBase = logBase;
+        this.actualMax = actualMax;
+        this.actualMin = actualMin;
     }
     setLogBase(logBase = DEFAULT_LOG_BASE) {
         this.logBase = logBase;
         this.calculate();
     }
     percentToValue(percent) {
+        if (percent === 0) {
+            return this.reverse ? this.actualMax : this.actualMin;
+        }
+        if (percent === 1) {
+            return this.reverse ? this.actualMin : this.actualMax;
+        }
         const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
         const exp = (this.reverse ? 1 - percent : percent) * this.rangeExp() + minExp;
         return this.logBase ** exp;
@@ -608,7 +629,7 @@ class LogScale extends NiceScale {
     valueToPercent(value) {
         if (!isNumber(value))
             return 0;
-        const exp = this.log(value) / this.denominator;
+        const exp = this.log(value);
         const minExp = this.dataOnEdge ? this.minExpExact : this.minExp;
         const maxExp = this.dataOnEdge ? this.maxExpExact : this.maxExp;
         const percent = (exp - minExp) / (maxExp - minExp);
@@ -621,15 +642,9 @@ class LogScale extends NiceScale {
         return this.dataOnEdge ? this.maxExpExact - this.minExpExact : this.maxExp - this.minExp;
     }
     calculate() {
-        this.log =
-            this.logBase === 10
-                ? Math.log10
-                : this.logBase === 2
-                    ? Math.log2
-                    : (x) => Math.log(x) / Math.log(this.logBase);
-        this.denominator = this.log === Math.log ? Math.log(this.logBase) : 1;
-        this.minExpExact = this.log(this.minValue) / this.denominator;
-        this.maxExpExact = this.log(this.maxValue) / this.denominator;
+        this.log = basedLog(this.logBase);
+        this.minExpExact = this.log(this.minValue);
+        this.maxExpExact = this.log(this.maxValue);
         this.minExp = Math.floor(this.minExpExact);
         this.maxExp = Math.ceil(this.maxExpExact);
         this.range = this.logBase ** this.maxExp - this.logBase ** this.minExp;
@@ -1176,7 +1191,7 @@ const metricDimensionSamples = [
         disableDrag: true,
         key: 'loss',
         label: 'Loss',
-        type: DimensionType.Linear,
+        type: DimensionType.Logarithmic,
     },
 ];
 const generateData = (dimensions, count, random = true, randomOptions = {}) => {
@@ -1383,17 +1398,18 @@ class Hermes {
             const internal = {
                 ...dimension,
                 labelTruncated: truncate(dimension.label, { size: this.config.style.dimension.label.truncate }),
-                range: undefined,
+                rangeActual: undefined,
+                rangeFinite: undefined,
                 scale: new LinearScale(direction, 0, 100),
             };
             if (dimension.type === DimensionType.Linear ||
                 dimension.type === DimensionType.Logarithmic) {
-                internal.range = getDataRange(data);
+                const range = getDataRange(data, dimension.type);
                 if (dimension.type === DimensionType.Linear) {
-                    internal.scale = new LinearScale(direction, internal.range[0], internal.range[1], dimension);
+                    internal.scale = new LinearScale(direction, range.actual[0], range.actual[1], dimension);
                 }
                 else if (dimension.type === DimensionType.Logarithmic) {
-                    internal.scale = new LogScale(direction, internal.range[0], internal.range[1], dimension.logBase, dimension);
+                    internal.scale = new LogScale(direction, range.finite[0], range.finite[1], range.actual[0], range.actual[1], dimension.logBase, dimension);
                 }
             }
             else if (dimension.type === DimensionType.Categorical) {

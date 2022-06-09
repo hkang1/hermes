@@ -193,7 +193,8 @@ class Hermes {
           dimension.label,
           { size: this.config.style.dimension.label.truncate },
         ),
-        range: undefined,
+        rangeActual: undefined,
+        rangeFinite: undefined,
         scale: new LinearScale(direction, 0, 100),
       };
 
@@ -201,19 +202,21 @@ class Hermes {
         dimension.type === t.DimensionType.Linear ||
         dimension.type === t.DimensionType.Logarithmic
       ) {
-        internal.range = getDataRange(data);
+        const range = getDataRange(data, dimension.type);
         if (dimension.type === t.DimensionType.Linear) {
           internal.scale = new LinearScale(
             direction,
-            internal.range[0],
-            internal.range[1],
+            range.actual[0],
+            range.actual[1],
             dimension,
           );
         } else if (dimension.type === t.DimensionType.Logarithmic) {
           internal.scale = new LogScale(
             direction,
-            internal.range[0],
-            internal.range[1],
+            range.finite[0],
+            range.finite[1],
+            range.actual[0],
+            range.actual[1],
             dimension.logBase,
             dimension,
           );
