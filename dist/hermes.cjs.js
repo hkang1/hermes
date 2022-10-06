@@ -1300,8 +1300,17 @@ class Hermes {
         if (this.config.filters) {
             // protected setActiveFilter(key: string, pos: number, value: t.Primitive)
             // setActiveFilter
+            console.log(this.config.filters);
             Object.keys(this.config.filters).forEach((key) => {
-                this.filters[key] = this.config.filters[key];
+                // const addFilter = this.config.filters[key];
+                // this.setActiveFilter(key, addFilter., addFilter.range);
+                // Store active filter into filter list.
+                console.log(key);
+                this.filters[key] = [];
+                this.config.filters[key].forEach(intf => {
+                    this.filters[key].push({ p0: intf.p0, p1: intf.p1, value0: intf.value0, value1: intf.value1 });
+                });
+                // _ixsa.filterIndex = _filters[key].length - 1;
             });
         }
         // Enable chart
