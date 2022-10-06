@@ -37,7 +37,7 @@ export const TRUNCATE_SUFFIX = '...';
 export const HERMES_CONFIG: t.Config = {
   debug: false,
   direction: t.Direction.Horizontal,
-  filters: new Array<t.InternalFilter>(),
+  filters: {},
   hooks: {},
   interactions: {
     throttleDelayMouseMove: 50,

@@ -71,7 +71,7 @@ const TRUNCATE_SUFFIX = '...';
 const HERMES_CONFIG = {
     debug: false,
     direction: Direction.Horizontal,
-    filters: new Array(),
+    filters: {},
     hooks: {},
     interactions: {
         throttleDelayMouseMove: 50,
@@ -1063,14 +1063,6 @@ const internalToFilter = (filter) => {
         ? [filter.value1, filter.value0]
         : [filter.value0, filter.value1];
 };
-const internalToFilters = (filters) => {
-    return Object.keys(filters).reduce((acc, key) => {
-        acc[key] = filters[key]
-            .map(filter => internalToFilter(filter))
-            .sort((a, b) => comparePrimitive(a[0], b[0]));
-        return acc;
-    }, {});
-};
 const isFilterEmpty = (filter) => {
     return isNaN(filter.p0) && isNaN(filter.p1);
 };
@@ -2041,7 +2033,7 @@ class Hermes {
         _ixf.key = undefined;
         this.cleanUpFilters();
         // Make hook call back with all of the filter changes.
-        (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, internalToFilters(this.filters));
+        (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, this.filters);
     }
     cleanUpFilters() {
         Object.keys(this.filters).forEach(key => {

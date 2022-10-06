@@ -17,7 +17,7 @@ import * as tester from './utils/tester';
 
 export {
   ActionType, DimensionLayout, DimensionType,
-  Direction, FocusType, LabelPlacement, PathType,
+  Direction, FocusType, InternalFilter, InternalFilters, LabelPlacement, PathType,
 } from './types';
 
 class Hermes {
@@ -85,6 +85,7 @@ class Hermes {
 
     if (this.config.filters) {
       // protected setActiveFilter(key: string, pos: number, value: t.Primitive)
+      // setActiveFilter
     }
 
     // Enable chart
@@ -931,7 +932,7 @@ class Hermes {
     this.cleanUpFilters();
 
     // Make hook call back with all of the filter changes.
-    this.config.hooks?.onFilterChange?.(ix.internalToFilters(this.filters));
+    this.config.hooks?.onFilterChange?.(this.filters);
   }
 
   protected cleanUpFilters(): void {
