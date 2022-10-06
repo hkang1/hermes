@@ -1297,7 +1297,13 @@ class Hermes {
                 : throttle((e) => this.handleMouseMove.bind(this)(e), this.config.interactions.throttleDelayMouseMove),
             mouseup: this.handleMouseUp.bind(this),
         };
-        if (this.config.filters) ;
+        if (this.config.filters) {
+            // protected setActiveFilter(key: string, pos: number, value: t.Primitive)
+            // setActiveFilter
+            Object.keys(this.config.filters).forEach((key) => {
+                this.filters[key] = this.config.filters[key];
+            });
+        }
         // Enable chart
         this.enable();
     }

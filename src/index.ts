@@ -86,6 +86,9 @@ class Hermes {
     if (this.config.filters) {
       // protected setActiveFilter(key: string, pos: number, value: t.Primitive)
       // setActiveFilter
+      Object.keys(this.config.filters).forEach((key) => {
+        this.filters[key] = this.config.filters[key];
+      });
     }
 
     // Enable chart
