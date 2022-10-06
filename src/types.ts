@@ -208,7 +208,7 @@ export interface Config {
   hooks: {
     onDimensionMove?: (dimension: Dimension, newIndex: number, oldIndex: number) => void;
     onFilterChange?: (filters: Filters) => void;
-    onFilterCreate?: (filter: Filter) => void,
+    onFilterCreate?: (filter: InternalFilter) => void,
     onFilterMove?: (filter: Filter) => void,
     onFilterRemove?: (filter: Filter) => void,
     onFilterResize?: (filter: Filter) => void,

@@ -912,7 +912,7 @@ class Hermes {
       // Make corresponding filter hook callback.
       switch (_ixsa.type) {
         case t.ActionType.FilterCreate:
-          this.config.hooks.onFilterCreate?.(ix.internalToFilter(_ixf.active));
+          this.config.hooks.onFilterCreate?.(_ixf.active);
           break;
         case t.ActionType.FilterMove:
           this.config.hooks.onFilterMove?.(ix.internalToFilter(_ixf.active));
