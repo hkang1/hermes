@@ -1293,7 +1293,7 @@ class Hermes {
                 : throttle((e) => this.handleMouseMove.bind(this)(e), this.config.interactions.throttleDelayMouseMove),
             mouseup: this.handleMouseUp.bind(this),
         };
-        if (this.config.filters) {
+        if (config === null || config === void 0 ? void 0 : config.filters) {
             // protected setActiveFilter(key: string, pos: number, value: t.Primitive)
             // setActiveFilter
             console.log(this.config.filters);

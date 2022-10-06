@@ -83,7 +83,7 @@ class Hermes {
       mouseup: this.handleMouseUp.bind(this),
     };
 
-    if (this.config.filters) {
+    if (config?.filters) {
       // protected setActiveFilter(key: string, pos: number, value: t.Primitive)
       // setActiveFilter
       console.log(this.config.filters);
