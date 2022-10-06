@@ -71,6 +71,7 @@ const TRUNCATE_SUFFIX = '...';
 const HERMES_CONFIG = {
     debug: false,
     direction: Direction.Horizontal,
+    filters: new Array(),
     hooks: {},
     interactions: {
         throttleDelayMouseMove: 50,
@@ -1304,6 +1305,7 @@ class Hermes {
                 : throttle((e) => this.handleMouseMove.bind(this)(e), this.config.interactions.throttleDelayMouseMove),
             mouseup: this.handleMouseUp.bind(this),
         };
+        if (this.config.filters) ;
         // Enable chart
         this.enable();
     }
@@ -2023,7 +2025,7 @@ class Hermes {
             // Make corresponding filter hook callback.
             switch (_ixsa.type) {
                 case ActionType.FilterCreate:
-                    (_f = (_e = this.config.hooks).onFilterCreate) === null || _f === void 0 ? void 0 : _f.call(_e, internalToFilter(_ixf.active));
+                    (_f = (_e = this.config.hooks).onFilterCreate) === null || _f === void 0 ? void 0 : _f.call(_e, _ixf.active);
                     break;
                 case ActionType.FilterMove:
                     (_h = (_g = this.config.hooks).onFilterMove) === null || _h === void 0 ? void 0 : _h.call(_g, internalToFilter(_ixf.active));
