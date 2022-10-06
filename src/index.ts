@@ -83,6 +83,10 @@ class Hermes {
       mouseup: this.handleMouseUp.bind(this),
     };
 
+    if (this.config.filters) {
+      // protected setActiveFilter(key: string, pos: number, value: t.Primitive)
+    }
+
     // Enable chart
     this.enable();
   }

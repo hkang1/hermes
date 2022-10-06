@@ -204,6 +204,7 @@ export type ActualAndFiniteRanges = { actual: Range; finite: Range }
 export interface Config {
   debug: boolean;
   direction: EDirection;
+  filters: InternalFilter[];
   hooks: {
     onDimensionMove?: (dimension: Dimension, newIndex: number, oldIndex: number) => void;
     onFilterChange?: (filters: Filters) => void;
