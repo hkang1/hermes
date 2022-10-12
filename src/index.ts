@@ -84,6 +84,7 @@ class Hermes {
     };
 
     if (config?.filters) {
+      console.log('update filters from config')
       Object.keys(this.config.filters).forEach((key) => {
         // Store active filter into filter list.
         this.filters[key] = [];
@@ -185,9 +186,6 @@ class Hermes {
     this.setDimensions(this.dimensionsOriginal, false);
 
     if (redraw) this.redraw();
-
-    console.log('after redraw');
-    console.log(this.filters);
   }
 
   public setDimensions(dimensions: t.Dimension[], redraw = true): void {
@@ -247,14 +245,6 @@ class Hermes {
       return internal;
     });
 
-    if (redraw) this.redraw();
-  }
-
-  public setFilters(filters: t.InternalFilters, redraw = false): void {
-    console.log(this.filters);
-    console.log('changed to');
-    console.log(filters);
-    this.filters = filters;
     if (redraw) this.redraw();
   }
 
@@ -642,6 +632,8 @@ class Hermes {
     for (let i = 0; i < _dl.length; i++) {
       const key = this.dimensions[i].key;
       const filters = this.filters[key] || [];
+      console.log('my column filters');
+      console.log(filters);
       const isDimActive = _ixsa.type === t.ActionType.LabelMove && _ixsa.dimIndex === i;
       const isDimFocused = _ixsf?.type === t.FocusType.DimensionLabel && _ixsf?.dimIndex === i;
       const isAxisActive = (
@@ -804,6 +796,7 @@ class Hermes {
   protected setActiveFilter(key: string, pos: number, value: t.Primitive): void {
     if (!this._) return;
 
+    console.log('setActiveFilter');
     const _filters = this.filters;
     const _ix = this.ix;
     const _ixsa = _ix.shared.action;
@@ -844,6 +837,8 @@ class Hermes {
 
   protected updateActiveFilter(e: MouseEvent): void {
     if (!this._) return;
+
+    console.log('updateActiveFilter');
 
     const _dl = this._.dims.list;
     const _dsa = this._.dims.shared.axes;
@@ -947,13 +942,14 @@ class Hermes {
     _ixf.active = { ...DEFAULT.FILTER };
     _ixf.key = undefined;
 
-    this.cleanUpFilters();
+    // this.cleanUpFilters();
 
     // Make hook call back with all of the filter changes.
     this.config.hooks?.onFilterChange?.(this.filters);
   }
 
   protected cleanUpFilters(): void {
+    console.log('cleanUpFilters');
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
       for (let i = 0; i < filters.length; i++) {

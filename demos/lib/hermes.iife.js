@@ -1297,6 +1297,7 @@ var Hermes = (function (exports) {
                 mouseup: this.handleMouseUp.bind(this),
             };
             if (config === null || config === void 0 ? void 0 : config.filters) {
+                console.log('update filters from config');
                 Object.keys(this.config.filters).forEach((key) => {
                     // Store active filter into filter list.
                     this.filters[key] = [];
@@ -1389,8 +1390,6 @@ var Hermes = (function (exports) {
             this.setDimensions(this.dimensionsOriginal, false);
             if (redraw)
                 this.redraw();
-            console.log('after redraw');
-            console.log(this.filters);
         }
         setDimensions(dimensions, redraw = true) {
             // Validate that the dimensions are set properly.
@@ -1426,14 +1425,6 @@ var Hermes = (function (exports) {
                 }
                 return internal;
             });
-            if (redraw)
-                this.redraw();
-        }
-        setFilters(filters, redraw = false) {
-            console.log(this.filters);
-            console.log('changed to');
-            console.log(filters);
-            this.filters = filters;
             if (redraw)
                 this.redraw();
         }
@@ -1783,6 +1774,8 @@ var Hermes = (function (exports) {
             for (let i = 0; i < _dl.length; i++) {
                 const key = this.dimensions[i].key;
                 const filters = this.filters[key] || [];
+                console.log('my column filters');
+                console.log(filters);
                 const isDimActive = _ixsa.type === ActionType.LabelMove && _ixsa.dimIndex === i;
                 const isDimFocused = (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionLabel && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
                 const isAxisActive = (_ixsa.type === ActionType.FilterCreate ||
@@ -1919,6 +1912,7 @@ var Hermes = (function (exports) {
         setActiveFilter(key, pos, value) {
             if (!this._)
                 return;
+            console.log('setActiveFilter');
             const _filters = this.filters;
             const _ix = this.ix;
             const _ixsa = _ix.shared.action;
@@ -1956,6 +1950,7 @@ var Hermes = (function (exports) {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _m, _o;
             if (!this._)
                 return;
+            console.log('updateActiveFilter');
             const _dl = this._.dims.list;
             const _dsa = this._.dims.shared.axes;
             const _ix = this.ix;
@@ -2050,11 +2045,12 @@ var Hermes = (function (exports) {
             // Overwrite active filter to remove reference to filter in filters list.
             _ixf.active = { ...FILTER };
             _ixf.key = undefined;
-            this.cleanUpFilters();
+            // this.cleanUpFilters();
             // Make hook call back with all of the filter changes.
             (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, this.filters);
         }
         cleanUpFilters() {
+            console.log('cleanUpFilters');
             Object.keys(this.filters).forEach(key => {
                 const filters = this.filters[key] || [];
                 for (let i = 0; i < filters.length; i++) {
