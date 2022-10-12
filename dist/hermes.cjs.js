@@ -1374,6 +1374,16 @@ class Hermes {
     setConfig(config = {}, redraw = true) {
         // Set config early as setSize references it early.
         this.config = deepMerge(HERMES_CONFIG, config);
+        if (config.filters) {
+            console.log('update filters from setConfig');
+            Object.keys(this.config.filters).forEach((key) => {
+                // Store active filter into filter list.
+                this.filters[key] = [];
+                this.config.filters[key].forEach(intf => {
+                    this.filters[key].push({ p0: intf.p0, p1: intf.p1, value0: intf.value0, value1: intf.value1 });
+                });
+            });
+        }
         // Re-add observers as config impacts the throttling of the observer handlers.
         this.addObservers();
         if (redraw)
@@ -1775,8 +1785,10 @@ class Hermes {
         for (let i = 0; i < _dl.length; i++) {
             const key = this.dimensions[i].key;
             const filters = this.filters[key] || [];
-            console.log('my column filters');
-            console.log(filters);
+            if (filters.length) {
+                console.log('my column filters');
+                console.log(filters);
+            }
             const isDimActive = _ixsa.type === ActionType.LabelMove && _ixsa.dimIndex === i;
             const isDimFocused = (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionLabel && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
             const isAxisActive = (_ixsa.type === ActionType.FilterCreate ||
