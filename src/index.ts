@@ -84,13 +84,8 @@ class Hermes {
     };
 
     if (config?.filters) {
-      console.log('update filters from config')
       Object.keys(this.config.filters).forEach((key) => {
-        // Store active filter into filter list.
-        this.filters[key] = [];
-        this.config.filters[key].forEach(intf => {
-          this.filters[key].push({ p0: intf.p0, p1: intf.p1, value0: intf.value0, value1: intf.value1 });
-        });
+        this.filters[key] = this.config.filters[key];
       });
     }
 
@@ -169,13 +164,8 @@ class Hermes {
     this.config = deepMerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
     if (config.filters) {
-      console.log('update filters from setConfig')
       Object.keys(this.config.filters).forEach((key) => {
-        // Store active filter into filter list.
-        this.filters[key] = [];
-        this.config.filters[key].forEach(intf => {
-          this.filters[key].push({ p0: intf.p0, p1: intf.p1, value0: intf.value0, value1: intf.value1 });
-        });
+        this.filters[key] = this.config.filters[key];
       });
     }
 
@@ -189,8 +179,6 @@ class Hermes {
     const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
     if (!dataValidation.valid) throw new HermesError(dataValidation.message);
 
-    console.log('known filters at set data');
-    console.log(this.filters);
     const filtered = removeInfinityNanSeries(data);
     this.data = filtered.data;
     this.dataCount = filtered.count;
@@ -643,10 +631,6 @@ class Hermes {
     for (let i = 0; i < _dl.length; i++) {
       const key = this.dimensions[i].key;
       const filters = this.filters[key] || [];
-      if (filters.length) {
-        console.log('my column filters');
-        console.log(filters);
-      }
       const isDimActive = _ixsa.type === t.ActionType.LabelMove && _ixsa.dimIndex === i;
       const isDimFocused = _ixsf?.type === t.FocusType.DimensionLabel && _ixsf?.dimIndex === i;
       const isAxisActive = (
@@ -809,7 +793,6 @@ class Hermes {
   protected setActiveFilter(key: string, pos: number, value: t.Primitive): void {
     if (!this._) return;
 
-    console.log('setActiveFilter');
     const _filters = this.filters;
     const _ix = this.ix;
     const _ixsa = _ix.shared.action;
@@ -850,8 +833,6 @@ class Hermes {
 
   protected updateActiveFilter(e: MouseEvent): void {
     if (!this._) return;
-
-    console.log('updateActiveFilter');
 
     const _dl = this._.dims.list;
     const _dsa = this._.dims.shared.axes;
@@ -955,14 +936,13 @@ class Hermes {
     _ixf.active = { ...DEFAULT.FILTER };
     _ixf.key = undefined;
 
-    // this.cleanUpFilters();
+    this.cleanUpFilters();
 
     // Make hook call back with all of the filter changes.
     this.config.hooks?.onFilterChange?.(this.filters);
   }
 
   protected cleanUpFilters(): void {
-    console.log('cleanUpFilters');
     Object.keys(this.filters).forEach(key => {
       const filters = this.filters[key] || [];
       for (let i = 0; i < filters.length; i++) {

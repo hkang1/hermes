@@ -1298,13 +1298,8 @@ class Hermes {
             mouseup: this.handleMouseUp.bind(this),
         };
         if (config === null || config === void 0 ? void 0 : config.filters) {
-            console.log('update filters from config');
             Object.keys(this.config.filters).forEach((key) => {
-                // Store active filter into filter list.
-                this.filters[key] = [];
-                this.config.filters[key].forEach(intf => {
-                    this.filters[key].push({ p0: intf.p0, p1: intf.p1, value0: intf.value0, value1: intf.value1 });
-                });
+                this.filters[key] = this.config.filters[key];
             });
         }
         // Enable chart
@@ -1375,13 +1370,8 @@ class Hermes {
         // Set config early as setSize references it early.
         this.config = deepMerge(HERMES_CONFIG, config);
         if (config.filters) {
-            console.log('update filters from setConfig');
             Object.keys(this.config.filters).forEach((key) => {
-                // Store active filter into filter list.
-                this.filters[key] = [];
-                this.config.filters[key].forEach(intf => {
-                    this.filters[key].push({ p0: intf.p0, p1: intf.p1, value0: intf.value0, value1: intf.value1 });
-                });
+                this.filters[key] = this.config.filters[key];
             });
         }
         // Re-add observers as config impacts the throttling of the observer handlers.
@@ -1393,8 +1383,6 @@ class Hermes {
         const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
         if (!dataValidation.valid)
             throw new HermesError(dataValidation.message);
-        console.log('known filters at set data');
-        console.log(this.filters);
         const filtered = removeInfinityNanSeries(data);
         this.data = filtered.data;
         this.dataCount = filtered.count;
@@ -1785,10 +1773,6 @@ class Hermes {
         for (let i = 0; i < _dl.length; i++) {
             const key = this.dimensions[i].key;
             const filters = this.filters[key] || [];
-            if (filters.length) {
-                console.log('my column filters');
-                console.log(filters);
-            }
             const isDimActive = _ixsa.type === ActionType.LabelMove && _ixsa.dimIndex === i;
             const isDimFocused = (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionLabel && (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i;
             const isAxisActive = (_ixsa.type === ActionType.FilterCreate ||
@@ -1925,7 +1909,6 @@ class Hermes {
     setActiveFilter(key, pos, value) {
         if (!this._)
             return;
-        console.log('setActiveFilter');
         const _filters = this.filters;
         const _ix = this.ix;
         const _ixsa = _ix.shared.action;
@@ -1963,7 +1946,6 @@ class Hermes {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _m, _o;
         if (!this._)
             return;
-        console.log('updateActiveFilter');
         const _dl = this._.dims.list;
         const _dsa = this._.dims.shared.axes;
         const _ix = this.ix;
@@ -2058,12 +2040,11 @@ class Hermes {
         // Overwrite active filter to remove reference to filter in filters list.
         _ixf.active = { ...FILTER };
         _ixf.key = undefined;
-        // this.cleanUpFilters();
+        this.cleanUpFilters();
         // Make hook call back with all of the filter changes.
         (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, this.filters);
     }
     cleanUpFilters() {
-        console.log('cleanUpFilters');
         Object.keys(this.filters).forEach(key => {
             const filters = this.filters[key] || [];
             for (let i = 0; i < filters.length; i++) {
