@@ -1378,12 +1378,16 @@ class Hermes {
         const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
         if (!dataValidation.valid)
             throw new HermesError(dataValidation.message);
+        console.log('known filters at set data');
+        console.log(this.filters);
         const filtered = removeInfinityNanSeries(data);
         this.data = filtered.data;
         this.dataCount = filtered.count;
         this.setDimensions(this.dimensionsOriginal, false);
         if (redraw)
             this.redraw();
+        console.log('after redraw');
+        console.log(this.filters);
     }
     setDimensions(dimensions, redraw = true) {
         // Validate that the dimensions are set properly.
