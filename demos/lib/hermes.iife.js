@@ -1919,9 +1919,14 @@ var Hermes = (function (exports) {
             const _ixsa = _ix.shared.action;
             const _ixf = _ix.filters;
             const _dsa = this._.dims.shared.axes;
+            console.log('this.ix action');
+            console.log(_ixsa);
             // See if there is an existing matching filter based on % position.
+            console.log('at filter time');
+            console.log(_filters);
             const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
             if (index !== -1) {
+                console.log('index not -1');
                 _ixf.active = _filters[key][index];
                 _ixf.active.startP0 = _ixf.active.p0;
                 _ixf.active.startP1 = _ixf.active.p1;
@@ -1939,6 +1944,7 @@ var Hermes = (function (exports) {
                 }
             }
             else {
+                console.log('index is -1');
                 _ixsa.type = ActionType.FilterCreate;
                 _ixf.active = { p0: pos, p1: pos, value0: value, value1: value };
                 // Store active filter into filter list.
