@@ -1294,19 +1294,12 @@ class Hermes {
             mouseup: this.handleMouseUp.bind(this),
         };
         if (config === null || config === void 0 ? void 0 : config.filters) {
-            // protected setActiveFilter(key: string, pos: number, value: t.Primitive)
-            // setActiveFilter
-            console.log(this.config.filters);
             Object.keys(this.config.filters).forEach((key) => {
-                // const addFilter = this.config.filters[key];
-                // this.setActiveFilter(key, addFilter., addFilter.range);
                 // Store active filter into filter list.
-                console.log(key);
                 this.filters[key] = [];
                 this.config.filters[key].forEach(intf => {
                     this.filters[key].push({ p0: intf.p0, p1: intf.p1, value0: intf.value0, value1: intf.value1 });
                 });
-                // _ixsa.filterIndex = _filters[key].length - 1;
             });
         }
         // Enable chart
@@ -1426,6 +1419,14 @@ class Hermes {
             }
             return internal;
         });
+        if (redraw)
+            this.redraw();
+    }
+    setFilters(filters, redraw = false) {
+        console.log(this.filters);
+        console.log('changed to');
+        console.log(filters);
+        this.filters = filters;
         if (redraw)
             this.redraw();
     }
@@ -1916,14 +1917,9 @@ class Hermes {
         const _ixsa = _ix.shared.action;
         const _ixf = _ix.filters;
         const _dsa = this._.dims.shared.axes;
-        console.log('this.ix action');
-        console.log(_ixsa);
         // See if there is an existing matching filter based on % position.
-        console.log('at filter time');
-        console.log(_filters);
         const index = (_filters[key] || []).findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
         if (index !== -1) {
-            console.log('index not -1');
             _ixf.active = _filters[key][index];
             _ixf.active.startP0 = _ixf.active.p0;
             _ixf.active.startP1 = _ixf.active.p1;
@@ -1941,7 +1937,6 @@ class Hermes {
             }
         }
         else {
-            console.log('index is -1');
             _ixsa.type = ActionType.FilterCreate;
             _ixf.active = { p0: pos, p1: pos, value0: value, value1: value };
             // Store active filter into filter list.
