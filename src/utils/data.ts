@@ -1,4 +1,6 @@
-import { Data, NestedObject, Primitive, RandomNumberOptions, Range } from '../types';
+import {
+  Data, InternalDataInfo, NestedObject, Primitive, RandomNumberOptions, Range,
+} from '../types';
 
 export const isBoolean = (data: unknown): data is boolean => typeof data === 'boolean';
 export const isError = (data: unknown): data is Error => data instanceof Error;
@@ -86,6 +88,36 @@ export const idempotentNumber = (
   return (index % (adjustedCount + 1)) * inc + min;
 };
 
+/**
+ * NOTE: The data being fed in has already been validated,
+ * so the series should all have equal data lengths.
+ *
+ * Scan the data to detect +/-Infinity and NaN numbers.
+ * Count the number of series.
+ * Figure out the max data length.
+ */
+export const processData = (data: Data): InternalDataInfo => {
+  const keys = Object.keys(data);
+  const info: InternalDataInfo = {
+    dataLength: 0,
+    hasInfinity: false,
+    hasNaN: false,
+    seriesCount: 0,
+  };
+
+  for (const key of keys) {
+    info.dataLength = info.dataLength || data[key].length;
+    info.seriesCount++;
+
+    for (const value of data[key]) {
+      if (isNaN(value as number)) info.hasNaN = true;
+      if (!isFinite(value as number)) info.hasInfinity = true;
+    }
+  }
+
+  return info;
+};
+
 export const randomInt = (max: number, min = 0): number => {
   return Math.floor(Math.random() * (max - min)) + min;
 };
@@ -127,30 +159,4 @@ export const randomNumber = (
     if (Math.random() < probabilityPositiveInfinity) return Infinity;
   }
   return Math.random() * (max - min) + min;
-};
-
-export const removeInfinityNanSeries = (data: Data): { count: number, data: Data } => {
-  const keys = Object.keys(data);
-  const indicesToRemove: Record<number, boolean> = {};
-  const filteredData: Data = {};
-  let count = 0;
-
-  // Find all the series indices to remove.
-  for (const key of keys) {
-    if (count === 0) count = data[key].length;
-    for (const [ index, value ] of data[key].entries()) {
-      if (!isNumber(value) || (!isNaN(value) && isFinite(value))) continue;
-      indicesToRemove[index] = true;
-    }
-  }
-
-  // Filter out all the series based on the remove indices.
-  for (const key of keys) {
-    filteredData[key] = data[key].filter((_, index) => !indicesToRemove[index]);
-  }
-
-  return {
-    count: count - Object.keys(indicesToRemove).length,
-    data: filteredData,
-  };
 };

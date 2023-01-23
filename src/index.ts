@@ -7,7 +7,7 @@ import * as DEFAULT from './defaults';
 import * as t from './types';
 import * as canvas from './utils/canvas';
 import { scale2rgba } from './utils/color';
-import { capDataRange, clone, deepMerge, getDataRange, isNumber, removeInfinityNanSeries } from './utils/data';
+import * as d from './utils/data';
 import { getElement, getMousePoint } from './utils/dom';
 import { throttle } from './utils/event';
 import * as ix from './utils/interaction';
@@ -26,13 +26,18 @@ class Hermes {
   protected ctx: CanvasRenderingContext2D;
   protected config: t.Config = DEFAULT.HERMES_CONFIG;
   protected data: t.Data = {};
-  protected dataCount = 0;
+  protected dataInfo: t.InternalDataInfo = {
+    dataLength: 0,
+    hasInfinity: false,
+    hasNaN: false,
+    seriesCount: 0,
+  };
   protected dimensions: t.InternalDimension[] = [];
   protected dimensionsOriginal: t.Dimension[] = [];
   protected filters: t.InternalFilters = {};
   protected resizeObserver: ResizeObserver | undefined;
   protected size: t.Size = { h: 0, w: 0 };
-  protected ix: t.IX = clone(DEFAULT.IX);
+  protected ix: t.IX = d.clone(DEFAULT.IX);
   protected listeners: t.InternalListeners;
   protected _?: t.Internal = undefined;
 
@@ -40,7 +45,7 @@ class Hermes {
     target: HTMLElement | string,
     dimensions?: t.Dimension[],
     config?: t.RecursivePartial<t.Config>,
-    data?: t.Data,
+    data?: t.RawData,
   ) {
     const element = getElement(target);
     if (!element) throw new HermesError('Target element selector did not match anything.');
@@ -88,24 +93,34 @@ class Hermes {
   }
 
   static deepMerge<T extends t.NestedObject>(...objects: T[]): T {
-    return deepMerge(...objects);
+    return d.deepMerge(...objects);
   }
 
   static getTester(): tester.Tester {
     return tester;
   }
 
-  static validateData(data: t.Data, dimensions: t.Dimension[]): t.ValidationData {
+  static validateData(data: t.RawData, dimensions: t.Dimension[]): t.ValidationData {
     const validation = { count: 0, message: '', valid: true };
+    const keys = Object.keys(data);
     const values = Object.values(data);
 
-    // All the dimension data should be equal in size.
     for (let i = 0; i < values.length; i++) {
       const value = values[i];
+
+      // All the dimension data should be equal in size.
       if (i === 0) {
         validation.count = value.length;
       } else if (value.length !== validation.count) {
         validation.message = 'The dimension data are not uniform in size.';
+        validation.valid = false;
+        return validation;
+      }
+
+      // Data should not contain null or undefined.
+      if (value == null) {
+        const isNull = value === null;
+        validation.message = `Data for "${keys[i]}" has ${isNull ? 'null' : 'undefined'}`;
         validation.valid = false;
         return validation;
       }
@@ -155,7 +170,7 @@ class Hermes {
 
   public setConfig(config: t.RecursivePartial<t.Config> = {}, redraw = true): void {
     // Set config early as setSize references it early.
-    this.config = deepMerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
+    this.config = d.deepMerge(DEFAULT.HERMES_CONFIG, config) as t.Config;
 
     // Re-add observers as config impacts the throttling of the observer handlers.
     this.addObservers();
@@ -163,13 +178,12 @@ class Hermes {
     if (redraw) this.redraw();
   }
 
-  public setData(data: t.Data, redraw = true): void {
+  public setData(data: t.RawData, redraw = true): void {
     const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
     if (!dataValidation.valid) throw new HermesError(dataValidation.message);
 
-    const filtered = removeInfinityNanSeries(data);
-    this.data = filtered.data;
-    this.dataCount = filtered.count;
+    this.data = data as t.Data;
+    this.dataInfo = d.processData(this.data);
     this.setDimensions(this.dimensionsOriginal, false);
 
     if (redraw) this.redraw();
@@ -184,7 +198,7 @@ class Hermes {
       ? t.Direction.Vertical
       : t.Direction.Horizontal;
     this.dimensionsOriginal = dimensions;
-    this.dimensions = clone(dimensions).map(dimension => {
+    this.dimensions = d.clone(dimensions).map(dimension => {
       const key = dimension.key;
       const data = this.data[key] || [];
       const internal: t.InternalDimension = {
@@ -201,7 +215,7 @@ class Hermes {
         dimension.type === t.DimensionType.Linear ||
         dimension.type === t.DimensionType.Logarithmic
       ) {
-        internal.range = getDataRange(data);
+        internal.range = d.getDataRange(data);
         if (dimension.type === t.DimensionType.Linear) {
           internal.scale = new LinearScale(
             direction,
@@ -259,7 +273,7 @@ class Hermes {
     this.removeObservers();
 
     // Clear out any intermediate focus or interactive states.
-    this.ix = clone(DEFAULT.IX);
+    this.ix = d.clone(DEFAULT.IX);
     this.updateCursor();
     this.redraw();
   }
@@ -867,11 +881,11 @@ class Hermes {
       _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
     } else if (_ixsa.type === t.ActionType.FilterResizeBefore) {
       _ixf.active.p0 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
-      _ixf.active.p0 = capDataRange(_ixf.active.p0, [ 0.0, 1.0 ]);
+      _ixf.active.p0 = d.capDataRange(_ixf.active.p0, [ 0.0, 1.0 ]);
       _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
     } else {
       _ixf.active.p1 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
-      _ixf.active.p1 = capDataRange(_ixf.active.p1, [ 0.0, 1.0 ]);
+      _ixf.active.p1 = d.capDataRange(_ixf.active.p1, [ 0.0, 1.0 ]);
       _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
     }
 
@@ -1010,7 +1024,7 @@ class Hermes {
 
     // Draw data lines.
     const dimColorKey = dataStyle.colorScale?.dimensionKey;
-    for (let k = 0; k < this.dataCount; k++) {
+    for (let k = 0; k < this.dataInfo.seriesCount; k++) {
       let dataDefaultStyle: t.StyleLine = dataStyle.default;
       let hasFilters = false;
       let isFilteredOut = false;
@@ -1211,7 +1225,7 @@ class Hermes {
     // Reset chart settings.
     this.setDimensions(this.dimensionsOriginal, false);
     this.filters = {};
-    this.ix = clone(DEFAULT.IX);
+    this.ix = d.clone(DEFAULT.IX);
 
     this.redraw();
 
@@ -1301,7 +1315,7 @@ class Hermes {
     this.updateActiveFilter(e);
 
     // Reset drag info but preserve focus.
-    this.ix = clone(DEFAULT.IX);
+    this.ix = d.clone(DEFAULT.IX);
     this.ix.shared.focus = this.getFocusByPoint(point);
 
     // Update cursor pointer based on type and position.

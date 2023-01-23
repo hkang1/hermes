@@ -254,6 +254,34 @@ var Hermes = (function (exports) {
         const inc = (max - min) / adjustedCount;
         return (index % (adjustedCount + 1)) * inc + min;
     };
+    /**
+     * NOTE: The data being fed in has already been validated,
+     * so the series should all have equal data lengths.
+     *
+     * Scan the data to detect +/-Infinity and NaN numbers.
+     * Count the number of series.
+     * Figure out the max data length.
+     */
+    const processData = (data) => {
+        const keys = Object.keys(data);
+        const info = {
+            dataLength: 0,
+            hasInfinity: false,
+            hasNaN: false,
+            seriesCount: 0,
+        };
+        for (const key of keys) {
+            info.dataLength = info.dataLength || data[key].length;
+            info.seriesCount++;
+            for (const value of data[key]) {
+                if (isNaN(value))
+                    info.hasNaN = true;
+                if (!isFinite(value))
+                    info.hasInfinity = true;
+            }
+        }
+        return info;
+    };
     const randomInt = (max, min = 0) => {
         return Math.floor(Math.random() * (max - min)) + min;
     };
@@ -287,30 +315,6 @@ var Hermes = (function (exports) {
                 return Infinity;
         }
         return Math.random() * (max - min) + min;
-    };
-    const removeInfinityNanSeries = (data) => {
-        const keys = Object.keys(data);
-        const indicesToRemove = {};
-        const filteredData = {};
-        let count = 0;
-        // Find all the series indices to remove.
-        for (const key of keys) {
-            if (count === 0)
-                count = data[key].length;
-            for (const [index, value] of data[key].entries()) {
-                if (!isNumber(value) || (!isNaN(value) && isFinite(value)))
-                    continue;
-                indicesToRemove[index] = true;
-            }
-        }
-        // Filter out all the series based on the remove indices.
-        for (const key of keys) {
-            filteredData[key] = data[key].filter((_, index) => !indicesToRemove[index]);
-        }
-        return {
-            count: count - Object.keys(indicesToRemove).length,
-            data: filteredData,
-        };
     };
 
     const readableNumber = (num, precision = 6) => {
@@ -1242,7 +1246,12 @@ var Hermes = (function (exports) {
         constructor(target, dimensions, config, data) {
             this.config = HERMES_CONFIG;
             this.data = {};
-            this.dataCount = 0;
+            this.dataInfo = {
+                dataLength: 0,
+                hasInfinity: false,
+                hasNaN: false,
+                seriesCount: 0,
+            };
             this.dimensions = [];
             this.dimensionsOriginal = [];
             this.filters = {};
@@ -1299,15 +1308,23 @@ var Hermes = (function (exports) {
         }
         static validateData(data, dimensions) {
             const validation = { count: 0, message: '', valid: true };
+            const keys = Object.keys(data);
             const values = Object.values(data);
-            // All the dimension data should be equal in size.
             for (let i = 0; i < values.length; i++) {
                 const value = values[i];
+                // All the dimension data should be equal in size.
                 if (i === 0) {
                     validation.count = value.length;
                 }
                 else if (value.length !== validation.count) {
                     validation.message = 'The dimension data are not uniform in size.';
+                    validation.valid = false;
+                    return validation;
+                }
+                // Data should not contain null or undefined.
+                if (value == null) {
+                    const isNull = value === null;
+                    validation.message = `Data for "${keys[i]}" has ${isNull ? 'null' : 'undefined'}`;
                     validation.valid = false;
                     return validation;
                 }
@@ -1364,9 +1381,8 @@ var Hermes = (function (exports) {
             const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
             if (!dataValidation.valid)
                 throw new HermesError(dataValidation.message);
-            const filtered = removeInfinityNanSeries(data);
-            this.data = filtered.data;
-            this.dataCount = filtered.count;
+            this.data = data;
+            this.dataInfo = processData(this.data);
             this.setDimensions(this.dimensionsOriginal, false);
             if (redraw)
                 this.redraw();
@@ -2107,7 +2123,7 @@ var Hermes = (function (exports) {
             const isAxesBefore = axesStyle.label.placement === LabelPlacement.Before;
             // Draw data lines.
             const dimColorKey = (_a = dataStyle.colorScale) === null || _a === void 0 ? void 0 : _a.dimensionKey;
-            for (let k = 0; k < this.dataCount; k++) {
+            for (let k = 0; k < this.dataInfo.seriesCount; k++) {
                 let dataDefaultStyle = dataStyle.default;
                 let hasFilters = false;
                 let isFilteredOut = false;

@@ -6,25 +6,25 @@ import * as utils from './tester';
 
 describe('library testing utility functions', () => {
   const dimCount = 3;
-  const dataCount = 10;
+  const seriesCount = 10;
   const idempotentCount = 5;
 
   describe('generateData', () => {
     const dimensions = utils.generateDimensions(dimCount, false);
 
     it('should generate data', () => {
-      const data = utils.generateData(dimensions, dataCount);
+      const data = utils.generateData(dimensions, seriesCount);
       expect(Object.keys(data).length).toBe(dimCount);
 
       Object.values(data).forEach(dimData => {
-        expect(dimData.length).toBe(dataCount);
+        expect(dimData.length).toBe(seriesCount);
       });
     });
 
     it('should generate idempotent data', () => {
-      const initialData = utils.generateData(dimensions, dataCount, false);
+      const initialData = utils.generateData(dimensions, seriesCount, false);
       new Array(idempotentCount).fill(null).forEach(() => {
-        expect(utils.generateData(dimensions, dataCount, false)).toStrictEqual(initialData);
+        expect(utils.generateData(dimensions, seriesCount, false)).toStrictEqual(initialData);
       });
     });
 
@@ -34,8 +34,8 @@ describe('library testing utility functions', () => {
       const dimKey = dimensionsWithInvalidType[dimIndex].key;
       dimensionsWithInvalidType[dimIndex].type = 'invalid' as EDimensionType;
 
-      const data = utils.generateData(dimensionsWithInvalidType, dataCount);
-      const expectedData = new Array(dataCount).fill(INVALID_VALUE);
+      const data = utils.generateData(dimensionsWithInvalidType, seriesCount);
+      const expectedData = new Array(seriesCount).fill(INVALID_VALUE);
       expect(data[dimKey]).toStrictEqual(expectedData);
     });
   });

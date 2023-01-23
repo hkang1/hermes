@@ -6,6 +6,8 @@ import LogScale from './classes/LogScale';
  * TYPES
  */
 
+export type HasNull<T> = null | T;
+export type HasUndefined<T> = undefined | T;
 export type NestedObject = Record<RecordKey, unknown>;
 export type Padding = number | [ number, number ] | PaddingNormalized;
 export type PaddingNormalized = [ number, number, number, number ]
@@ -197,6 +199,8 @@ export interface TickOptions extends StyleLine {
  * PRIMARY INTERFACES AND TYPES
  */
 
+export type RawData = Record<DimensionKey, HasNull<HasUndefined<Primitive>>[]>;
+
 export type Data = Record<DimensionKey, Primitive[]>;
 
 export interface Config {
@@ -266,6 +270,13 @@ export interface Filters {
   [key: DimensionKey]: Filter[];
 }
 
+export interface InternalDataInfo {
+  dataLength: number;
+  hasInfinity: boolean;
+  hasNaN: boolean;
+  seriesCount: number;
+}
+
 export interface InternalDimension extends Dimension {
   labelTruncated: string;
   range?: Range;
@@ -309,7 +320,6 @@ export interface Internal {
         start: number;
         stop: number;
       };
-      dataCount: number;
       label: {
         cos?: number;
         maxLengthCos?: number;
