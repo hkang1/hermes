@@ -9,7 +9,11 @@
     <script>
       const tester = Hermes.default.getTester();
       const dimensions = tester.generateDimensions(10, false);
-      const data = tester.generateData(dimensions, 50);
+      const data = tester.generateData(dimensions, 50, true, {
+        includeNaN: 1,
+        includeNegativeInfinity: 1,
+        includePositiveInfinity: 1,
+      });
       const hermes = new Hermes.default('#hermes', dimensions, undefined, data);
     </script>
   </body>

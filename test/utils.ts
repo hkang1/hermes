@@ -75,7 +75,7 @@ export class HermesTester extends Hermes {
   public getConfig(): t.Config { return this.config; }
   public getCtx(): CanvasRenderingContext2D { return this.ctx; }
   public getData(): t.Data { return this.data; }
-  public getDataCount(): number { return this.dataCount; }
+  public getDataInfo(): t.InternalDataInfo { return this.dataInfo; }
   public drawDebugOutline(): void { super.drawDebugOutline(); }
 
   public setConfig(config: t.RecursivePartial<t.Config> = {}, redraw = true): void {
