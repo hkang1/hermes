@@ -175,6 +175,24 @@ describe('data utilities', () => {
     });
   });
 
+  describe('getDataRange', () => {
+    it('should get a range from a list of data', () => {
+      const data = [ -123, 123, 0, 48 ];
+      expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({
+        actual: [ -123, 123 ],
+        finite: [ -123, 123 ],
+      });
+    });
+
+    it('should ignore non-numbers when getting a range', () => {
+      const data = [ null, undefined, -123, 123, 0, Infinity, NaN ];
+      expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({
+        actual: [ -123, Infinity ],
+        finite: [ -123, 123 ],
+      });
+    });
+  });
+
   describe('idempotentItem', () => {
     it('should return the same item from a list everytime given an index', () => {
       const list = [ 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vw', 'xyz' ];
@@ -261,21 +279,47 @@ describe('data utilities', () => {
     });
   });
 
-  describe('getDataRange', () => {
-    it('should get a range from a list of data', () => {
-      const data = [ -123, 123, 0, 48 ];
-      expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({
-        actual: [ -123, 123 ],
-        finite: [ -123, 123 ],
-      });
+  describe('processData', () => {
+    const a = utils.processData({
+      accuracy: [ NaN, 0.97, 0.98, 0.99 ],
+      globalBatchSize: [ 2, 4, 8, 16 ],
+      learningRate: [ 0.1, 0.01, 0.001, Infinity ],
+      loss: [ 0.4, Infinity, 0.2, 0.1 ],
+    });
+    const b = utils.processData({
+      accuracy: [ 0.96, 0.97, 0.98, 0.99 ],
+      learningRate: [ 0.1, 0.01, 0.001, -Infinity ],
+      loss: [ 0.4, -Infinity, 0.2, 0.1 ],
+    });
+    const c = utils.processData({
+      accuracy: [ 0.97, 0.98, 0.99 ],
+      globalBatchSize: [ 2, 4, 6 ],
+      learningRate: [ 0.1, 0.01, 0.001 ],
+      loss: [ -0.4, -0.2, NaN ],
     });
 
-    it('should ignore non-numbers when getting a range', () => {
-      const data = [ null, undefined, -123, 123, 0, Infinity, NaN ];
-      expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({
-        actual: [ -123, Infinity ],
-        finite: [ -123, 123 ],
-      });
+    it('should detect number of data series', () => {
+      expect(a.seriesCount).toEqual(4);
+      expect(b.seriesCount).toEqual(3);
+      expect(c.seriesCount).toEqual(4);
+    });
+
+    it('should detect data length', () => {
+      expect(a.dataLength).toEqual(4);
+      expect(b.dataLength).toEqual(4);
+      expect(c.dataLength).toEqual(3);
+    });
+
+    it('should detect positive and negative Infinity numbers', () => {
+      expect(a.hasInfinity).toBeTrue();
+      expect(b.hasInfinity).toBeTrue();
+      expect(c.hasInfinity).toBeFalse();
+    });
+
+    it('should detect NaNs', () => {
+      expect(a.hasNaN).toBeFalse();
+      expect(b.hasNaN).toBeFalse();
+      expect(c.hasNaN).toBeTrue();
     });
   });
 
@@ -368,27 +412,6 @@ describe('data utilities', () => {
     it('should generate positive Infinity', () => {
       const value = utils.randomNumber(MAX, MIN, { includePositiveInfinity: 1.0 });
       expect(value).toBe(Infinity);
-    });
-  });
-
-  describe('removeInfinityNanSeries', () => {
-    const DATA = {
-      accuracy: [ NaN, 0.97, 0.98, 0.99 ],
-      globalBatchSize: [ 2, 4, 8, 16 ],
-      learningRate: [ 0.1, 0.01, 0.001, -Infinity ],
-      loss: [ 0.4, Infinity, 0.2, 0.1 ],
-    };
-    const FILTERED_DATA = {
-      accuracy: [ 0.98 ],
-      globalBatchSize: [ 8 ],
-      learningRate: [ 0.001 ],
-      loss: [ 0.2 ],
-    };
-
-    it('should filter out NaN, Infinity and -Infinity', () => {
-      const filtered = utils.removeInfinityNanSeries(DATA);
-      expect(filtered.count).toBe(1);
-      expect(filtered.data).toStrictEqual(FILTERED_DATA);
     });
   });
 });
