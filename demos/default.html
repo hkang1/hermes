@@ -9,12 +9,17 @@
     <script>
       const tester = Hermes.default.getTester();
       const dimensions = tester.generateDimensions(10, false);
+      const config = { 
+        // debug: true,
+        // direction: 'vertical',
+      };
       const data = tester.generateData(dimensions, 50, true, {
-        includeNaN: 1,
-        includeNegativeInfinity: 1,
-        includePositiveInfinity: 1,
+        includeNaN: 0.1,
+        includeNegativeInfinity: 0.1,
+        includePositiveInfinity: 0.1,
       });
-      const hermes = new Hermes.default('#hermes', dimensions, undefined, data);
+      console.log('data', data);
+      const hermes = new Hermes.default('#hermes', dimensions, config, data);
     </script>
   </body>
 </html>

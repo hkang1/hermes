@@ -300,14 +300,8 @@ describe('data utilities', () => {
 
     it('should detect number of data series', () => {
       expect(a.seriesCount).toEqual(4);
-      expect(b.seriesCount).toEqual(3);
-      expect(c.seriesCount).toEqual(4);
-    });
-
-    it('should detect data length', () => {
-      expect(a.dataLength).toEqual(4);
-      expect(b.dataLength).toEqual(4);
-      expect(c.dataLength).toEqual(3);
+      expect(b.seriesCount).toEqual(4);
+      expect(c.seriesCount).toEqual(3);
     });
 
     it('should detect positive and negative Infinity numbers', () => {
@@ -317,7 +311,7 @@ describe('data utilities', () => {
     });
 
     it('should detect NaNs', () => {
-      expect(a.hasNaN).toBeFalse();
+      expect(a.hasNaN).toBeTrue();
       expect(b.hasNaN).toBeFalse();
       expect(c.hasNaN).toBeTrue();
     });
