@@ -80,9 +80,9 @@ var Hermes = (function (exports) {
                 axis: {
                     boundaryPadding: 15,
                     infLineDash: [2, 4],
-                    infOffset: 12.0,
+                    infOffset: 24.0,
                     lineWidth: 1,
-                    nanGap: 15.0,
+                    nanGap: 24.0,
                     strokeStyle: 'rgba(147, 147, 147, 1.0)',
                 },
                 axisActve: {
