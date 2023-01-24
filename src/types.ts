@@ -34,7 +34,11 @@ export type Focus = { dimIndex: number, filterIndex?: number, type: EFocusType }
 export type Point = { x: number, y: number };
 export type Rect = Point & Size;
 export type Size = { h: number, w: number };
-export type StyleLine = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
+export type StyleLine = Partial<
+  CanvasFillStrokeStyles &
+  CanvasPathDrawingStyles &
+  { lineDash: number [] }
+>;
 export type StyleRect = Partial<StyleShape & { cornerRadius: number }>;
 export type StyleShape = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
 export type StyleText = Partial<
@@ -109,6 +113,9 @@ export const PathType = {
 
 export interface AxisOptions extends StyleLine {
   boundaryPadding: number;
+  infLineDash: number[];
+  infOffset: number;
+  nanGap: number;
 }
 
 export interface DataColorScale {
@@ -145,10 +152,10 @@ export interface FilterOptions extends StyleRect {
 }
 
 export interface InternalFilter {
-  p0: number;         // starting axis % position relative to axisStart.(x|y).
-  p1: number;         // ending axis % position relative to axisStart.(x|y).
-  value0: Primitive;  // starting axis value.
-  value1: Primitive;  // ending axis value.
+  p0: number;         // Starting axis % position relative to axisStart.(x|y).
+  p1: number;         // Ending axis % position relative to axisStart.(x|y).
+  value0: Primitive;  // Starting axis value.
+  value1: Primitive;  // Ending axis value.
 }
 
 export interface InternalFilterActive extends InternalFilter {
@@ -186,9 +193,9 @@ export interface PathOptions {
 }
 
 export interface RandomNumberOptions {
-  includeNaN?: number;
-  includeNegativeInfinity?: number;
-  includePositiveInfinity?: number;
+  includeNaN?: number;                  // Probability to show up between 0 and 1.
+  includeNegativeInfinity?: number;     // Probability to show up between 0 and 1.
+  includePositiveInfinity?: number;     // Probability to show up between 0 and 1.
 }
 
 export interface TickOptions extends StyleLine {
@@ -271,7 +278,6 @@ export interface Filters {
 }
 
 export interface InternalDataInfo {
-  dataLength: number;
   hasInfinity: boolean;
   hasNaN: boolean;
   seriesCount: number;
@@ -302,12 +308,16 @@ export interface Internal {
       };
       layout: {
         axisBoundary: Boundary;   // Coordinates for axis boundary after transformation.
-        axisStart: Point;         // Respective to bound (x, y)
-        axisStop: Point;          // Respective to bound (x, y)
+        axisBoundaryStart: Point; // Respective to bound (x, y).
+        axisBoundaryStop: Point;  // Respective to bound (x, y).
+        axisDataStart: Point;     // Axis excluding +/-Infinity and NaN.
+        axisDataStop: Point;      // Axis excluding +/-Infinity and NaN.
+        axisInfinityStart: Point; // Axis including +/-Infinity but excluding NaN.
+        axisInfinityStop: Point;  // Axis including +/-Infinity but excluding NaN.
         bound: Rect;              // Bounding rect for the dimension label and axis.
         boundOffset: Point;       // Offset for the bounding rect from dragging.
         labelBoundary: Boundary;  // Coordinates for label boundary after transformation.
-        labelPoint: Point;        // Respective to bound (x, y)
+        labelPoint: Point;        // Respective to bound (x, y).
         spaceAfter: number;       // Space after the axis line.
         spaceBefore: number;      // Space before the axis line.
       };
@@ -318,7 +328,13 @@ export interface Internal {
         length: number;
         maxTicks: number;
         start: number;
+        startData: number;
+        startInfinity: number;
+        startNaN?: number;
         stop: number;
+        stopData: number;
+        stopInfinity: number;
+        stopNaN?: number;
       };
       label: {
         cos?: number;

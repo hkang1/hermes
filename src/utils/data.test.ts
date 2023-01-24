@@ -175,6 +175,20 @@ describe('data utilities', () => {
     });
   });
 
+  describe('getDataRange', () => {
+    const DATA = [ 1e2, -3.14, 0, -0.24, 2048 ];
+    const DATA_WITH_INFINITY = [ ...DATA, -Infinity, Infinity ];
+    const RESULT = [ -3.14, 2048 ];
+
+    it('should return the min and max data range', () => {
+      expect(utils.getDataRange(DATA)).toStrictEqual(RESULT);
+    });
+
+    it('should ignore -Infinity and Infinity for min/max data range', () => {
+      expect(utils.getDataRange(DATA_WITH_INFINITY)).toStrictEqual(RESULT);
+    });
+  });
+
   describe('idempotentItem', () => {
     it('should return the same item from a list everytime given an index', () => {
       const list = [ 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vw', 'xyz' ];
@@ -282,14 +296,8 @@ describe('data utilities', () => {
 
     it('should detect number of data series', () => {
       expect(a.seriesCount).toEqual(4);
-      expect(b.seriesCount).toEqual(3);
-      expect(c.seriesCount).toEqual(4);
-    });
-
-    it('should detect data length', () => {
-      expect(a.dataLength).toEqual(4);
-      expect(b.dataLength).toEqual(4);
-      expect(c.dataLength).toEqual(3);
+      expect(b.seriesCount).toEqual(4);
+      expect(c.seriesCount).toEqual(3);
     });
 
     it('should detect positive and negative Infinity numbers', () => {
@@ -299,7 +307,7 @@ describe('data utilities', () => {
     });
 
     it('should detect NaNs', () => {
-      expect(a.hasNaN).toBeFalse();
+      expect(a.hasNaN).toBeTrue();
       expect(b.hasNaN).toBeFalse();
       expect(c.hasNaN).toBeTrue();
     });

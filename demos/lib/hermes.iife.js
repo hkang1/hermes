@@ -79,7 +79,10 @@ var Hermes = (function (exports) {
             axes: {
                 axis: {
                     boundaryPadding: 15,
+                    infLineDash: [2, 4],
+                    infOffset: 12.0,
                     lineWidth: 1,
+                    nanGap: 15.0,
                     strokeStyle: 'rgba(147, 147, 147, 1.0)',
                 },
                 axisActve: {
@@ -230,7 +233,7 @@ var Hermes = (function (exports) {
     };
     const getDataRange = (data) => {
         return data.reduce((acc, x) => {
-            if (isNumber(x)) {
+            if (isNumber(x) && isFinite(x)) {
                 if (x > acc[1])
                     acc[1] = x;
                 if (x < acc[0])
@@ -265,18 +268,16 @@ var Hermes = (function (exports) {
     const processData = (data) => {
         const keys = Object.keys(data);
         const info = {
-            dataLength: 0,
             hasInfinity: false,
             hasNaN: false,
             seriesCount: 0,
         };
         for (const key of keys) {
-            info.dataLength = info.dataLength || data[key].length;
-            info.seriesCount++;
+            info.seriesCount = info.seriesCount || data[key].length;
             for (const value of data[key]) {
                 if (isNaN(value))
                     info.hasNaN = true;
-                if (!isFinite(value))
+                if (!isNaN(value) && !isFinite(value))
                     info.hasInfinity = true;
             }
         }
@@ -807,6 +808,7 @@ var Hermes = (function (exports) {
         ctx.miterLimit = style.miterLimit || MITER_LIMIT;
         ctx.strokeStyle = style.strokeStyle || STROKE_STYLE;
         ctx.beginPath();
+        ctx.setLineDash(style.lineDash || []);
         ctx.moveTo(roundPixel(x0), roundPixel(y0));
         ctx.lineTo(roundPixel(x1), roundPixel(y1));
         ctx.stroke();
@@ -1247,7 +1249,6 @@ var Hermes = (function (exports) {
             this.config = HERMES_CONFIG;
             this.data = {};
             this.dataInfo = {
-                dataLength: 0,
                 hasInfinity: false,
                 hasNaN: false,
                 seriesCount: 0,
@@ -1528,6 +1529,7 @@ var Hermes = (function (exports) {
             const dimLabelBoundaryPadding = this.config.style.dimension.label.boundaryPadding;
             const dimLayout = this.config.style.dimension.layout;
             const axesLabelStyle = this.config.style.axes.label;
+            const axisStyle = this.config.style.axes.axis;
             const axisBoundaryPadding = this.config.style.axes.axis.boundaryPadding;
             const isLabelBefore = dimLabelStyle.placement === LabelPlacement.Before;
             const isLabelAngled = dimLabelStyle.angle != null;
@@ -1567,8 +1569,8 @@ var Hermes = (function (exports) {
             /**
              * Figure out the max axis pixel range after dimension labels are calculated.
              */
-            _dsa.start = 0;
-            _dsa.stop = 0;
+            _dsa.start = _dsa.stop = 0;
+            _dsa.startInfinity = _dsa.stopInfinity = _dsa.startNaN = _dsa.stopNaN = undefined;
             if (isHorizontal) {
                 if (isLabelBefore) {
                     const labelOffset = Math.max(0, _dsl.maxLengthSin);
@@ -1580,6 +1582,11 @@ var Hermes = (function (exports) {
                     _dsa.start = _l.padding[0];
                     _dsa.stop = h - _l.padding[2] - labelOffset - dimLabelStyle.offset;
                 }
+                _dsa.stopNaN = this.dataInfo.hasNaN ? _dsa.stop : undefined;
+                _dsa.startInfinity = _dsa.start;
+                _dsa.stopInfinity = _dsa.stop - (this.dataInfo.hasNaN ? axisStyle.nanGap : 0);
+                _dsa.startData = _dsa.startInfinity + (this.dataInfo.hasInfinity ? axisStyle.infOffset : 0);
+                _dsa.stopData = _dsa.stopInfinity - (this.dataInfo.hasInfinity ? axisStyle.infOffset : 0);
             }
             else {
                 if (isLabelBefore) {
@@ -1592,11 +1599,16 @@ var Hermes = (function (exports) {
                     _dsa.start = _l.padding[3];
                     _dsa.stop = w - _l.padding[1] - labelOffset - dimLabelStyle.offset;
                 }
+                _dsa.startNaN = this.dataInfo.hasNaN ? _dsa.start : undefined;
+                _dsa.startInfinity = _dsa.start + (this.dataInfo.hasNaN ? axisStyle.nanGap : 0);
+                _dsa.stopInfinity = _dsa.stop;
+                _dsa.startData = _dsa.startInfinity + (this.dataInfo.hasInfinity ? axisStyle.infOffset : 0);
+                _dsa.stopData = _dsa.stopInfinity - (this.dataInfo.hasInfinity ? axisStyle.infOffset : 0);
             }
             /**
              * Go through each axis and figure out the sizes of each axis labels.
              */
-            _dsa.length = _dsa.stop - _dsa.start;
+            _dsa.length = _dsa.stopData - _dsa.startData;
             _dsa.labelFactor = isAxesBefore ? -1 : 1;
             _dsly.totalBoundSpace = 0;
             this.dimensions.forEach((dimension, i) => {
@@ -1697,8 +1709,12 @@ var Hermes = (function (exports) {
                         _dlily.bound.x = traversed;
                         traversed += _dsly.gap + _dlily.bound.w;
                     }
-                    _dlily.axisStart = { x: _dlily.spaceBefore, y: _dsa.start - _l.padding[0] };
-                    _dlily.axisStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
+                    _dlily.axisBoundaryStart = { x: _dlily.spaceBefore, y: _dsa.start - _l.padding[0] };
+                    _dlily.axisBoundaryStop = { x: _dlily.spaceBefore, y: _dsa.stop - _l.padding[0] };
+                    _dlily.axisInfinityStart = { x: _dlily.spaceBefore, y: _dsa.startInfinity - _l.padding[0] };
+                    _dlily.axisInfinityStop = { x: _dlily.spaceBefore, y: _dsa.stopInfinity - _l.padding[0] };
+                    _dlily.axisDataStart = { x: _dlily.spaceBefore, y: _dsa.startData - _l.padding[0] };
+                    _dlily.axisDataStop = { x: _dlily.spaceBefore, y: _dsa.stopData - _l.padding[0] };
                     _dlily.labelPoint = {
                         x: _dlily.spaceBefore,
                         y: isLabelBefore
@@ -1715,8 +1731,12 @@ var Hermes = (function (exports) {
                         _dlily.bound.y = traversed;
                         traversed += _dsly.gap + _dlily.bound.h;
                     }
-                    _dlily.axisStart = { x: _dsa.start - _l.padding[3], y: _dlily.spaceBefore };
-                    _dlily.axisStop = { x: _dsa.stop - _l.padding[3], y: _dlily.spaceBefore };
+                    _dlily.axisBoundaryStart = { x: _dsa.start - _l.padding[3], y: _dlily.spaceBefore };
+                    _dlily.axisBoundaryStop = { x: _dsa.stop - _l.padding[3], y: _dlily.spaceBefore };
+                    _dlily.axisInfinityStart = { x: _dsa.startInfinity - _l.padding[3], y: _dlily.spaceBefore };
+                    _dlily.axisInfinityStop = { x: _dsa.stopInfinity - _l.padding[3], y: _dlily.spaceBefore };
+                    _dlily.axisDataStart = { x: _dsa.startData - _l.padding[3], y: _dlily.spaceBefore };
+                    _dlily.axisDataStop = { x: _dsa.stopData - _l.padding[3], y: _dlily.spaceBefore };
                     _dlily.labelPoint = {
                         x: isLabelBefore
                             ? _dsa.start - dimLabelStyle.offset - _l.padding[1]
@@ -1735,20 +1755,20 @@ var Hermes = (function (exports) {
                  */
                 _dlily.axisBoundary = [
                     {
-                        x: _dlily.bound.x + _dlily.axisStart.x - (isHorizontal ? axisBoundaryPadding : 0),
-                        y: _dlily.bound.y + _dlily.axisStart.y - (isHorizontal ? 0 : axisBoundaryPadding),
+                        x: _dlily.bound.x + _dlily.axisBoundaryStart.x - (isHorizontal ? axisBoundaryPadding : 0),
+                        y: _dlily.bound.y + _dlily.axisBoundaryStart.y - (isHorizontal ? 0 : axisBoundaryPadding),
                     },
                     {
-                        x: _dlily.bound.x + _dlily.axisStart.x + (isHorizontal ? axisBoundaryPadding : 0),
-                        y: _dlily.bound.y + _dlily.axisStart.y + (isHorizontal ? 0 : axisBoundaryPadding),
+                        x: _dlily.bound.x + _dlily.axisBoundaryStart.x + (isHorizontal ? axisBoundaryPadding : 0),
+                        y: _dlily.bound.y + _dlily.axisBoundaryStart.y + (isHorizontal ? 0 : axisBoundaryPadding),
                     },
                     {
-                        x: _dlily.bound.x + _dlily.axisStop.x + (isHorizontal ? axisBoundaryPadding : 0),
-                        y: _dlily.bound.y + _dlily.axisStop.y + (isHorizontal ? 0 : axisBoundaryPadding),
+                        x: _dlily.bound.x + _dlily.axisBoundaryStop.x + (isHorizontal ? axisBoundaryPadding : 0),
+                        y: _dlily.bound.y + _dlily.axisBoundaryStop.y + (isHorizontal ? 0 : axisBoundaryPadding),
                     },
                     {
-                        x: _dlily.bound.x + _dlily.axisStop.x - (isHorizontal ? axisBoundaryPadding : 0),
-                        y: _dlily.bound.y + _dlily.axisStop.y - (isHorizontal ? 0 : axisBoundaryPadding),
+                        x: _dlily.bound.x + _dlily.axisBoundaryStop.x - (isHorizontal ? axisBoundaryPadding : 0),
+                        y: _dlily.bound.y + _dlily.axisBoundaryStop.y - (isHorizontal ? 0 : axisBoundaryPadding),
                     },
                 ];
             }
@@ -1836,7 +1856,7 @@ var Hermes = (function (exports) {
                 if (isPointInTriangle(point, axisBoundary[0], axisBoundary[1], axisBoundary[2]) ||
                     isPointInTriangle(point, axisBoundary[2], axisBoundary[3], axisBoundary[0])) {
                     const filters = this.filters[key] || [];
-                    const axisOffset = layout.bound[vKey] + layout.axisStart[vKey];
+                    const axisOffset = layout.bound[vKey] + layout.axisBoundaryStart[vKey];
                     const p = (point[vKey] - axisOffset) / axisLength;
                     const filterIndex = filters.findIndex(filter => p >= filter.p0 && p <= filter.p1);
                     let type = FocusType.DimensionAxis;
@@ -1870,7 +1890,7 @@ var Hermes = (function (exports) {
                 if (_ixsa.dimIndex === i || this.dimensions[i].disableDrag)
                     continue;
                 const layout = _dl[i].layout;
-                const axisPosition = layout.bound[hKey] + layout.axisStart[hKey];
+                const axisPosition = layout.bound[hKey] + layout.axisBoundaryStart[hKey];
                 const axisDistance = Math.abs(dragPosition - axisPosition);
                 const isNearAxis = axisDistance < DIMENSION_SWAP_THRESHOLD;
                 // Drag dimension came before the i-th dimension before drag started.
@@ -1959,7 +1979,7 @@ var Hermes = (function (exports) {
             if (!isFilterAction || !_ixf.key)
                 return;
             const bound = _dl[_ixsa.dimIndex].layout.bound;
-            const axisStart = _dl[_ixsa.dimIndex].layout.axisStart[filterKey];
+            const axisBoundaryStart = _dl[_ixsa.dimIndex].layout.axisBoundaryStart[filterKey];
             /**
              * If the active filter previously exists, we want to drag it,
              * otherwise we want to change the size of the new one based on event position.
@@ -1984,12 +2004,12 @@ var Hermes = (function (exports) {
                 _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
             }
             else if (_ixsa.type === ActionType.FilterResizeBefore) {
-                _ixf.active.p0 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
+                _ixf.active.p0 = (_ixsa.p1[filterKey] - bound[filterKey] - axisBoundaryStart) / _dsa.length;
                 _ixf.active.p0 = capDataRange(_ixf.active.p0, [0.0, 1.0]);
                 _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
             }
             else {
-                _ixf.active.p1 = (_ixsa.p1[filterKey] - bound[filterKey] - axisStart) / _dsa.length;
+                _ixf.active.p1 = (_ixsa.p1[filterKey] - bound[filterKey] - axisBoundaryStart) / _dsa.length;
                 _ixf.active.p1 = capDataRange(_ixf.active.p1, [0.0, 1.0]);
                 _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
             }
@@ -2128,19 +2148,35 @@ var Hermes = (function (exports) {
                 let hasFilters = false;
                 let isFilteredOut = false;
                 const series = this.dimensions.map((dimension, i) => {
-                    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+                    var _a, _b, _c, _d, _e, _f, _g;
                     const key = dimension.key;
                     const layout = _dl[i].layout;
                     const bound = getDragBound(i, _ix, layout.bound);
                     const value = this.data[key][k];
-                    const pos = (_b = (_a = dimension.scale) === null || _a === void 0 ? void 0 : _a.valueToPos(value)) !== null && _b !== void 0 ? _b : 0;
-                    const percent = (_d = (_c = dimension.scale) === null || _c === void 0 ? void 0 : _c.valueToPercent(value)) !== null && _d !== void 0 ? _d : 0;
-                    const x = bound.x + layout.axisStart.x + (isHorizontal ? 0 : pos);
-                    const y = bound.y + layout.axisStart.y + (isHorizontal ? pos : 0);
+                    const isNumber$1 = isNumber(value);
+                    const isNan = isNumber$1 && isNaN(value);
+                    const isInfinity = isNumber$1 && !isNan && !isFinite(value);
+                    const percent = isNan || isInfinity ? 0 : (_b = (_a = dimension.scale) === null || _a === void 0 ? void 0 : _a.valueToPercent(value)) !== null && _b !== void 0 ? _b : 0;
+                    let x = bound.x;
+                    let y = bound.y;
+                    if (isNan) {
+                        x += isHorizontal ? layout.axisDataStart.x : layout.axisBoundaryStart.x;
+                        y += isHorizontal ? layout.axisBoundaryStop.y : layout.axisDataStart.y;
+                    }
+                    else if (isInfinity) {
+                        const dx = value === -Infinity ? layout.axisInfinityStart.x : layout.axisInfinityStop.x;
+                        const dy = value === -Infinity ? layout.axisInfinityStop.y : layout.axisInfinityStart.y;
+                        x += isHorizontal ? layout.axisDataStart.x : dx;
+                        y += isHorizontal ? dy : layout.axisDataStart.y;
+                    }
+                    else {
+                        const pos = (_d = (_c = dimension.scale) === null || _c === void 0 ? void 0 : _c.valueToPos(value)) !== null && _d !== void 0 ? _d : 0;
+                        x += layout.axisDataStart.x + (isHorizontal ? 0 : pos);
+                        y += layout.axisDataStart.y + (isHorizontal ? pos : 0);
+                    }
                     if (dimColorKey === key) {
-                        const percent = (_f = (_e = dimension.scale) === null || _e === void 0 ? void 0 : _e.valueToPercent(value)) !== null && _f !== void 0 ? _f : 0;
-                        const reverse = (_h = (_g = dimension.scale) === null || _g === void 0 ? void 0 : _g.reverse) !== null && _h !== void 0 ? _h : false;
-                        const colors = ((_j = dataStyle.colorScale) === null || _j === void 0 ? void 0 : _j.colors) || [];
+                        const reverse = (_f = (_e = dimension.scale) === null || _e === void 0 ? void 0 : _e.reverse) !== null && _f !== void 0 ? _f : false;
+                        const colors = ((_g = dataStyle.colorScale) === null || _g === void 0 ? void 0 : _g.colors) || [];
                         const scaleColor = scale2rgba(reverse ? colors.slice().reverse() : colors, percent);
                         dataDefaultStyle.strokeStyle = scaleColor;
                     }
@@ -2191,15 +2227,80 @@ var Hermes = (function (exports) {
                 textBaseline: tickAdjust ? undefined : (isAxesBefore ? 'bottom' : 'top'),
             };
             _dl.forEach((dim, i) => {
+                var _a;
                 const key = this.dimensions[i].key;
                 const bound = getDragBound(i, _ix, dim.layout.bound);
-                const axisStart = dim.layout.axisStart;
-                const axisStop = dim.layout.axisStop;
+                const axisBoundaryStart = dim.layout.axisBoundaryStart;
+                const axisBoundaryStop = dim.layout.axisBoundaryStop;
+                const axisInfinityStart = dim.layout.axisInfinityStart;
+                const axisInfinityStop = dim.layout.axisInfinityStop;
+                const axisDataStart = dim.layout.axisDataStart;
+                const axisDataStop = dim.layout.axisDataStop;
                 const tickLabels = dim.axes.tickLabels;
                 const tickPos = dim.axes.tickPos;
                 const tickLengthFactor = isAxesBefore ? -1 : 1;
+                const tickLabelStyle = { ..._s[i].tickLabel, ...tickTextStyle };
+                const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
+                const yTickLength = isHorizontal ? 0 : tickLengthFactor * axesStyle.tick.length;
                 const filters = _filters[key] || [];
-                drawLine(this.ctx, bound.x + axisStart.x, bound.y + axisStart.y, bound.x + axisStop.x, bound.y + axisStop.y, _s[i].axis);
+                // Draw axis line.
+                drawLine(this.ctx, bound.x + axisDataStart.x, bound.y + axisDataStart.y, bound.x + axisDataStop.x, bound.y + axisDataStop.y, _s[i].axis);
+                // Draw dashed lines to Infinity markers if applicable.
+                if (this.dataInfo.hasInfinity) {
+                    // Draw dashed line.
+                    drawLine(this.ctx, bound.x + axisInfinityStart.x, bound.y + axisInfinityStart.y, bound.x + axisDataStart.x, bound.y + axisDataStart.y, { ..._s[i].axis, lineDash: axesStyle.axis.infLineDash });
+                    // Draw lower/right Infinity dashed line.
+                    drawLine(this.ctx, bound.x + axisDataStop.x, bound.y + axisDataStop.y, bound.x + axisInfinityStop.x, bound.y + axisInfinityStop.y, {
+                        ..._s[i].axis,
+                        lineDash: axesStyle.axis.infLineDash,
+                        /**
+                         * Adding an offset to introduce a dash offset first before
+                         * to create a gap on the tail end of the axis.
+                         */
+                        lineDashOffset: (_a = axesStyle.axis.infLineDash[0]) !== null && _a !== void 0 ? _a : 0,
+                    });
+                    // Draw ticks.
+                    const aX0 = bound.x + axisInfinityStart.x;
+                    const aY0 = bound.y + axisInfinityStart.y;
+                    const aX1 = aX0 + xTickLength;
+                    const aY1 = aY0 + yTickLength;
+                    drawLine(this.ctx, aX0, aY0, aX1, aY1, _s[i].tick);
+                    const bX0 = bound.x + axisInfinityStop.x;
+                    const bY0 = bound.y + axisInfinityStop.y;
+                    const bX1 = bX0 + xTickLength;
+                    const bY1 = bY0 + yTickLength;
+                    drawLine(this.ctx, bX0, bY0, bX1, bY1, _s[i].tick);
+                    // Draw tick labels.
+                    const aCx = isHorizontal ? aX1 + tickLengthFactor * axesStyle.label.offset : aX0;
+                    const aCy = isHorizontal ? aY0 : aY1 + tickLengthFactor * axesStyle.label.offset;
+                    const aRad = axesStyle.label.angle != null
+                        ? axesStyle.label.angle
+                        : (isHorizontal && isAxesBefore ? Math.PI : 0);
+                    const aLabel = isHorizontal ? '+Ꝏ' : '-Ꝏ';
+                    drawText(this.ctx, aLabel, aCx, aCy, aRad, tickLabelStyle);
+                    const bCx = isHorizontal ? bX1 + tickLengthFactor * axesStyle.label.offset : bX0;
+                    const bCy = isHorizontal ? bY0 : bY1 + tickLengthFactor * axesStyle.label.offset;
+                    const bRad = axesStyle.label.angle != null
+                        ? axesStyle.label.angle
+                        : (isHorizontal && isAxesBefore ? Math.PI : 0);
+                    const bLabel = isHorizontal ? '-Ꝏ' : '+Ꝏ';
+                    drawText(this.ctx, bLabel, bCx, bCy, bRad, tickLabelStyle);
+                }
+                if (this.dataInfo.hasNaN) {
+                    // Draw tick.
+                    const x0 = bound.x + (isHorizontal ? axisBoundaryStop.x : axisBoundaryStart.x);
+                    const y0 = bound.y + (isHorizontal ? axisBoundaryStop.y : axisBoundaryStart.y);
+                    const x1 = x0 + xTickLength;
+                    const y1 = y0 + yTickLength;
+                    drawLine(this.ctx, x0, y0, x1, y1, _s[i].tick);
+                    // Draw tick label.
+                    const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
+                    const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;
+                    const rad = axesStyle.label.angle != null
+                        ? axesStyle.label.angle
+                        : (isHorizontal && isAxesBefore ? Math.PI : 0);
+                    drawText(this.ctx, 'NaN', cx, cy, rad, tickLabelStyle);
+                }
                 for (let j = 0; j < tickLabels.length; j++) {
                     let tickLabel = tickLabels[j];
                     if (tickLabel[0] === '*') {
@@ -2212,15 +2313,17 @@ var Hermes = (function (exports) {
                             continue;
                         }
                     }
+                    // Draw tick line.
                     const xOffset = isHorizontal ? 0 : tickPos[j];
                     const yOffset = isHorizontal ? tickPos[j] : 0;
                     const xTickLength = isHorizontal ? tickLengthFactor * axesStyle.tick.length : 0;
                     const yTickLength = isHorizontal ? 0 : tickLengthFactor * axesStyle.tick.length;
-                    const x0 = bound.x + axisStart.x + xOffset;
-                    const y0 = bound.y + axisStart.y + yOffset;
-                    const x1 = bound.x + axisStart.x + xOffset + xTickLength;
-                    const y1 = bound.y + axisStart.y + yOffset + yTickLength;
+                    const x0 = bound.x + axisDataStart.x + xOffset;
+                    const y0 = bound.y + axisDataStart.y + yOffset;
+                    const x1 = bound.x + axisDataStart.x + xOffset + xTickLength;
+                    const y1 = bound.y + axisDataStart.y + yOffset + yTickLength;
                     drawLine(this.ctx, x0, y0, x1, y1, _s[i].tick);
+                    // Draw tick label.
                     const cx = isHorizontal ? x1 + tickLengthFactor * axesStyle.label.offset : x0;
                     const cy = isHorizontal ? y0 : y1 + tickLengthFactor * axesStyle.label.offset;
                     const rad = axesStyle.label.angle != null
@@ -2229,13 +2332,14 @@ var Hermes = (function (exports) {
                     const style = { ..._s[i].tickLabel, ...tickTextStyle };
                     drawText(this.ctx, tickLabel, cx, cy, rad, style);
                 }
+                // Draw axis filter bars.
                 filters.forEach((filter, j) => {
                     const p0 = filter.p0 * _dsa.length;
                     const p1 = filter.p1 * _dsa.length;
                     const width = _s[i].filters[j].width;
                     const halfWidth = width / 2;
-                    const x = bound.x + axisStart.x + (isHorizontal ? -halfWidth : p0);
-                    const y = bound.y + axisStart.y + (isHorizontal ? p0 : -halfWidth);
+                    const x = bound.x + axisBoundaryStart.x + (isHorizontal ? -halfWidth : p0);
+                    const y = bound.y + axisBoundaryStart.y + (isHorizontal ? p0 : -halfWidth);
                     const w = isHorizontal ? width : p1 - p0;
                     const h = isHorizontal ? p1 - p0 : width;
                     drawRect(this.ctx, x, y, w, h, _s[i].filters[j]);
@@ -2312,11 +2416,11 @@ var Hermes = (function (exports) {
                 const i = _ixs.focus.dimIndex;
                 const layout = this._.dims.list[i].layout;
                 const bound = layout.bound;
-                const axisStart = layout.axisStart;
+                const axisBoundaryStart = layout.axisBoundaryStart;
                 if (((_a = _ixs.focus) === null || _a === void 0 ? void 0 : _a.type) === FocusType.DimensionLabel) {
                     _ixsa.type = ActionType.LabelMove;
                     _ixsa.dimIndex = i;
-                    _ixd.axis = bound[hKey] + axisStart[hKey];
+                    _ixd.axis = bound[hKey] + axisBoundaryStart[hKey];
                     _ixd.bound = bound;
                 }
                 else if ([
@@ -2327,7 +2431,7 @@ var Hermes = (function (exports) {
                     _ixsa.type = ActionType.FilterCreate;
                     _ixsa.dimIndex = i;
                     _ixf.key = this.dimensions[i].key;
-                    const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisStart[vKey]) / _dsa.length;
+                    const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisBoundaryStart[vKey]) / _dsa.length;
                     const value0 = this.dimensions[i].scale.percentToValue(p0);
                     this.setActiveFilter(_ixf.key, p0, value0);
                 }
