@@ -46,7 +46,10 @@ export const HERMES_CONFIG: t.Config = {
     axes: {
       axis: {
         boundaryPadding: 15,
+        infLineDash: [ 2, 4 ],
+        infOffset: 12.0,
         lineWidth: 1,
+        nanGap: 15.0,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
       axisActve: {

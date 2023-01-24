@@ -121,19 +121,17 @@ export const idempotentNumber = (
 export const processData = (data: Data): InternalDataInfo => {
   const keys = Object.keys(data);
   const info: InternalDataInfo = {
-    dataLength: 0,
     hasInfinity: false,
     hasNaN: false,
     seriesCount: 0,
   };
 
   for (const key of keys) {
-    info.dataLength = info.dataLength || data[key].length;
-    info.seriesCount++;
+    info.seriesCount = info.seriesCount || data[key].length;
 
     for (const value of data[key]) {
       if (isNaN(value as number)) info.hasNaN = true;
-      if (!isFinite(value as number)) info.hasInfinity = true;
+      if (!isNaN(value as number) && !isFinite(value as number)) info.hasInfinity = true;
     }
   }
 
