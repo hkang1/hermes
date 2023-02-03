@@ -13,12 +13,11 @@
         // debug: true,
         // direction: 'vertical',
       };
-      const data = tester.generateData(dimensions, 50, true, {
+      const data = tester.generateData(dimensions, 5, true, {
         includeNaN: 0.1,
         includeNegativeInfinity: 0.1,
         includePositiveInfinity: 0.1,
       });
-      console.log('data', data);
       const hermes = new Hermes.default('#hermes', dimensions, config, data);
     </script>
   </body>

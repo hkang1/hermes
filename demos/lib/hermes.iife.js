@@ -165,8 +165,13 @@ var Hermes = (function (exports) {
         },
     };
     const FILTER = {
+        hasNaN: false,
+        hasNegativeInfinity: false,
+        hasPositiveInfinity: false,
         p0: Number.NaN,
         p1: Number.NaN,
+        percent0: Number.NaN,
+        percent1: Number.NaN,
         value0: Number.NaN,
         value1: Number.NaN,
     };
@@ -1089,20 +1094,27 @@ var Hermes = (function (exports) {
         const newFilter = clone(FILTER);
         if (filter0.p0 < filter1.p0) {
             newFilter.p0 = filter0.p0;
+            newFilter.percent0 = filter0.percent0;
             newFilter.value0 = filter0.value0;
         }
         else {
             newFilter.p0 = filter1.p0;
+            newFilter.percent0 = filter1.percent0;
             newFilter.value0 = filter1.value0;
         }
         if (filter0.p1 > filter1.p1) {
             newFilter.p1 = filter0.p1;
+            newFilter.percent1 = filter0.percent1;
             newFilter.value1 = filter0.value1;
         }
         else {
             newFilter.p1 = filter1.p1;
+            newFilter.percent1 = filter1.percent1;
             newFilter.value1 = filter1.value1;
         }
+        newFilter.hasNaN = filter0.hasNaN || filter1.hasNaN;
+        newFilter.hasNegativeInfinity = filter0.hasNegativeInfinity || filter1.hasNegativeInfinity;
+        newFilter.hasPositiveInfinity = filter0.hasPositiveInfinity || filter1.hasPositiveInfinity;
         return newFilter;
     };
 
@@ -1624,7 +1636,7 @@ var Hermes = (function (exports) {
             /**
              * Go through each axis and figure out the sizes of each axis labels.
              */
-            _dsa.length = _dsa.stopData - _dsa.startData;
+            _dsa.length = _dsa.stop - _dsa.start;
             _dsa.labelFactor = isAxesBefore ? -1 : 1;
             _dsly.totalBoundSpace = 0;
             this.dimensions.forEach((dimension, i) => {
@@ -1639,7 +1651,7 @@ var Hermes = (function (exports) {
                 _dlia.tickPos = [];
                 _dlia.maxLength = 0;
                 if (scale) {
-                    scale.setAxisLength(_dsa.length);
+                    scale.setAxisLength(_dsa.stopData - _dsa.startData);
                     _dlia.tickLabels = scale.tickLabels.slice();
                     _dlia.tickPos = scale.tickPos.slice();
                     scale.tickLabels.forEach(tickLabel => {
@@ -1938,7 +1950,7 @@ var Hermes = (function (exports) {
                 (_b = (_a = this.config.hooks).onDimensionMove) === null || _b === void 0 ? void 0 : _b.call(_a, dragDimension[0], newIndex, oldIndex);
             }
         }
-        setActiveFilter(key, pos, value) {
+        setActiveFilter(key, pos) {
             if (!this._)
                 return;
             const _filters = this.filters;
@@ -1967,7 +1979,11 @@ var Hermes = (function (exports) {
             }
             else {
                 _ixsa.type = ActionType.FilterCreate;
-                _ixf.active = { p0: pos, p1: pos, value0: value, value1: value };
+                _ixf.active = {
+                    ...FILTER,
+                    p0: pos,
+                    p1: pos,
+                };
                 // Store active filter into filter list.
                 _filters[key] = _filters[key] || [];
                 _filters[key].push(_ixf.active);
@@ -2016,19 +2032,16 @@ var Hermes = (function (exports) {
                     _ixf.active.p0 = 1.0 - startLength;
                     _ixf.active.p1 = 1.0;
                 }
-                _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
-                _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
             }
             else if (_ixsa.type === ActionType.FilterResizeBefore) {
                 _ixf.active.p0 = (_ixsa.p1[filterKey] - bound[filterKey] - axisBoundaryStart) / _dsa.length;
                 _ixf.active.p0 = capDataRange(_ixf.active.p0, [0.0, 1.0]);
-                _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
             }
             else {
                 _ixf.active.p1 = (_ixsa.p1[filterKey] - bound[filterKey] - axisBoundaryStart) / _dsa.length;
                 _ixf.active.p1 = capDataRange(_ixf.active.p1, [0.0, 1.0]);
-                _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
             }
+            this.processActiveFilter(_ixf.active, index);
             // Whether or not to finalize active filter and removing reference to it.
             if (e.type !== 'mouseup')
                 return;
@@ -2051,9 +2064,10 @@ var Hermes = (function (exports) {
             else {
                 // Swap p0 and p1 if p1 is less than p0.
                 if (_ixf.active.p1 < _ixf.active.p0) {
-                    const [tempP, tempValue] = [_ixf.active.p1, _ixf.active.value1];
-                    [_ixf.active.p1, _ixf.active.value1] = [_ixf.active.p0, _ixf.active.value0];
-                    [_ixf.active.p0, _ixf.active.value0] = [tempP, tempValue];
+                    const tempP = _ixf.active.p1;
+                    _ixf.active.p1 = _ixf.active.p0;
+                    _ixf.active.p0 = tempP;
+                    this.processActiveFilter(_ixf.active, index);
                 }
                 // Make corresponding filter hook callback.
                 switch (_ixsa.type) {
@@ -2075,6 +2089,56 @@ var Hermes = (function (exports) {
             this.cleanUpFilters();
             // Make hook call back with all of the filter changes.
             (_o = (_m = this.config.hooks) === null || _m === void 0 ? void 0 : _m.onFilterChange) === null || _o === void 0 ? void 0 : _o.call(_m, internalToFilters(this.filters));
+        }
+        processActiveFilter(filter, dimIndex) {
+            if (!this._)
+                return;
+            const layout = this._.dims.list[dimIndex].layout;
+            const isHorizontal = this.config.direction === Direction.Horizontal;
+            const p0 = Math.min(filter.p0, filter.p1);
+            const p1 = Math.max(filter.p0, filter.p1);
+            const xLength = layout.axisBoundaryStop.x - layout.axisBoundaryStart.x;
+            const yLength = layout.axisBoundaryStop.y - layout.axisBoundaryStart.y;
+            const pStart = isHorizontal
+                ? (layout.axisDataStart.y - layout.axisBoundaryStart.y) / yLength
+                : (layout.axisDataStart.x - layout.axisBoundaryStart.x) / xLength;
+            const pStop = isHorizontal
+                ? (layout.axisDataStop.y - layout.axisBoundaryStart.y) / yLength
+                : (layout.axisDataStop.x - layout.axisBoundaryStart.x) / xLength;
+            if (this.dataInfo.hasInfinity) {
+                if (isHorizontal) {
+                    const pi = (layout.axisInfinityStop.y - layout.axisBoundaryStart.y) / yLength;
+                    filter.hasPositiveInfinity = p0 === 0.0;
+                    filter.hasNegativeInfinity = p0 <= pi && p1 >= pi;
+                }
+                else {
+                    const pi = (layout.axisInfinityStart.x - layout.axisBoundaryStart.x) / xLength;
+                    filter.hasNegativeInfinity = p0 <= pi && p1 >= pi;
+                    filter.hasPositiveInfinity = p1 === 1.0;
+                }
+            }
+            if (this.dataInfo.hasNaN) {
+                filter.hasNaN = (isHorizontal && p1 === 1.0) || (!isHorizontal && p0 === 0.0);
+            }
+            const pLength = pStop - pStart;
+            if (p0 < pStart) {
+                filter.percent0 = 0.0;
+            }
+            else if (p0 >= pStart && p0 <= pStop) {
+                filter.percent0 = (p0 - pStart) / pLength;
+            }
+            if (p1 > pStop) {
+                filter.percent1 = 1.0;
+            }
+            else if (p1 >= pStart && p1 <= pStop) {
+                filter.percent1 = (p1 - pStart) / pLength;
+            }
+            if (!isNaN(filter.percent0)) {
+                filter.value0 = this.dimensions[dimIndex].scale.percentToValue(filter.percent0);
+            }
+            if (!isNaN(filter.percent1)) {
+                filter.value1 = this.dimensions[dimIndex].scale.percentToValue(filter.percent1);
+            }
         }
         cleanUpFilters() {
             Object.keys(this.filters).forEach(key => {
@@ -2169,17 +2233,18 @@ var Hermes = (function (exports) {
                     const layout = _dl[i].layout;
                     const bound = getDragBound(i, _ix, layout.bound);
                     const value = this.data[key][k];
-                    const isNumber$1 = isNumber(value);
-                    const isNan = isNumber$1 && isNaN(value);
-                    const isInfinity = isNumber$1 && !isNan && !isFinite(value);
-                    const percent = isNan || isInfinity ? 0 : (_b = (_a = dimension.scale) === null || _a === void 0 ? void 0 : _a.valueToPercent(value)) !== null && _b !== void 0 ? _b : 0;
+                    const valueIsNumber = isNumber(value);
+                    const valueIsNaN = valueIsNumber && isNaN(value);
+                    const valueIsInfinity = valueIsNumber && !valueIsNaN && !isFinite(value);
+                    const percent = valueIsNaN || valueIsInfinity
+                        ? 0 : (_b = (_a = dimension.scale) === null || _a === void 0 ? void 0 : _a.valueToPercent(value)) !== null && _b !== void 0 ? _b : 0;
                     let x = bound.x;
                     let y = bound.y;
-                    if (isNan) {
+                    if (valueIsNaN) {
                         x += isHorizontal ? layout.axisDataStart.x : layout.axisBoundaryStart.x;
                         y += isHorizontal ? layout.axisBoundaryStop.y : layout.axisDataStart.y;
                     }
-                    else if (isInfinity) {
+                    else if (valueIsInfinity) {
                         const dx = value === -Infinity ? layout.axisInfinityStart.x : layout.axisInfinityStop.x;
                         const dy = value === -Infinity ? layout.axisInfinityStop.y : layout.axisInfinityStart.y;
                         x += isHorizontal ? layout.axisDataStart.x : dx;
@@ -2205,9 +2270,19 @@ var Hermes = (function (exports) {
                         let hasMatchedFilter = false;
                         for (let f = 0; f < _filters[key].length; f++) {
                             const filter = _filters[key][f];
-                            const filterMin = Math.min(filter.p0, filter.p1);
-                            const filterMax = Math.max(filter.p0, filter.p1);
-                            if (percent >= filterMin && percent <= filterMax) {
+                            if (valueIsNaN && filter.hasNaN) {
+                                hasMatchedFilter = true;
+                                break;
+                            }
+                            else if (valueIsInfinity &&
+                                ((value === -Infinity && filter.hasNegativeInfinity) ||
+                                    (value === Infinity && filter.hasPositiveInfinity))) {
+                                hasMatchedFilter = true;
+                                break;
+                            }
+                            else if (!valueIsNaN && !valueIsInfinity &&
+                                !isNaN(filter.percent0) && !isNaN(filter.percent1) &&
+                                percent >= filter.percent0 && percent <= filter.percent1) {
                                 hasMatchedFilter = true;
                                 break;
                             }
@@ -2448,8 +2523,8 @@ var Hermes = (function (exports) {
                     _ixsa.dimIndex = i;
                     _ixf.key = this.dimensions[i].key;
                     const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisBoundaryStart[vKey]) / _dsa.length;
-                    const value0 = this.dimensions[i].scale.percentToValue(p0);
-                    this.setActiveFilter(_ixf.key, p0, value0);
+                    this.setActiveFilter(_ixf.key, p0);
+                    this.processActiveFilter(_ixf.active, i);
                 }
             }
             // Update cursor pointer based on type and position.
