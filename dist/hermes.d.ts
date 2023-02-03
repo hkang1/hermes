@@ -271,7 +271,6 @@ declare namespace Hermes {
         label: LabelOptions;
         labelActive: StyleText;
         labelHover: StyleText;
-        showNaNInfinityOnlyWhenAvailable: boolean;
         tick: TickOptions;
         tickActive: StyleLine;
         tickHover: StyleLine;
