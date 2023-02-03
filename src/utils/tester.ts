@@ -105,7 +105,7 @@ export const metricDimensionSamples: t.Dimension[] = [
     disableDrag: true,
     key: 'loss',
     label: 'Loss',
-    type: t.DimensionType.Linear,
+    type: t.DimensionType.Logarithmic,
   },
 ];
 
