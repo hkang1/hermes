@@ -194,8 +194,14 @@ describe('Hermes Core', () => {
       expect(check.valid).toBeTrue();
     });
 
-    it('should throw an error when dimension data are not uniform', () => {
+    it('should report the data is invalid when dimension data are not uniform', () => {
       const invalidData = { abc: [ 0, 1 ], def: [ 0, 1, 2 ] };
+      const check = utils.HermesTester.validateData(invalidData, dimensions);
+      expect(check.valid).toBeFalse();
+    });
+
+    it('should report the data is invalid when the data contains null or undefined', () => {
+      const invalidData = { abc: [ 0, 1, null ], def: [ 0, 1, 2 ] };
       const check = utils.HermesTester.validateData(invalidData, dimensions);
       expect(check.valid).toBeFalse();
     });
