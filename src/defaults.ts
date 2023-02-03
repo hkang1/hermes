@@ -133,8 +133,13 @@ export const HERMES_CONFIG: t.Config = {
 };
 
 export const FILTER: t.InternalFilter = {
+  hasNaN: false,
+  hasNegativeInfinity: false,
+  hasPositiveInfinity: false,
   p0: Number.NaN,
   p1: Number.NaN,
+  percent0: Number.NaN,
+  percent1: Number.NaN,
   value0: Number.NaN,
   value1: Number.NaN,
 };
