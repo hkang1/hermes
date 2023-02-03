@@ -152,10 +152,15 @@ export interface FilterOptions extends StyleRect {
 }
 
 export interface InternalFilter {
-  p0: number;         // Starting axis % position relative to axisStart.(x|y).
-  p1: number;         // Ending axis % position relative to axisStart.(x|y).
-  value0: Primitive;  // Starting axis value.
-  value1: Primitive;  // Ending axis value.
+  hasNaN: boolean;
+  hasNegativeInfinity: boolean;
+  hasPositiveInfinity: boolean;
+  p0: number;           // Starting axis % position relative to axisBoundaryStart|Stop.(x|y).
+  p1: number;           // Ending axis % position relative to axisBoundaryStart|Stop.(x|y).
+  percent0: number;     // Starting percent accommodating NaN and +/-Infinity markers.
+  percent1: number;     // Ending percent accommodating NaN and +/-Infinity markers.
+  value0: Primitive;    // Starting axis value adjusted for NaN and +/-Infinity markers.
+  value1: Primitive;    // Ending axis value adjusted for NaN and +/-Infinity markers.
 }
 
 export interface InternalFilterActive extends InternalFilter {
@@ -291,6 +296,22 @@ export interface InternalDimension extends Dimension {
 
 export type InternalDimensions = Record<DimensionKey, InternalDimension>;
 
+export interface InternalDimensionLayout {
+  axisBoundary: Boundary;   // Coordinates for axis boundary after transformation.
+  axisBoundaryStart: Point; // Respective to bound (x, y).
+  axisBoundaryStop: Point;  // Respective to bound (x, y).
+  axisDataStart: Point;     // Axis excluding +/-Infinity and NaN.
+  axisDataStop: Point;      // Axis excluding +/-Infinity and NaN.
+  axisInfinityStart: Point; // Axis including +/-Infinity but excluding NaN.
+  axisInfinityStop: Point;  // Axis including +/-Infinity but excluding NaN.
+  bound: Rect;              // Bounding rect for the dimension label and axis.
+  boundOffset: Point;       // Offset for the bounding rect from dragging.
+  labelBoundary: Boundary;  // Coordinates for label boundary after transformation.
+  labelPoint: Point;        // Respective to bound (x, y).
+  spaceAfter: number;       // Space after the axis line.
+  spaceBefore: number;      // Space before the axis line.
+}
+
 export interface Internal {
   dims: {
     list: {
@@ -306,21 +327,7 @@ export interface Internal {
         lengthSin: number;
         w: number;
       };
-      layout: {
-        axisBoundary: Boundary;   // Coordinates for axis boundary after transformation.
-        axisBoundaryStart: Point; // Respective to bound (x, y).
-        axisBoundaryStop: Point;  // Respective to bound (x, y).
-        axisDataStart: Point;     // Axis excluding +/-Infinity and NaN.
-        axisDataStop: Point;      // Axis excluding +/-Infinity and NaN.
-        axisInfinityStart: Point; // Axis including +/-Infinity but excluding NaN.
-        axisInfinityStop: Point;  // Axis including +/-Infinity but excluding NaN.
-        bound: Rect;              // Bounding rect for the dimension label and axis.
-        boundOffset: Point;       // Offset for the bounding rect from dragging.
-        labelBoundary: Boundary;  // Coordinates for label boundary after transformation.
-        labelPoint: Point;        // Respective to bound (x, y).
-        spaceAfter: number;       // Space after the axis line.
-        spaceBefore: number;      // Space before the axis line.
-      };
+      layout: InternalDimensionLayout;
     }[];
     shared: {
       axes: {

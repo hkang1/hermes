@@ -450,7 +450,7 @@ class Hermes {
     /**
      * Go through each axis and figure out the sizes of each axis labels.
      */
-    _dsa.length = _dsa.stopData - _dsa.startData;
+    _dsa.length = _dsa.stop - _dsa.start;
     _dsa.labelFactor = isAxesBefore ? -1 : 1;
     _dsly.totalBoundSpace = 0;
     this.dimensions.forEach((dimension, i) => {
@@ -466,7 +466,7 @@ class Hermes {
       _dlia.tickPos = [];
       _dlia.maxLength = 0;
       if (scale) {
-        scale.setAxisLength(_dsa.length);
+        scale.setAxisLength(_dsa.stopData - _dsa.startData);
 
         _dlia.tickLabels = scale.tickLabels.slice();
         _dlia.tickPos = scale.tickPos.slice();
@@ -807,7 +807,7 @@ class Hermes {
     }
   }
 
-  protected setActiveFilter(key: string, pos: number, value: t.Primitive): void {
+  protected setActiveFilter(key: string, pos: number): void {
     if (!this._) return;
 
     const _filters = this.filters;
@@ -839,7 +839,11 @@ class Hermes {
       }
     } else {
       _ixsa.type = t.ActionType.FilterCreate;
-      _ixf.active = { p0: pos, p1: pos, value0: value, value1: value };
+      _ixf.active = {
+        ...DEFAULT.FILTER,
+        p0: pos,
+        p1: pos,
+      };
 
       // Store active filter into filter list.
       _filters[key] = _filters[key] || [];
@@ -894,18 +898,15 @@ class Hermes {
         _ixf.active.p0 = 1.0 - startLength;
         _ixf.active.p1 = 1.0;
       }
-
-      _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
-      _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
     } else if (_ixsa.type === t.ActionType.FilterResizeBefore) {
       _ixf.active.p0 = (_ixsa.p1[filterKey] - bound[filterKey] - axisBoundaryStart) / _dsa.length;
       _ixf.active.p0 = d.capDataRange(_ixf.active.p0, [ 0.0, 1.0 ]);
-      _ixf.active.value0 = this.dimensions[index].scale.percentToValue(_ixf.active.p0);
     } else {
       _ixf.active.p1 = (_ixsa.p1[filterKey] - bound[filterKey] - axisBoundaryStart) / _dsa.length;
       _ixf.active.p1 = d.capDataRange(_ixf.active.p1, [ 0.0, 1.0 ]);
-      _ixf.active.value1 = this.dimensions[index].scale.percentToValue(_ixf.active.p1);
     }
+
+    this.processActiveFilter(_ixf.active, index);
 
     // Whether or not to finalize active filter and removing reference to it.
     if (e.type !== 'mouseup') return;
@@ -929,9 +930,11 @@ class Hermes {
     } else {
       // Swap p0 and p1 if p1 is less than p0.
       if (_ixf.active.p1 < _ixf.active.p0) {
-        const [ tempP, tempValue ] = [ _ixf.active.p1, _ixf.active.value1 ];
-        [ _ixf.active.p1, _ixf.active.value1 ] = [ _ixf.active.p0, _ixf.active.value0 ];
-        [ _ixf.active.p0, _ixf.active.value0 ] = [ tempP, tempValue ];
+        const tempP = _ixf.active.p1;
+        _ixf.active.p1 = _ixf.active.p0;
+        _ixf.active.p0 = tempP;
+
+        this.processActiveFilter(_ixf.active, index);
       }
 
       // Make corresponding filter hook callback.
@@ -957,6 +960,57 @@ class Hermes {
 
     // Make hook call back with all of the filter changes.
     this.config.hooks?.onFilterChange?.(ix.internalToFilters(this.filters));
+  }
+
+  protected processActiveFilter(filter: t.InternalFilter, dimIndex: number): void {
+    if (!this._) return;
+
+    const layout = this._.dims.list[dimIndex].layout;
+    const isHorizontal = this.config.direction === t.Direction.Horizontal;
+    const p0 = Math.min(filter.p0, filter.p1);
+    const p1 = Math.max(filter.p0, filter.p1);
+    const xLength = layout.axisBoundaryStop.x - layout.axisBoundaryStart.x;
+    const yLength = layout.axisBoundaryStop.y - layout.axisBoundaryStart.y;
+    const pStart = isHorizontal
+      ? (layout.axisDataStart.y - layout.axisBoundaryStart.y) / yLength
+      : (layout.axisDataStart.x - layout.axisBoundaryStart.x) / xLength;
+    const pStop = isHorizontal
+      ? (layout.axisDataStop.y - layout.axisBoundaryStart.y) / yLength
+      : (layout.axisDataStop.x - layout.axisBoundaryStart.x) / xLength;
+
+    if (this.dataInfo.hasInfinity) {
+      if (isHorizontal) {
+        const pi = (layout.axisInfinityStop.y - layout.axisBoundaryStart.y) / yLength;
+        filter.hasPositiveInfinity = p0 === 0.0;
+        filter.hasNegativeInfinity = p0 <= pi && p1 >= pi;
+      } else {
+        const pi = (layout.axisInfinityStart.x - layout.axisBoundaryStart.x) / xLength;
+        filter.hasNegativeInfinity = p0 <= pi && p1 >= pi;
+        filter.hasPositiveInfinity = p1 === 1.0;
+      }
+    }
+    if (this.dataInfo.hasNaN) {
+      filter.hasNaN = (isHorizontal && p1 === 1.0) || (!isHorizontal && p0 === 0.0);
+    }
+
+    const pLength = pStop - pStart;
+    if (p0 < pStart) {
+      filter.percent0 = 0.0;
+    } else if (p0 >= pStart && p0 <= pStop) {
+      filter.percent0 = (p0 - pStart) / pLength;
+    }
+    if (p1 > pStop) {
+      filter.percent1 = 1.0;
+    } else if (p1 >= pStart && p1 <= pStop) {
+      filter.percent1 = (p1 - pStart) / pLength;
+    }
+
+    if (!isNaN(filter.percent0)) {
+      filter.value0 = this.dimensions[dimIndex].scale.percentToValue(filter.percent0);
+    }
+    if (!isNaN(filter.percent1)) {
+      filter.value1 = this.dimensions[dimIndex].scale.percentToValue(filter.percent1);
+    }
   }
 
   protected cleanUpFilters(): void {
@@ -1052,17 +1106,18 @@ class Hermes {
         const layout = _dl[i].layout;
         const bound = ix.getDragBound(i, _ix, layout.bound);
         const value = this.data[key][k];
-        const isNumber = d.isNumber(value);
-        const isNan = isNumber && isNaN(value);
-        const isInfinity = isNumber && !isNan && !isFinite(value);
-        const percent = isNan || isInfinity ? 0 : dimension.scale?.valueToPercent(value) ?? 0;
+        const valueIsNumber = d.isNumber(value);
+        const valueIsNaN = valueIsNumber && isNaN(value);
+        const valueIsInfinity = valueIsNumber && !valueIsNaN && !isFinite(value);
+        const percent = valueIsNaN || valueIsInfinity
+          ? 0 : dimension.scale?.valueToPercent(value) ?? 0;
         let x = bound.x;
         let y = bound.y;
 
-        if (isNan) {
+        if (valueIsNaN) {
           x += isHorizontal ? layout.axisDataStart.x : layout.axisBoundaryStart.x;
           y += isHorizontal ? layout.axisBoundaryStop.y : layout.axisDataStart.y;
-        } else if (isInfinity) {
+        } else if (valueIsInfinity) {
           const dx = value === -Infinity ? layout.axisInfinityStart.x : layout.axisInfinityStop.x;
           const dy = value === -Infinity ? layout.axisInfinityStop.y : layout.axisInfinityStart.y;
           x += isHorizontal ? layout.axisDataStart.x : dx;
@@ -1090,9 +1145,17 @@ class Hermes {
           let hasMatchedFilter = false;
           for (let f = 0; f < _filters[key].length; f++) {
             const filter = _filters[key][f];
-            const filterMin = Math.min(filter.p0, filter.p1);
-            const filterMax = Math.max(filter.p0, filter.p1);
-            if (percent >= filterMin && percent <= filterMax) {
+            if (valueIsNaN && filter.hasNaN) {
+              hasMatchedFilter = true;
+              break;
+            } else if (valueIsInfinity &&
+                ((value === -Infinity && filter.hasNegativeInfinity) ||
+                 (value === Infinity && filter.hasPositiveInfinity))) {
+              hasMatchedFilter = true;
+              break;
+            } else if (!valueIsNaN && !valueIsInfinity &&
+                !isNaN(filter.percent0) && !isNaN(filter.percent1) &&
+                percent >= filter.percent0 && percent <= filter.percent1) {
               hasMatchedFilter = true;
               break;
             }
@@ -1394,9 +1457,8 @@ class Hermes {
         _ixf.key = this.dimensions[i].key;
 
         const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisBoundaryStart[vKey]) / _dsa.length;
-        const value0 = this.dimensions[i].scale.percentToValue(p0);
-
-        this.setActiveFilter(_ixf.key, p0, value0);
+        this.setActiveFilter(_ixf.key, p0);
+        this.processActiveFilter(_ixf.active, i);
       }
     }
 
