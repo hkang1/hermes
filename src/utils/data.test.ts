@@ -1,4 +1,4 @@
-import { NestedObject } from 'src/types';
+import { DimensionType, NestedObject } from '../types';
 
 import * as utils from './data';
 

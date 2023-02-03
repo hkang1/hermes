@@ -215,6 +215,8 @@ export type RawData = Record<DimensionKey, HasNull<HasUndefined<Primitive>>[]>;
 
 export type Data = Record<DimensionKey, Primitive[]>;
 
+export type ActualAndFiniteRanges = { actual: Range; finite: Range }
+
 export interface Config {
   debug: boolean;
   direction: EDirection;
@@ -290,7 +292,8 @@ export interface InternalDataInfo {
 
 export interface InternalDimension extends Dimension {
   labelTruncated: string;
-  range?: Range;
+  rangeActual?: Range;
+  rangeFinite?: Range;
   scale: CategoricalScale | LinearScale | LogScale;
 }
 

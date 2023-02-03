@@ -2,17 +2,19 @@ import { CLOSE_PRECISION } from 'test/utils';
 
 import { Direction, EDirection } from '../types';
 
-import LogScale from './LogScale';
+import LogScale, { DEFAULT_LOG_BASE } from './LogScale';
 
 class TestScale extends LogScale {
   constructor(
-    direction: EDirection,
-    minValue: number,
-    maxValue: number,
-    logBase?: number,
+    protected direction: EDirection,
+    protected finiteMin: number,
+    protected finiteMax: number,
+    protected actualMin: number,
+    protected actualMax: number,
+    protected logBase: number = DEFAULT_LOG_BASE,
     config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
-    super(direction, minValue, maxValue, logBase, config);
+    super(direction, finiteMin, finiteMax, actualMin, actualMax, logBase, config);
   }
 
   public getLogBase() {
@@ -40,7 +42,15 @@ describe('LogScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, 2, { dataOnEdge: true });
+      scale = new TestScale(
+        Direction.Horizontal,
+        MIN_VALUE,
+        MAX_VALUE,
+        MIN_VALUE,
+        MAX_VALUE,
+        2,
+        { dataOnEdge: true },
+      );
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -101,7 +111,15 @@ describe('LogScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, 10, { dataOnEdge: false });
+      scale = new TestScale(
+        Direction.Horizontal,
+        MIN_VALUE,
+        MAX_VALUE,
+        MIN_VALUE,
+        MAX_VALUE,
+        10,
+        { dataOnEdge: false },
+      );
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -155,7 +173,15 @@ describe('LogScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, 10, { reverse: true });
+      scale = new TestScale(
+        Direction.Horizontal,
+        MIN_VALUE,
+        MAX_VALUE,
+        MIN_VALUE,
+        MAX_VALUE,
+        10,
+        { reverse: true },
+      );
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -209,7 +235,15 @@ describe('LogScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(Direction.Vertical, MIN_VALUE, MAX_VALUE, 10, { reverse: true });
+      scale = new TestScale(
+        Direction.Vertical,
+        MIN_VALUE,
+        MAX_VALUE,
+        MIN_VALUE,
+        MAX_VALUE,
+        10,
+        { reverse: true },
+      );
       scale.setAxisLength(AXIS_LENGTH);
     });
 
