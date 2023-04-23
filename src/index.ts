@@ -997,14 +997,14 @@ class Hermes {
     }
 
     const pLength = pStop - pStart;
-    if (p0 < pStart) {
+    if (p0 <= pStart) {
       filter.percent0 = 0.0;
-    } else if (p0 >= pStart && p0 <= pStop) {
+    } else if (p0 > pStart && p0 <= pStop) {
       filter.percent0 = (p0 - pStart) / pLength;
     }
-    if (p1 > pStop) {
+    if (p1 >= pStop) {
       filter.percent1 = 1.0;
-    } else if (p1 >= pStart && p1 <= pStop) {
+    } else if (p1 >= pStart && p1 < pStop) {
       filter.percent1 = (p1 - pStart) / pLength;
     }
 
