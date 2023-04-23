@@ -4,7 +4,12 @@ import * as t from '../types';
 import * as dataUtils from './data';
 
 export interface Tester {
-  generateData: (dimensions: t.Dimension[], count: number, random?: boolean) => t.Data;
+  generateData: (
+    dimensions: t.Dimension[],
+    count: number,
+    random?: boolean,
+    randomOptions?: t.RandomNumberOptions,
+  ) => t.Data;
   generateDimensions: (dimCount?: number, random?: boolean) => t.Dimension[];
 }
 
@@ -94,14 +99,14 @@ export const dimensionSamples: t.Dimension[] = [
 
 export const metricDimensionSamples: t.Dimension[] = [
   {
-    dataOnEdge: false,
+    dataOnEdge: true,
     disableDrag: true,
     key: 'accuracy',
     label: 'Accuracy',
     type: t.DimensionType.Linear,
   },
   {
-    dataOnEdge: false,
+    dataOnEdge: true,
     disableDrag: true,
     key: 'loss',
     label: 'Loss',

@@ -16,6 +16,11 @@ export const DEFAULT_WIDTH = 1280;
 export const DEFAULT_HEIGHT = 500;
 export const DEFAULT_DIMENSIONS = tester.generateDimensions(DIMENSION_COUNT, false);
 export const DEFAULT_DATA = tester.generateData(DEFAULT_DIMENSIONS, DATA_COUNT);
+export const DEFAULT_DATA_INF_NAN = tester.generateData(DEFAULT_DIMENSIONS, DATA_COUNT, true, {
+  includeNaN: 0.1,
+  includeNegativeInfinity: 0.1,
+  includePositiveInfinity: 0.1,
+});
 
 export const DEFAULT_EVENT_INIT = { bubbles: true, cancelable: true, view: window };
 
