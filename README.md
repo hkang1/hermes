@@ -1,4 +1,4 @@
-# Hermes Parallel Coordinates [![CircleCI](https://circleci.com/gh/hkang1/hermes.svg?style=svg&circle-token=8ba8640f46689196736c4eba43384331eed60ee2)](<LINK>) [![codecov](https://codecov.io/gh/hkang1/hermes/branch/main/graph/badge.svg?token=JNS0KB6VXX)](https://codecov.io/gh/hkang1/hermes)
+# Hermes Parallel Coordinates [![CircleCI](https://circleci.com/gh/hkang1/hermes.svg?style=svg)](<LINK>) [![codecov](https://codecov.io/gh/hkang1/hermes/branch/main/graph/badge.svg?token=JNS0KB6VXX)](https://codecov.io/gh/hkang1/hermes)
 
 A lightweight canvas-based parallel coordinates chart library.
 
