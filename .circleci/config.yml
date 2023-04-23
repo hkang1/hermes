@@ -8,7 +8,7 @@ defaults: &defaults
   # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
   # List of related images: https://circleci.com/developer/images/image/cimg/node
   docker:
-    - image: cimg/node:16.14.0-browsers
+    - image: cimg/node:16.15.1-browsers
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -27,9 +27,12 @@ jobs:
           name: Install packages
           command: npm ci
       - run:
+          name: Update browserlist
+          command: npx browserslist@latest --update-db
+      - run:
           name: Run tests
           command: |
-            npm run test:coverage --ci
+            npm run test:coverage -- --ci --maxWorkers=1
       - run:
           name: Run build
           command: npm run build
@@ -37,7 +40,7 @@ jobs:
           path: ./test-results/lcov-report
           destination: coverage
       - store_test_results:
-          path: ./test-results
+          path: ./test-results/lcov-report
       - run:
           name: Upload to CodeCov
           command: bash <(curl -s https://codecov.io/bash)
