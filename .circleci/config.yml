@@ -2,6 +2,9 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+orbs:
+  codecov: codecov/codecov@3.2.4
+
 defaults: &defaults
   working_directory: ~/repo
   # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
@@ -37,13 +40,16 @@ jobs:
           name: Run build
           command: npm run build
       - store_artifacts:
-          path: ./test-results/lcov-report
+          path: ./test-results
           destination: coverage
       - store_test_results:
           path: ./test-results/lcov-report
       - run:
-          name: Upload to CodeCov
-          command: bash <(curl -s https://codecov.io/bash)
+          name: Upload coverage report to CodeCov 
+          command: |
+            curl -Os https://uploader.codecov.io/latest/linux/codecov
+            chmod +x codecov
+            ./codecov -t ${CODECOV_TOKEN} -f ./test-results/coverage-final.json
       - save_cache:
           key: node-deps-v1-{{ .Branch }}-{{checksum "package-lock.json"}}
           paths:
