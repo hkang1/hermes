@@ -1202,14 +1202,14 @@ const dimensionSamples = [
 ];
 const metricDimensionSamples = [
     {
-        dataOnEdge: false,
+        dataOnEdge: true,
         disableDrag: true,
         key: 'accuracy',
         label: 'Accuracy',
         type: DimensionType.Linear,
     },
     {
-        dataOnEdge: false,
+        dataOnEdge: true,
         disableDrag: true,
         key: 'loss',
         label: 'Loss',
@@ -1351,7 +1351,7 @@ class Hermes {
                 return validation;
             }
             // Data should not contain null or undefined.
-            if (value == null) {
+            if (value.findIndex(data => data == null) !== -1) {
                 const isNull = value === null;
                 validation.message = `Data for "${keys[i]}" has ${isNull ? 'null' : 'undefined'}`;
                 validation.valid = false;
@@ -2122,16 +2122,16 @@ class Hermes {
             filter.hasNaN = (isHorizontal && p1 === 1.0) || (!isHorizontal && p0 === 0.0);
         }
         const pLength = pStop - pStart;
-        if (p0 < pStart) {
+        if (p0 <= pStart) {
             filter.percent0 = 0.0;
         }
-        else if (p0 >= pStart && p0 <= pStop) {
+        else if (p0 > pStart && p0 <= pStop) {
             filter.percent0 = (p0 - pStart) / pLength;
         }
-        if (p1 > pStop) {
+        if (p1 >= pStop) {
             filter.percent1 = 1.0;
         }
-        else if (p1 >= pStart && p1 <= pStop) {
+        else if (p1 >= pStart && p1 < pStop) {
             filter.percent1 = (p1 - pStart) / pLength;
         }
         if (!isNaN(filter.percent0)) {
@@ -2395,6 +2395,11 @@ class Hermes {
             }
             for (let j = 0; j < tickLabels.length; j++) {
                 let tickLabel = tickLabels[j];
+                /**
+                 * If the tick label starts with '*', it already contains the final label value.
+                 * For example '*123' will render '123'. This is useful for tick marks on the edge
+                 * of the dimension axis that require the value to be interpolated.
+                 */
                 if (tickLabel[0] === '*') {
                     if ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.dimIndex) === i && ((_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.DimensionAxis ||
                         (_ixsf === null || _ixsf === void 0 ? void 0 : _ixsf.type) === FocusType.Filter ||
