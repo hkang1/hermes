@@ -52,19 +52,29 @@ export const mergeFilters = (
   filter1: t.InternalFilter,
 ): t.InternalFilter => {
   const newFilter: t.InternalFilter = clone(FILTER);
+
   if (filter0.p0 < filter1.p0) {
     newFilter.p0 = filter0.p0;
+    newFilter.percent0 = filter0.percent0;
     newFilter.value0 = filter0.value0;
   } else {
     newFilter.p0 = filter1.p0;
+    newFilter.percent0 = filter1.percent0;
     newFilter.value0 = filter1.value0;
   }
   if (filter0.p1 > filter1.p1) {
     newFilter.p1 = filter0.p1;
+    newFilter.percent1 = filter0.percent1;
     newFilter.value1 = filter0.value1;
   } else {
     newFilter.p1 = filter1.p1;
+    newFilter.percent1 = filter1.percent1;
     newFilter.value1 = filter1.value1;
   }
+
+  newFilter.hasNaN = filter0.hasNaN || filter1.hasNaN;
+  newFilter.hasNegativeInfinity = filter0.hasNegativeInfinity || filter1.hasNegativeInfinity;
+  newFilter.hasPositiveInfinity = filter0.hasPositiveInfinity || filter1.hasPositiveInfinity;
+
   return newFilter;
 };

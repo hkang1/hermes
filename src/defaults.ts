@@ -46,7 +46,10 @@ export const HERMES_CONFIG: t.Config = {
     axes: {
       axis: {
         boundaryPadding: 15,
+        infLineDash: [ 2, 4 ],
+        infOffset: 24.0,
         lineWidth: 1,
+        nanGap: 24.0,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
       axisActve: {
@@ -130,8 +133,13 @@ export const HERMES_CONFIG: t.Config = {
 };
 
 export const FILTER: t.InternalFilter = {
+  hasNaN: false,
+  hasNegativeInfinity: false,
+  hasPositiveInfinity: false,
   p0: Number.NaN,
   p1: Number.NaN,
+  percent0: Number.NaN,
+  percent1: Number.NaN,
   value0: Number.NaN,
   value1: Number.NaN,
 };

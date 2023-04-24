@@ -6,6 +6,8 @@ import LogScale from './classes/LogScale';
  * TYPES
  */
 
+export type HasNull<T> = null | T;
+export type HasUndefined<T> = undefined | T;
 export type NestedObject = Record<RecordKey, unknown>;
 export type Padding = number | [ number, number ] | PaddingNormalized;
 export type PaddingNormalized = [ number, number, number, number ]
@@ -32,7 +34,11 @@ export type Focus = { dimIndex: number, filterIndex?: number, type: EFocusType }
 export type Point = { x: number, y: number };
 export type Rect = Point & Size;
 export type Size = { h: number, w: number };
-export type StyleLine = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
+export type StyleLine = Partial<
+  CanvasFillStrokeStyles &
+  CanvasPathDrawingStyles &
+  { lineDash: number [] }
+>;
 export type StyleRect = Partial<StyleShape & { cornerRadius: number }>;
 export type StyleShape = Partial<CanvasFillStrokeStyles & CanvasPathDrawingStyles>;
 export type StyleText = Partial<
@@ -107,6 +113,9 @@ export const PathType = {
 
 export interface AxisOptions extends StyleLine {
   boundaryPadding: number;
+  infLineDash: number[];
+  infOffset: number;
+  nanGap: number;
 }
 
 export interface DataColorScale {
@@ -143,10 +152,15 @@ export interface FilterOptions extends StyleRect {
 }
 
 export interface InternalFilter {
-  p0: number;         // starting axis % position relative to axisStart.(x|y).
-  p1: number;         // ending axis % position relative to axisStart.(x|y).
-  value0: Primitive;  // starting axis value.
-  value1: Primitive;  // ending axis value.
+  hasNaN: boolean;
+  hasNegativeInfinity: boolean;
+  hasPositiveInfinity: boolean;
+  p0: number;           // Starting axis % position relative to axisBoundaryStart|Stop.(x|y).
+  p1: number;           // Ending axis % position relative to axisBoundaryStart|Stop.(x|y).
+  percent0: number;     // Starting percent accommodating NaN and +/-Infinity markers.
+  percent1: number;     // Ending percent accommodating NaN and +/-Infinity markers.
+  value0: Primitive;    // Starting axis value adjusted for NaN and +/-Infinity markers.
+  value1: Primitive;    // Ending axis value adjusted for NaN and +/-Infinity markers.
 }
 
 export interface InternalFilterActive extends InternalFilter {
@@ -184,9 +198,9 @@ export interface PathOptions {
 }
 
 export interface RandomNumberOptions {
-  includeNaN?: number;
-  includeNegativeInfinity?: number;
-  includePositiveInfinity?: number;
+  includeNaN?: number;                  // Probability to show up between 0 and 1.
+  includeNegativeInfinity?: number;     // Probability to show up between 0 and 1.
+  includePositiveInfinity?: number;     // Probability to show up between 0 and 1.
 }
 
 export interface TickOptions extends StyleLine {
@@ -196,6 +210,8 @@ export interface TickOptions extends StyleLine {
 /**
  * PRIMARY INTERFACES AND TYPES
  */
+
+export type RawData = Record<DimensionKey, HasNull<HasUndefined<Primitive>>[]>;
 
 export type Data = Record<DimensionKey, Primitive[]>;
 
@@ -268,6 +284,12 @@ export interface Filters {
   [key: DimensionKey]: Filter[];
 }
 
+export interface InternalDataInfo {
+  hasInfinity: boolean;
+  hasNaN: boolean;
+  seriesCount: number;
+}
+
 export interface InternalDimension extends Dimension {
   labelTruncated: string;
   rangeActual?: Range;
@@ -276,6 +298,22 @@ export interface InternalDimension extends Dimension {
 }
 
 export type InternalDimensions = Record<DimensionKey, InternalDimension>;
+
+export interface InternalDimensionLayout {
+  axisBoundary: Boundary;   // Coordinates for axis boundary after transformation.
+  axisBoundaryStart: Point; // Respective to bound (x, y).
+  axisBoundaryStop: Point;  // Respective to bound (x, y).
+  axisDataStart: Point;     // Axis excluding +/-Infinity and NaN.
+  axisDataStop: Point;      // Axis excluding +/-Infinity and NaN.
+  axisInfinityStart: Point; // Axis including +/-Infinity but excluding NaN.
+  axisInfinityStop: Point;  // Axis including +/-Infinity but excluding NaN.
+  bound: Rect;              // Bounding rect for the dimension label and axis.
+  boundOffset: Point;       // Offset for the bounding rect from dragging.
+  labelBoundary: Boundary;  // Coordinates for label boundary after transformation.
+  labelPoint: Point;        // Respective to bound (x, y).
+  spaceAfter: number;       // Space after the axis line.
+  spaceBefore: number;      // Space before the axis line.
+}
 
 export interface Internal {
   dims: {
@@ -292,17 +330,7 @@ export interface Internal {
         lengthSin: number;
         w: number;
       };
-      layout: {
-        axisBoundary: Boundary;   // Coordinates for axis boundary after transformation.
-        axisStart: Point;         // Respective to bound (x, y)
-        axisStop: Point;          // Respective to bound (x, y)
-        bound: Rect;              // Bounding rect for the dimension label and axis.
-        boundOffset: Point;       // Offset for the bounding rect from dragging.
-        labelBoundary: Boundary;  // Coordinates for label boundary after transformation.
-        labelPoint: Point;        // Respective to bound (x, y)
-        spaceAfter: number;       // Space after the axis line.
-        spaceBefore: number;      // Space before the axis line.
-      };
+      layout: InternalDimensionLayout;
     }[];
     shared: {
       axes: {
@@ -310,9 +338,14 @@ export interface Internal {
         length: number;
         maxTicks: number;
         start: number;
+        startData: number;
+        startInfinity: number;
+        startNaN?: number;
         stop: number;
+        stopData: number;
+        stopInfinity: number;
+        stopNaN?: number;
       };
-      dataCount: number;
       label: {
         cos?: number;
         maxLengthCos?: number;

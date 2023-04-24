@@ -172,18 +172,32 @@ describe('Hermes Config', () => {
       });
 
       describe('layout', () => {
-        it('should render with dimension layout `axis-evenly-spaced`', () => {
+        it('should render horizontal chart with dimension layout `axis-evenly-spaced`', () => {
           testSetConfig(setup, {
+            direction: t.Direction.Horizontal,
+            style: { dimension: { layout: t.DimensionLayout.AxisEvenlySpaced } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
 
+        it('should render horizontal chart with dimension layout `equidistant`', () => {
+          testSetConfig(setup, {
+            direction: t.Direction.Horizontal,
+            style: { dimension: { layout: t.DimensionLayout.Equidistant } },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+
+        it('should render vertical chart with dimension layout `axis-evenly-spaced`', () => {
+          testSetConfig(setup, {
             direction: t.Direction.Vertical,
             style: { dimension: { layout: t.DimensionLayout.AxisEvenlySpaced } },
           });
           expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
         });
 
-        it('should render with dimension layout `equidistant`', () => {
+        it('should render vertical chart with dimension layout `equidistant`', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Vertical,
             style: { dimension: { layout: t.DimensionLayout.Equidistant } },
           });

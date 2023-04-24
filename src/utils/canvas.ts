@@ -133,6 +133,7 @@ export const drawLine = (
   ctx.strokeStyle = style.strokeStyle || DEFAULT.STROKE_STYLE;
 
   ctx.beginPath();
+  ctx.setLineDash(style.lineDash || []);
   ctx.moveTo(roundPixel(x0), roundPixel(y0));
   ctx.lineTo(roundPixel(x1), roundPixel(y1));
   ctx.stroke();
