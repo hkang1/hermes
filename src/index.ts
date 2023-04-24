@@ -1304,6 +1304,12 @@ class Hermes {
 
       for (let j = 0; j < tickLabels.length; j++) {
         let tickLabel = tickLabels[j];
+
+        /**
+         * If the tick label starts with '*', it already contains the final label value.
+         * For example '*123' will render '123'. This is useful for tick marks on the edge
+         * of the dimension axis that require the value to be interpolated.
+         */
         if (tickLabel[0] === '*') {
           if (_ixsf?.dimIndex === i && (
             _ixsf?.type === t.FocusType.DimensionAxis ||
