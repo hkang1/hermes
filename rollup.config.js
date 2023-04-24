@@ -1,5 +1,6 @@
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import terser from '@rollup/plugin-terser';
 
 export default [
   {
@@ -31,6 +32,6 @@ export default [
         name: 'Hermes',
       },
     ],
-    plugins: [ resolve(), commonjs() ],
+    plugins: [ resolve(), commonjs(), terser() ],
   },
 ];
