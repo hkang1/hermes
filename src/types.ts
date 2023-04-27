@@ -168,9 +168,7 @@ export interface InternalFilterActive extends InternalFilter {
   startP1?: number;   // Initial p1 value before an existing filter is shifted via dragging.
 }
 
-export interface InternalFilters {
-  [key: DimensionKey]: InternalFilter[];
-}
+export type InternalFilters = Record<DimensionKey, InternalFilter[]>
 
 export interface InternalListeners {
   dblclick: (e: MouseEvent) => void;
@@ -220,13 +218,14 @@ export type ActualAndFiniteRanges = { actual: Range; finite: Range }
 export interface Config {
   debug: boolean;
   direction: EDirection;
+  filters: Filters,
   hooks: {
     onDimensionMove?: (dimension: Dimension, newIndex: number, oldIndex: number) => void;
     onFilterChange?: (filters: Filters) => void;
-    onFilterCreate?: (filter: Filter) => void,
-    onFilterMove?: (filter: Filter) => void,
-    onFilterRemove?: (filter: Filter) => void,
-    onFilterResize?: (filter: Filter) => void,
+    onFilterCreate?: (filters: Filters) => void,
+    onFilterMove?: (filters: Filters) => void,
+    onFilterRemove?: (filters: Filters) => void,
+    onFilterResize?: (filters: Filters) => void,
     onReset?: () => void;
     onResize?: (newSize: Size, oldSize: Size) => void;
   };
@@ -278,11 +277,9 @@ export interface IX {
   };
 }
 
-export type Filter = Range<Primitive>;
+export type Filter = Range<number>
 
-export interface Filters {
-  [key: DimensionKey]: Filter[];
-}
+export type Filters = Record<DimensionKey, Filter[]>
 
 export interface InternalDataInfo {
   hasInfinity: boolean;
@@ -332,6 +329,7 @@ export interface Internal {
       };
       layout: InternalDimensionLayout;
     }[];
+    map: Record<DimensionKey, number>,
     shared: {
       axes: {
         labelFactor: number;

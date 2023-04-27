@@ -15,11 +15,6 @@ import { distance, isPointInTriangle } from './utils/math';
 import { truncate } from './utils/string';
 import * as tester from './utils/tester';
 
-export {
-  ActionType, DimensionLayout, DimensionType,
-  Direction, FocusType, LabelPlacement, PathType,
-} from './types';
-
 class Hermes {
   protected element: HTMLElement;
   protected canvas: HTMLCanvasElement;
@@ -72,6 +67,9 @@ class Hermes {
     if (dimensions) this.setDimensions(dimensions, false);
     if (config) this.setConfig(config, false);
     if (data) this.setData(data, false);
+
+    this.setConfigFilters(config?.filters);
+
     if (dimensions || config || data) this.redraw();
 
     // Define listeners up front, but don't start listening yet.
@@ -352,6 +350,10 @@ class Hermes {
         list: new Array(this.dimensions.length)
           .fill(undefined)
           .map(() => ({ axes: {}, label: {}, layout: {} })),
+        map: this.dimensions.reduce((acc, dimension, index) => {
+          acc[dimension.key] = index;
+          return acc;
+        }, {} as Record<t.DimensionKey, number>),
         shared: { axes: {}, label: {}, layout: {} },
       },
       layout: {
@@ -810,6 +812,34 @@ class Hermes {
     }
   }
 
+  protected setConfigFilters(filters: t.RecursivePartial<t.Filters> = {}): void {
+    if (!this._) return;
+
+    const dimensionIndexMap = this._.dims.map;
+
+    // Read `filters` and convert it to internal filters.
+    Object.keys(filters).forEach((dimensionKey) => {
+      this.filters[dimensionKey] = this.config.filters[dimensionKey].map((filter) => {
+        const internalFilter: t.InternalFilter = {
+          hasNaN: false,
+          hasNegativeInfinity: false,
+          hasPositiveInfinity: false,
+          p0: filter[0],
+          p1: filter[1],
+          percent0: 0,
+          percent1: 1,
+          value0: 0,
+          value1: 1,
+        };
+
+        // `internalFilter` gets modified.
+        this.processFilter(internalFilter, dimensionIndexMap[dimensionKey]);
+
+        return internalFilter;
+      });
+    });
+  }
+
   protected setActiveFilter(key: string, pos: number): void {
     if (!this._) return;
 
@@ -909,7 +939,7 @@ class Hermes {
       _ixf.active.p1 = d.capDataRange(_ixf.active.p1, [ 0.0, 1.0 ]);
     }
 
-    this.processActiveFilter(_ixf.active, index);
+    this.processFilter(_ixf.active, index);
 
     // Whether or not to finalize active filter and removing reference to it.
     if (e.type !== 'mouseup') return;
@@ -937,7 +967,7 @@ class Hermes {
         _ixf.active.p1 = _ixf.active.p0;
         _ixf.active.p0 = tempP;
 
-        this.processActiveFilter(_ixf.active, index);
+        this.processFilter(_ixf.active, index);
       }
 
       // Make corresponding filter hook callback.
@@ -965,7 +995,7 @@ class Hermes {
     this.config.hooks?.onFilterChange?.(ix.internalToFilters(this.filters));
   }
 
-  protected processActiveFilter(filter: t.InternalFilter, dimIndex: number): void {
+  protected processFilter(filter: t.InternalFilter, dimIndex: number): void {
     if (!this._) return;
 
     const layout = this._.dims.list[dimIndex].layout;
@@ -1467,7 +1497,7 @@ class Hermes {
 
         const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisBoundaryStart[vKey]) / _dsa.length;
         this.setActiveFilter(_ixf.key, p0);
-        this.processActiveFilter(_ixf.active, i);
+        this.processFilter(_ixf.active, i);
       }
     }
 
