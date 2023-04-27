@@ -907,6 +907,7 @@ class Hermes {
 
     if (!isFilterAction || !_ixf.key) return;
 
+    const dimensionKey = this.dimensions[_ixsa.dimIndex].key;
     const bound = _dl[_ixsa.dimIndex].layout.bound;
     const axisBoundaryStart = _dl[_ixsa.dimIndex].layout.axisBoundaryStart[filterKey];
 
@@ -955,7 +956,8 @@ class Hermes {
       const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
       if (removeIndex !== -1) {
         // Make hook callback.
-        this.config.hooks.onFilterRemove?.(ix.internalToFilter(filters[removeIndex]));
+        const filter = ix.internalToFilter(filters[removeIndex]);
+        this.config.hooks.onFilterRemove?.({ [dimensionKey]: [ filter ] });
 
         // Remove filter.
         filters.splice(removeIndex, 1);
@@ -970,17 +972,19 @@ class Hermes {
         this.processFilter(_ixf.active, index);
       }
 
+      const filters = { [dimensionKey]: [ ix.internalToFilter(_ixf.active) ] };
+
       // Make corresponding filter hook callback.
       switch (_ixsa.type) {
         case t.ActionType.FilterCreate:
-          this.config.hooks.onFilterCreate?.(ix.internalToFilter(_ixf.active));
+          this.config.hooks.onFilterCreate?.(filters);
           break;
         case t.ActionType.FilterMove:
-          this.config.hooks.onFilterMove?.(ix.internalToFilter(_ixf.active));
+          this.config.hooks.onFilterMove?.(filters);
           break;
         case t.ActionType.FilterResizeAfter:
         case t.ActionType.FilterResizeBefore:
-          this.config.hooks.onFilterResize?.(ix.internalToFilter(_ixf.active));
+          this.config.hooks.onFilterResize?.(filters);
           break;
       }
     }
