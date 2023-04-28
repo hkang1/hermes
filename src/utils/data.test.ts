@@ -184,6 +184,21 @@ describe('data utilities', () => {
       });
     });
 
+    it('should get a range with Infinity and -Infinity in the data', () => {
+      const data = [
+        5.515413647727075,
+        25.44972216362644,
+        Infinity,
+        19.85869210272669,
+        -Infinity,
+        -8.868850782132931,
+      ];
+      expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({
+        actual: [ -Infinity, Infinity ],
+        finite: [ -8.868850782132931, 25.44972216362644 ],
+      });
+    });
+
     it('should ignore non-numbers when getting a range', () => {
       const data = [ null, undefined, -123, 123, 0, Infinity, NaN ];
       expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({

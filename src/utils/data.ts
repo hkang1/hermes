@@ -61,24 +61,22 @@ export const getDataRange = (
   data: unknown[],
   dimensionType: EDimensionType,
 ): ActualAndFiniteRanges => {
-  const isFiniteOnScale = (x: number) =>
-    dimensionType === DimensionType.Logarithmic ? isFinite(Math.log(x)) : isFinite(x);
-  const { actual, finite } : ActualAndFiniteRanges = data
-    .reduce(
-      (acc: ActualAndFiniteRanges, x: unknown) => {
-        if (isNumber(x)) {
-          if (isFiniteOnScale(x)) {
-            if (x < acc.finite[0]) acc.finite[0] = x;
-            if (x > acc.finite[1]) acc.finite[1] = x;
-          }
-          if (x < acc.actual[0]) acc.actual[0] = x;
-          if (x > acc.actual[1]) acc.actual[1] = x;
+  const isFiniteOnScale = (x: number) => dimensionType === DimensionType.Logarithmic
+    ? isFinite(Math.log(x)) : isFinite(x);
+  return data.reduce(
+    (acc: ActualAndFiniteRanges, x: unknown) => {
+      if (isNumber(x) && !isNaN(x)) {
+        if (isFiniteOnScale(x)) {
+          if (x < acc.finite[0]) acc.finite[0] = x;
+          if (x > acc.finite[1]) acc.finite[1] = x;
         }
-        return acc;
-      },
-      { actual: [ Infinity, -Infinity ], finite: [ Number.MAX_VALUE, -Number.MAX_VALUE ] },
-    );
-  return { actual: actual.sort(), finite: finite.sort() };
+        if (x < acc.actual[0]) acc.actual[0] = x;
+        if (x > acc.actual[1]) acc.actual[1] = x;
+      }
+      return acc;
+    },
+    { actual: [ Infinity, -Infinity ], finite: [ Number.MAX_VALUE, -Number.MAX_VALUE ] },
+  );
 };
 
 export const idempotentItem = <T = unknown>(list: T[], index: number): T => {
