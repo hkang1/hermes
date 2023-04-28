@@ -929,10 +929,10 @@ class Hermes {
       _ixf.active.p1 = startP1 + shift;
 
       // Cap the drag to the axis edges.
-      if (_ixf.active.p0 < 0.0) {
+      if (_ixf.active.p0 <= 0.0) {
         _ixf.active.p0 = 0;
         _ixf.active.p1 = startLength;
-      } else if (_ixf.active.p1 > 1.0) {
+      } else if (_ixf.active.p1 >= 1.0) {
         _ixf.active.p0 = 1.0 - startLength;
         _ixf.active.p1 = 1.0;
       }

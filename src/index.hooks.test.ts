@@ -173,9 +173,18 @@ describe('Hermes Hooks', () => {
     jest.runOnlyPendingTimers();
     expect(onFilterCreate).toHaveBeenCalled();
 
+    // Attemp to move down out of axis bounds.
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 200 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 250 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 250 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 1000 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 1000 });
+
+    jest.runOnlyPendingTimers();
+    expect(onFilterMove).toHaveBeenCalled();
+
+    // Attemp to move up out of axis bounds.
+    utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 400 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: -100 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: -100 });
 
     jest.runOnlyPendingTimers();
     expect(onFilterMove).toHaveBeenCalled();

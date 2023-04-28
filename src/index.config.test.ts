@@ -14,7 +14,7 @@ const testSetConfig = (
 describe('Hermes Config', () => {
   const tester = utils.HermesTester.getTester();
   const idempotentDimensions = tester.generateDimensions(10, false);
-  const idempotentData = tester.generateData(idempotentDimensions, 50, false, {
+  const idempotentData = tester.generateData(idempotentDimensions, 50, true, {
     includeNaN: 0.1,
     includeNegativeInfinity: 0.1,
     includePositiveInfinity: 0.1,
@@ -83,6 +83,7 @@ describe('Hermes Config', () => {
           'accuracy': [ [ 0.1, 0.3 ] ],
           'learning-rate': [ [ 0.4, 0.6 ], [ 0.8, 0.9 ] ],
         },
+        interactions: { throttleDelayResize: 0 },
       };
       const setup = utils.hermesSetup(idempotentDimensions, config, idempotentData);
       const ctx = setup.hermes?.getCtx();
