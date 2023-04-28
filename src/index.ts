@@ -67,9 +67,6 @@ class Hermes {
     if (dimensions) this.setDimensions(dimensions, false);
     if (config) this.setConfig(config, false);
     if (data) this.setData(data, false);
-
-    this.setConfigFilters(config?.filters);
-
     if (dimensions || config || data) this.redraw();
 
     // Define listeners up front, but don't start listening yet.
@@ -813,6 +810,8 @@ class Hermes {
   }
 
   protected setConfigFilters(filters: t.RecursivePartial<t.Filters> = {}): void {
+    this.calculate();
+
     if (!this._) return;
 
     const dimensionIndexMap = this._.dims.map;
@@ -826,10 +825,10 @@ class Hermes {
           hasPositiveInfinity: false,
           p0: filter[0],
           p1: filter[1],
-          percent0: 0,
-          percent1: 1,
-          value0: 0,
-          value1: 1,
+          percent0: Number.NaN,
+          percent1: Number.NaN,
+          value0: Number.NaN,
+          value1: Number.NaN,
         };
 
         // `internalFilter` gets modified.
@@ -838,6 +837,9 @@ class Hermes {
         return internalFilter;
       });
     });
+
+    // Redraw the chart with the newly initialized filters.
+    this.redraw();
   }
 
   protected setActiveFilter(key: string, pos: number): void {
@@ -1447,7 +1449,12 @@ class Hermes {
 
     const { width: w, height: h } = entry.contentRect;
 
-    this.setSize(w, h);
+    if (this.size.w === 0 && this.size.h === 0 && w !== 0 && h !== 0) {
+      this.setSize(w, h);
+      this.setConfigFilters(this.config.filters);
+    } else {
+      this.setSize(w, h);
+    }
   }
 
   protected handleDoubleClick(): void {
