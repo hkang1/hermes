@@ -1,11 +1,30 @@
-import { Primitive } from '../types';
+import { EDirection, Primitive } from '../types';
 import { isNumber } from '../utils/data';
 import { readableTick } from '../utils/string';
 
 import NiceScale from './NiceScale';
 
 class LinearScale extends NiceScale {
+  constructor(
+    protected direction: EDirection,
+    protected finiteMin: number,
+    protected finiteMax: number,
+    protected actualMin: number,
+    protected actualMax: number,
+    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
+  ) {
+    super(direction, finiteMin, finiteMax, config);
+    this.actualMax = actualMax;
+    this.actualMin = actualMin;
+  }
+
   public percentToValue(percent: number): number {
+    if (percent === 0) {
+      return this.reverse ? this.actualMax : this.actualMin;
+    }
+    if (percent === 1) {
+      return this.reverse ? this.actualMin : this.actualMax;
+    }
     const min = this.dataOnEdge ? this.minValue : this.min;
     const max = this.dataOnEdge ? this.maxValue : this.max;
     return (this.reverse ? 1 - percent : percent) * (max - min) + min;
