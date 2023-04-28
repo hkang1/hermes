@@ -31,7 +31,6 @@ class LogScale extends NiceScale {
     this.logBase = logBase;
     this.actualMax = actualMax;
     this.actualMin = actualMin;
-
   }
 
   public setLogBase(logBase: number = DEFAULT_LOG_BASE): void {
