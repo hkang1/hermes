@@ -97,9 +97,10 @@ abstract class NiceScale {
    * @return a "nice" number to be used for the data range
    */
   protected niceNum(range: number, round: boolean): number {
-    const exponent = Math.floor(Math.log10(range));   // Exponent of range.
-    const fraction = range / 10 ** exponent;          // Fractional part of range.
-    let niceFraction: number;                         // Nice, rounded fraction.
+    const absRange = Math.abs(range);
+    const exponent = Math.floor(Math.log10(absRange));   // Exponent of range.
+    const fraction = absRange / 10 ** exponent;          // Fractional part of range.
+    let niceFraction: number;                            // Nice, rounded fraction.
 
     if (round) {
       if (fraction < 1.5) niceFraction = 1;

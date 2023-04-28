@@ -203,7 +203,7 @@ class Hermes {
         ),
         rangeActual: undefined,
         rangeFinite: undefined,
-        scale: new LinearScale(direction, 0, 100),
+        scale: new LinearScale(direction, 0, 100, 0, 100),
       };
 
       if (
@@ -214,6 +214,8 @@ class Hermes {
         if (dimension.type === t.DimensionType.Linear) {
           internal.scale = new LinearScale(
             direction,
+            range.finite[0],
+            range.finite[1],
             range.actual[0],
             range.actual[1],
             dimension,
