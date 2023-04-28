@@ -11,7 +11,7 @@ class LinearScale extends NiceScale {
     protected finiteMax: number,
     protected actualMin: number,
     protected actualMax: number,
-    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
+    protected config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
     super(direction, finiteMin, finiteMax, config);
     this.actualMax = actualMax;
@@ -35,7 +35,9 @@ class LinearScale extends NiceScale {
   }
 
   public valueToPercent(value: Primitive): number {
-    if (!isNumber(value)) return 0;
+    if (!isNumber(value)) return Number.NaN;
+    if (value === this.actualMax) return this.reverse ? 0 : 1;
+    if (value === this.actualMin) return this.reverse ? 1 : 0;
     const min = this.dataOnEdge ? this.minValue : this.min;
     const max = this.dataOnEdge ? this.maxValue : this.max;
     const percent = (value - min) / (max - min);

@@ -4,12 +4,14 @@ import LinearScale from './LinearScale';
 
 class TestScale extends LinearScale {
   constructor(
-    direction: EDirection,
-    minValue: number,
-    maxValue: number,
-    config: { dataOnEdge?: boolean, reverse?: boolean } = {},
+    protected direction: EDirection,
+    protected finiteMin: number,
+    protected finiteMax: number,
+    protected actualMin: number,
+    protected actualMax: number,
+    protected config: { dataOnEdge?: boolean, reverse?: boolean } = {},
   ) {
-    super(direction, minValue, maxValue, config);
+    super(direction, finiteMin, finiteMax, actualMin, actualMax, config);
   }
 
   public testCalculate() {
@@ -24,16 +26,25 @@ describe('LinearScale class', () => {
     const AXIS_LENGTH = 200;
     const MIN_VALUE = 32;
     const MAX_VALUE = 64;
+    const ACTUAL_MIN_VALUE = -Infinity;
+    const ACTUAL_MAX_VALUE = Infinity;
     const tests = [
-      { percent: 0.0, position: 0, value: MIN_VALUE },
+      { percent: 0.0, position: 0, value: ACTUAL_MIN_VALUE },
       { percent: 0.25, position: 50, value: 40 },
       { percent: 0.5, position: 100, value: 48 },
       { percent: 0.75, position: 150, value: 56 },
-      { percent: 1.0, position: 200, value: MAX_VALUE },
+      { percent: 1.0, position: 200, value: ACTUAL_MAX_VALUE },
     ];
 
     beforeAll(() => {
-      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, { dataOnEdge: true });
+      scale = new TestScale(
+        Direction.Horizontal,
+        MIN_VALUE,
+        MAX_VALUE,
+        ACTUAL_MIN_VALUE,
+        ACTUAL_MAX_VALUE,
+        { dataOnEdge: true },
+      );
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -78,16 +89,25 @@ describe('LinearScale class', () => {
     const AXIS_LENGTH = 200;
     const MIN_VALUE = 32;
     const MAX_VALUE = 64;
+    const ACTUAL_MIN_VALUE = MIN_VALUE;
+    const ACTUAL_MAX_VALUE = MAX_VALUE;
     const tests = [
-      { percent: 0.0, position: 0, value: 30 },
+      { percent: 0.0, position: 0, value: ACTUAL_MIN_VALUE },
       { percent: 0.25, position: 50, value: 40 },
       { percent: 0.5, position: 100, value: 50 },
       { percent: 0.75, position: 150, value: 60 },
-      { percent: 1.0, position: 200, value: 70 },
+      { percent: 1.0, position: 200, value: ACTUAL_MAX_VALUE },
     ];
 
     beforeAll(() => {
-      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, { dataOnEdge: false });
+      scale = new TestScale(
+        Direction.Horizontal,
+        MIN_VALUE,
+        MAX_VALUE,
+        ACTUAL_MIN_VALUE,
+        ACTUAL_MAX_VALUE,
+        { dataOnEdge: false },
+      );
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -132,6 +152,8 @@ describe('LinearScale class', () => {
     const AXIS_LENGTH = 200;
     const MIN_VALUE = 32;
     const MAX_VALUE = 64;
+    const ACTUAL_MIN_VALUE = MIN_VALUE;
+    const ACTUAL_MAX_VALUE = MAX_VALUE;
     const tests = [
       { percent: 0.0, position: 0, value: 64 },
       { percent: 0.25, position: 50, value: 56 },
@@ -141,7 +163,14 @@ describe('LinearScale class', () => {
     ];
 
     beforeAll(() => {
-      scale = new TestScale(Direction.Horizontal, MIN_VALUE, MAX_VALUE, { reverse: true });
+      scale = new TestScale(
+        Direction.Horizontal,
+        MIN_VALUE,
+        MAX_VALUE,
+        ACTUAL_MIN_VALUE,
+        ACTUAL_MAX_VALUE,
+        { reverse: true },
+      );
       scale.setAxisLength(AXIS_LENGTH);
     });
 
@@ -186,16 +215,25 @@ describe('LinearScale class', () => {
     const AXIS_LENGTH = 200;
     const MIN_VALUE = 32;
     const MAX_VALUE = 64;
+    const ACTUAL_MIN_VALUE = -Infinity;
+    const ACTUAL_MAX_VALUE = Infinity;
     const tests = [
-      { percent: 0.0, position: 0, value: 32 },
+      { percent: 0.0, position: 0, value: ACTUAL_MIN_VALUE },
       { percent: 0.25, position: 50, value: 40 },
       { percent: 0.5, position: 100, value: 48 },
       { percent: 0.75, position: 150, value: 56 },
-      { percent: 1.0, position: 200, value: 64 },
+      { percent: 1.0, position: 200, value: ACTUAL_MAX_VALUE },
     ];
 
     beforeAll(() => {
-      scale = new TestScale(Direction.Vertical, MIN_VALUE, MAX_VALUE, { reverse: true });
+      scale = new TestScale(
+        Direction.Vertical,
+        MIN_VALUE,
+        MAX_VALUE,
+        ACTUAL_MIN_VALUE,
+        ACTUAL_MAX_VALUE,
+        { reverse: true },
+      );
       scale.setAxisLength(AXIS_LENGTH);
     });
 
