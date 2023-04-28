@@ -14,7 +14,11 @@ const testSetConfig = (
 describe('Hermes Config', () => {
   const tester = utils.HermesTester.getTester();
   const idempotentDimensions = tester.generateDimensions(10, false);
-  const idempotentData = tester.generateData(idempotentDimensions, 50, false);
+  const idempotentData = tester.generateData(idempotentDimensions, 50, false, {
+    includeNaN: 0.1,
+    includeNegativeInfinity: 0.1,
+    includePositiveInfinity: 0.1,
+  });
   let setup: utils.HermesSetup;
 
   beforeEach(() => {
@@ -63,6 +67,23 @@ describe('Hermes Config', () => {
 
     it('should render chart consistently in debug mode', () => {
       const config: t.RecursivePartial<t.Config> = { debug: true };
+      const setup = utils.hermesSetup(idempotentDimensions, config, idempotentData);
+      const ctx = setup.hermes?.getCtx();
+
+      expect(ctx.__getDrawCalls()).toMatchSnapshot();
+
+      utils.hermesTeardown(setup);
+    });
+  });
+
+  describe('filters', () => {
+    it('should draw chart with filters initialized from config', () => {
+      const config: t.RecursivePartial<t.Config> = {
+        filters: {
+          'accuracy': [ [ 0.1, 0.3 ] ],
+          'learning-rate': [ [ 0.4, 0.6 ], [ 0.8, 0.9 ] ],
+        },
+      };
       const setup = utils.hermesSetup(idempotentDimensions, config, idempotentData);
       const ctx = setup.hermes?.getCtx();
 
