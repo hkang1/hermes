@@ -154,11 +154,29 @@ describe('Hermes Config', () => {
       });
     });
 
+    describe('data', () => {
+      describe('colorScale', () => {
+        it('should render color scale based on a dimension key', () => {
+          testSetConfig(setup, {
+            direction: t.Direction.Horizontal,
+            style: {
+              data: {
+                colorScale: {
+                  colors: [ '#cc0000', '#cc9900', '#0000cc' ],
+                  dimensionKey: 'accuracy',
+                },
+              },
+            },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+      });
+    });
+
     describe('dimension', () => {
       describe('label', () => {
         it('should render label after in horizontal layout', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Horizontal,
             style: { dimension: { label: { placement: t.LabelPlacement.After } } },
           });
@@ -167,7 +185,6 @@ describe('Hermes Config', () => {
 
         it('should render label after in vertical layout', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Vertical,
             style: { dimension: { label: { placement: t.LabelPlacement.After } } },
           });
@@ -176,7 +193,6 @@ describe('Hermes Config', () => {
 
         it('should render label at an angle in horizontal layout', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Horizontal,
             style: { dimension: { label: { angle: Math.PI / 4 } } },
           });
@@ -185,7 +201,6 @@ describe('Hermes Config', () => {
 
         it('should render label at an angle in vertical layout', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Vertical,
             style: { dimension: { label: { angle: Math.PI / 4 } } },
           });
