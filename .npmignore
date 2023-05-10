@@ -1,12 +1,15 @@
 .circleci
 .eslintrc.js
+codecov
 demos/
 hermes.code-workspace
 jest.config.js
 package-lock.json
+pages/
 rollup.config.js
 screenshots/
 src/
+test/
 test-results/
 tsc-out/
 tsconfig.json
