@@ -1136,7 +1136,6 @@ class Hermes {
     const isAxesBefore = axesStyle.label.placement === t.LabelPlacement.Before;
 
     // Draw data lines.
-    const dimColorKey = dataStyle.colorScale?.dimensionKey;
     for (let k = 0; k < this.dataInfo.seriesCount; k++) {
       let dataDefaultStyle: t.StyleLine = dataStyle.default;
       let hasFilters = false;
@@ -1169,11 +1168,19 @@ class Hermes {
           y += layout.axisDataStart.y + (isHorizontal ? pos : 0);
         }
 
-        if (dimColorKey === key) {
+        if (key === dataStyle.colorScaleDimensionKey) {
           const reverse = dimension.scale?.reverse ?? false;
-          const colors = dataStyle.colorScale?.colors || [];
+          const colors = dataStyle.colorScale || [];
           const scaleColor = scale2rgba(reverse ? colors.slice().reverse() : colors, percent);
           dataDefaultStyle.strokeStyle = scaleColor;
+
+          if (valueIsNaN) {
+            dataDefaultStyle = dataStyle.nan;
+          } else if (valueIsInfinity && value === -Infinity) {
+            dataDefaultStyle = dataStyle.negativeInfinity;
+          } else if (valueIsInfinity && value === Infinity) {
+            dataDefaultStyle = dataStyle.positiveInfinity;
+          }
         }
 
         /**
@@ -1189,9 +1196,10 @@ class Hermes {
             if (valueIsNaN && filter.hasNaN) {
               hasMatchedFilter = true;
               break;
-            } else if (valueIsInfinity &&
-                ((value === -Infinity && filter.hasNegativeInfinity) ||
-                 (value === Infinity && filter.hasPositiveInfinity))) {
+            } else if (
+              (value === -Infinity && filter.hasNegativeInfinity) ||
+              (value === Infinity && filter.hasPositiveInfinity)
+            ) {
               hasMatchedFilter = true;
               break;
             } else if (!valueIsNaN && !valueIsInfinity &&

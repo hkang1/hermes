@@ -161,10 +161,8 @@ describe('Hermes Config', () => {
             direction: t.Direction.Horizontal,
             style: {
               data: {
-                colorScale: {
-                  colors: [ '#cc0000', '#cc9900', '#0000cc' ],
-                  dimensionKey: 'accuracy',
-                },
+                colorScale: [ '#cc0000', '#cc9900', '#0000cc' ],
+                colorScaleDimensionKey: 'accuracy',
               },
             },
           });
