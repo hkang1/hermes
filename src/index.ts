@@ -15,11 +15,6 @@ import { distance, isPointInTriangle } from './utils/math';
 import { truncate } from './utils/string';
 import * as tester from './utils/tester';
 
-export {
-  ActionType, DimensionLayout, DimensionType,
-  Direction, FocusType, LabelPlacement, PathType,
-} from './types';
-
 class Hermes {
   protected element: HTMLElement;
   protected canvas: HTMLCanvasElement;
@@ -208,7 +203,7 @@ class Hermes {
         ),
         rangeActual: undefined,
         rangeFinite: undefined,
-        scale: new LinearScale(direction, 0, 100),
+        scale: new LinearScale(direction, 0, 100, 0, 100),
       };
 
       if (
@@ -219,6 +214,8 @@ class Hermes {
         if (dimension.type === t.DimensionType.Linear) {
           internal.scale = new LinearScale(
             direction,
+            range.finite[0],
+            range.finite[1],
             range.actual[0],
             range.actual[1],
             dimension,
@@ -352,6 +349,10 @@ class Hermes {
         list: new Array(this.dimensions.length)
           .fill(undefined)
           .map(() => ({ axes: {}, label: {}, layout: {} })),
+        map: this.dimensions.reduce((acc, dimension, index) => {
+          acc[dimension.key] = index;
+          return acc;
+        }, {} as Record<t.DimensionKey, number>),
         shared: { axes: {}, label: {}, layout: {} },
       },
       layout: {
@@ -810,6 +811,39 @@ class Hermes {
     }
   }
 
+  protected setConfigFilters(filters: t.RecursivePartial<t.Filters> = {}): void {
+    this.calculate();
+
+    if (!this._) return;
+
+    const dimensionIndexMap = this._.dims.map;
+
+    // Read `filters` and convert it to internal filters.
+    Object.keys(filters).forEach((dimensionKey) => {
+      this.filters[dimensionKey] = this.config.filters[dimensionKey].map((filter) => {
+        const internalFilter: t.InternalFilter = {
+          hasNaN: false,
+          hasNegativeInfinity: false,
+          hasPositiveInfinity: false,
+          p0: filter[0],
+          p1: filter[1],
+          percent0: Number.NaN,
+          percent1: Number.NaN,
+          value0: Number.NaN,
+          value1: Number.NaN,
+        };
+
+        // `internalFilter` gets modified.
+        this.processFilter(internalFilter, dimensionIndexMap[dimensionKey]);
+
+        return internalFilter;
+      });
+    });
+
+    // Redraw the chart with the newly initialized filters.
+    this.redraw();
+  }
+
   protected setActiveFilter(key: string, pos: number): void {
     if (!this._) return;
 
@@ -877,6 +911,7 @@ class Hermes {
 
     if (!isFilterAction || !_ixf.key) return;
 
+    const dimensionKey = this.dimensions[_ixsa.dimIndex].key;
     const bound = _dl[_ixsa.dimIndex].layout.bound;
     const axisBoundaryStart = _dl[_ixsa.dimIndex].layout.axisBoundaryStart[filterKey];
 
@@ -894,10 +929,10 @@ class Hermes {
       _ixf.active.p1 = startP1 + shift;
 
       // Cap the drag to the axis edges.
-      if (_ixf.active.p0 < 0.0) {
+      if (_ixf.active.p0 <= 0.0) {
         _ixf.active.p0 = 0;
         _ixf.active.p1 = startLength;
-      } else if (_ixf.active.p1 > 1.0) {
+      } else if (_ixf.active.p1 >= 1.0) {
         _ixf.active.p0 = 1.0 - startLength;
         _ixf.active.p1 = 1.0;
       }
@@ -909,7 +944,7 @@ class Hermes {
       _ixf.active.p1 = d.capDataRange(_ixf.active.p1, [ 0.0, 1.0 ]);
     }
 
-    this.processActiveFilter(_ixf.active, index);
+    this.processFilter(_ixf.active, index);
 
     // Whether or not to finalize active filter and removing reference to it.
     if (e.type !== 'mouseup') return;
@@ -925,7 +960,8 @@ class Hermes {
       const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
       if (removeIndex !== -1) {
         // Make hook callback.
-        this.config.hooks.onFilterRemove?.(ix.internalToFilter(filters[removeIndex]));
+        const filter = ix.internalToFilter(filters[removeIndex]);
+        this.config.hooks.onFilterRemove?.({ [dimensionKey]: [ filter ] });
 
         // Remove filter.
         filters.splice(removeIndex, 1);
@@ -937,20 +973,22 @@ class Hermes {
         _ixf.active.p1 = _ixf.active.p0;
         _ixf.active.p0 = tempP;
 
-        this.processActiveFilter(_ixf.active, index);
+        this.processFilter(_ixf.active, index);
       }
+
+      const filters = { [dimensionKey]: [ ix.internalToFilter(_ixf.active) ] };
 
       // Make corresponding filter hook callback.
       switch (_ixsa.type) {
         case t.ActionType.FilterCreate:
-          this.config.hooks.onFilterCreate?.(ix.internalToFilter(_ixf.active));
+          this.config.hooks.onFilterCreate?.(filters);
           break;
         case t.ActionType.FilterMove:
-          this.config.hooks.onFilterMove?.(ix.internalToFilter(_ixf.active));
+          this.config.hooks.onFilterMove?.(filters);
           break;
         case t.ActionType.FilterResizeAfter:
         case t.ActionType.FilterResizeBefore:
-          this.config.hooks.onFilterResize?.(ix.internalToFilter(_ixf.active));
+          this.config.hooks.onFilterResize?.(filters);
           break;
       }
     }
@@ -965,7 +1003,7 @@ class Hermes {
     this.config.hooks?.onFilterChange?.(ix.internalToFilters(this.filters));
   }
 
-  protected processActiveFilter(filter: t.InternalFilter, dimIndex: number): void {
+  protected processFilter(filter: t.InternalFilter, dimIndex: number): void {
     if (!this._) return;
 
     const layout = this._.dims.list[dimIndex].layout;
@@ -1098,7 +1136,6 @@ class Hermes {
     const isAxesBefore = axesStyle.label.placement === t.LabelPlacement.Before;
 
     // Draw data lines.
-    const dimColorKey = dataStyle.colorScale?.dimensionKey;
     for (let k = 0; k < this.dataInfo.seriesCount; k++) {
       let dataDefaultStyle: t.StyleLine = dataStyle.default;
       let hasFilters = false;
@@ -1131,11 +1168,19 @@ class Hermes {
           y += layout.axisDataStart.y + (isHorizontal ? pos : 0);
         }
 
-        if (dimColorKey === key) {
+        if (key === dataStyle.colorScaleDimensionKey) {
           const reverse = dimension.scale?.reverse ?? false;
-          const colors = dataStyle.colorScale?.colors || [];
+          const colors = dataStyle.colorScale || [];
           const scaleColor = scale2rgba(reverse ? colors.slice().reverse() : colors, percent);
           dataDefaultStyle.strokeStyle = scaleColor;
+
+          if (valueIsNaN) {
+            dataDefaultStyle = dataStyle.nan;
+          } else if (valueIsInfinity && value === -Infinity) {
+            dataDefaultStyle = dataStyle.negativeInfinity;
+          } else if (valueIsInfinity && value === Infinity) {
+            dataDefaultStyle = dataStyle.positiveInfinity;
+          }
         }
 
         /**
@@ -1151,9 +1196,10 @@ class Hermes {
             if (valueIsNaN && filter.hasNaN) {
               hasMatchedFilter = true;
               break;
-            } else if (valueIsInfinity &&
-                ((value === -Infinity && filter.hasNegativeInfinity) ||
-                 (value === Infinity && filter.hasPositiveInfinity))) {
+            } else if (
+              (value === -Infinity && filter.hasNegativeInfinity) ||
+              (value === Infinity && filter.hasPositiveInfinity)
+            ) {
               hasMatchedFilter = true;
               break;
             } else if (!valueIsNaN && !valueIsInfinity &&
@@ -1413,7 +1459,12 @@ class Hermes {
 
     const { width: w, height: h } = entry.contentRect;
 
-    this.setSize(w, h);
+    if (this.size.w === 0 && this.size.h === 0 && w !== 0 && h !== 0) {
+      this.setSize(w, h);
+      this.setConfigFilters(this.config.filters);
+    } else {
+      this.setSize(w, h);
+    }
   }
 
   protected handleDoubleClick(): void {
@@ -1467,7 +1518,7 @@ class Hermes {
 
         const p0 = (_ixsa.p0[vKey] - bound[vKey] - axisBoundaryStart[vKey]) / _dsa.length;
         this.setActiveFilter(_ixf.key, p0);
-        this.processActiveFilter(_ixf.active, i);
+        this.processFilter(_ixf.active, i);
       }
     }
 

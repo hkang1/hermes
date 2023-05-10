@@ -8,7 +8,7 @@ export interface Tester {
     dimensions: t.Dimension[],
     count: number,
     random?: boolean,
-    randomOptions?: t.RandomNumberOptions,
+    numberOptions?: t.NumberOptions,
   ) => t.Data;
   generateDimensions: (dimCount?: number, random?: boolean) => t.Dimension[];
 }
@@ -118,7 +118,7 @@ export const generateData = (
   dimensions: t.Dimension[],
   count: number,
   random = true,
-  randomOptions: t.RandomNumberOptions = {},
+  options: t.NumberOptions = {},
 ): t.Data => {
   return dimensions.reduce((acc, dimension) => {
     acc[dimension.key] = new Array(count).fill(null).map((_, index) => {
@@ -132,14 +132,14 @@ export const generateData = (
         const range = dimensionRanges[dimension.key];
         if (range) {
           return random
-            ? dataUtils.randomNumber(range[1], range[0], randomOptions)
-            : dataUtils.idempotentNumber(range[1], range[0], count, index);
+            ? dataUtils.randomNumber(range[1], range[0], options)
+            : dataUtils.idempotentNumber(range[1], range[0], count, index, options);
         }
       } else if (dimension.type === t.DimensionType.Logarithmic) {
         const range = dimensionRanges[dimension.key];
         if (range && dimension.logBase) {
           return random
-            ? dataUtils.randomLogNumber(dimension.logBase, range[1], range[0], randomOptions)
+            ? dataUtils.randomLogNumber(dimension.logBase, range[1], range[0], options)
             : dataUtils.idempotentLogNumber(dimension.logBase, range[1], range[0], count, index);
         }
       }

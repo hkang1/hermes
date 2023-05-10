@@ -43,14 +43,20 @@ describe('Hermes Behaviors', () => {
 
     // Drag the top part of filter to the very top.
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 100 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: 0 });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: 0 });
+    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: -100 });
+    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: -100 });
     jest.runOnlyPendingTimers();
 
     // Drag the lower part of filter to the very bottom.
     utils.dispatchMouseEvent('mousedown', setup.element, { clientX: 449, clientY: 150 });
-    utils.dispatchMouseEvent('mousemove', setup.element, { clientX: 449, clientY: utils.DEFAULT_HEIGHT });
-    utils.dispatchMouseEvent('mouseup', setup.element, { clientX: 449, clientY: utils.DEFAULT_HEIGHT });
+    utils.dispatchMouseEvent('mousemove', setup.element, {
+      clientX: 449,
+      clientY: utils.DEFAULT_HEIGHT,
+    });
+    utils.dispatchMouseEvent('mouseup', setup.element, {
+      clientX: 449,
+      clientY: utils.DEFAULT_HEIGHT,
+    });
     jest.runOnlyPendingTimers();
 
     // Expect the filter to be full range from 0 to 1.

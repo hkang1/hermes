@@ -17,9 +17,9 @@ export const getDragBound = (index: number, ix: t.IX, bound: t.Rect): t.Rect => 
 };
 
 export const internalToFilter = (filter: t.InternalFilter): t.Filter => {
-  return comparePrimitive(filter.value0, filter.value1) === 1
-    ? [ filter.value1, filter.value0 ]
-    : [ filter.value0, filter.value1 ];
+  return comparePrimitive(filter.p0, filter.p1) === 1
+    ? [ filter.p1, filter.p0 ]
+    : [ filter.p0, filter.p1 ];
 };
 
 export const internalToFilters = (filters: t.InternalFilters): t.Filters => {

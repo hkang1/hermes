@@ -14,7 +14,11 @@ const testSetConfig = (
 describe('Hermes Config', () => {
   const tester = utils.HermesTester.getTester();
   const idempotentDimensions = tester.generateDimensions(10, false);
-  const idempotentData = tester.generateData(idempotentDimensions, 50, false);
+  const idempotentData = tester.generateData(idempotentDimensions, 50, false, {
+    includeNaN: 0.1,
+    includeNegativeInfinity: 0.1,
+    includePositiveInfinity: 0.1,
+  });
   let setup: utils.HermesSetup;
 
   beforeEach(() => {
@@ -63,6 +67,24 @@ describe('Hermes Config', () => {
 
     it('should render chart consistently in debug mode', () => {
       const config: t.RecursivePartial<t.Config> = { debug: true };
+      const setup = utils.hermesSetup(idempotentDimensions, config, idempotentData);
+      const ctx = setup.hermes?.getCtx();
+
+      expect(ctx.__getDrawCalls()).toMatchSnapshot();
+
+      utils.hermesTeardown(setup);
+    });
+  });
+
+  describe('filters', () => {
+    it('should draw chart with filters initialized from config', () => {
+      const config: t.RecursivePartial<t.Config> = {
+        filters: {
+          'accuracy': [ [ 0.1, 0.3 ] ],
+          'learning-rate': [ [ 0.4, 0.6 ], [ 0.8, 0.9 ] ],
+        },
+        interactions: { throttleDelayResize: 0 },
+      };
       const setup = utils.hermesSetup(idempotentDimensions, config, idempotentData);
       const ctx = setup.hermes?.getCtx();
 
@@ -132,11 +154,27 @@ describe('Hermes Config', () => {
       });
     });
 
+    describe('data', () => {
+      describe('colorScale', () => {
+        it('should render color scale based on a dimension key', () => {
+          testSetConfig(setup, {
+            direction: t.Direction.Horizontal,
+            style: {
+              data: {
+                colorScale: [ '#cc0000', '#cc9900', '#0000cc' ],
+                colorScaleDimensionKey: 'accuracy',
+              },
+            },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+      });
+    });
+
     describe('dimension', () => {
       describe('label', () => {
         it('should render label after in horizontal layout', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Horizontal,
             style: { dimension: { label: { placement: t.LabelPlacement.After } } },
           });
@@ -145,7 +183,6 @@ describe('Hermes Config', () => {
 
         it('should render label after in vertical layout', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Vertical,
             style: { dimension: { label: { placement: t.LabelPlacement.After } } },
           });
@@ -154,7 +191,6 @@ describe('Hermes Config', () => {
 
         it('should render label at an angle in horizontal layout', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Horizontal,
             style: { dimension: { label: { angle: Math.PI / 4 } } },
           });
@@ -163,7 +199,6 @@ describe('Hermes Config', () => {
 
         it('should render label at an angle in vertical layout', () => {
           testSetConfig(setup, {
-
             direction: t.Direction.Vertical,
             style: { dimension: { label: { angle: Math.PI / 4 } } },
           });
