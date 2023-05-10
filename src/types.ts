@@ -118,21 +118,15 @@ export interface AxisOptions extends StyleLine {
   nanGap: number;
 }
 
-export interface DataColorScale {
-  colors: string[];
-  dimensionKey: DimensionKey;
-}
-
 export interface DataOptions {
-  colorScale?: {
-    colors: string[];
-    dimensionKey: DimensionKey;
-  };
+  colorScale?: string[];
+  colorScaleDimensionKey?: DimensionKey;
   default: StyleLine;
-  defaultColorScale?: DataColorScale;
   filtered: StyleLine;
-  filteredColorScale?: DataColorScale;
+  nan: StyleLine;
+  negativeInfinity: StyleLine;
   path: PathOptions;
+  positiveInfinity: StyleLine;
 }
 
 export interface Dimension {
