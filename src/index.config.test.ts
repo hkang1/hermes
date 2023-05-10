@@ -14,7 +14,7 @@ const testSetConfig = (
 describe('Hermes Config', () => {
   const tester = utils.HermesTester.getTester();
   const idempotentDimensions = tester.generateDimensions(10, false);
-  const idempotentData = tester.generateData(idempotentDimensions, 50, true, {
+  const idempotentData = tester.generateData(idempotentDimensions, 50, false, {
     includeNaN: 0.1,
     includeNegativeInfinity: 0.1,
     includePositiveInfinity: 0.1,
