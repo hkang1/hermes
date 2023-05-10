@@ -188,17 +188,17 @@ export interface LabelOptions extends StyleText {
   truncate?: number;
 }
 
+export interface NumberOptions {
+  includeNaN?: number;                  // Probability to show up between 0 and 1.
+  includeNegativeInfinity?: number;     // Probability to show up between 0 and 1.
+  includePositiveInfinity?: number;     // Probability to show up between 0 and 1.
+}
+
 export interface PathOptions {
   options: {
     bezierFactor?: number;
   };
   type: EPathType;
-}
-
-export interface RandomNumberOptions {
-  includeNaN?: number;                  // Probability to show up between 0 and 1.
-  includeNegativeInfinity?: number;     // Probability to show up between 0 and 1.
-  includePositiveInfinity?: number;     // Probability to show up between 0 and 1.
 }
 
 export interface TickOptions extends StyleLine {

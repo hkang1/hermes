@@ -3,7 +3,7 @@ import * as utils from 'test/utils';
 import * as t from './types';
 import { Tester } from './utils/tester';
 
-const testSetup = (tester: Tester, dataOptions?: t.RandomNumberOptions) => {
+const testSetup = (tester: Tester, dataOptions?: t.NumberOptions) => {
   const idempotentDimensions = tester.generateDimensions(10, false);
   const idempotentData = tester.generateData(idempotentDimensions, 50, false, dataOptions);
   return utils.hermesSetup(idempotentDimensions, undefined, idempotentData);

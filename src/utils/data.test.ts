@@ -259,6 +259,26 @@ describe('data utilities', () => {
       expect(utils.idempotentLogNumber(logBase, max, min, count, 2)).toBe(4);
       expect(utils.idempotentLogNumber(logBase, max, min, count, 2)).toBe(4);
     });
+
+    it('should return the same nan, positive infinity and negative infinity', () => {
+      const [ logBase, min, max, count ] = [ 2, 4, 16, 10 ];
+      const options = {
+        includeNaN: 0.3,
+        includeNegativeInfinity: 0.3,
+        includePositiveInfinity: 0.3,
+      };
+
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 0, options)).toBe(NaN);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 1, options)).toBe(NaN);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 2, options)).toBe(NaN);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 3, options)).toBe(NaN);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 4, options)).toBe(0);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 5, options)).toBe(0);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 6, options)).toBe(0);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 7, options)).toBe(Infinity);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 8, options)).toBe(Infinity);
+      expect(utils.idempotentLogNumber(logBase, max, min, count, 9, options)).toBe(16);
+    });
   });
 
   describe('idempotentNumber', () => {
@@ -291,6 +311,26 @@ describe('data utilities', () => {
       expect(utils.idempotentNumber(max, min, count, 1)).toBe(100);
       expect(utils.idempotentNumber(max, min, count, 2)).toBe(50);
       expect(utils.idempotentNumber(max, min, count, 2)).toBe(50);
+    });
+
+    it('should return the same nan, positive infinity and negative infinity', () => {
+      const [ min, max, count ] = [ 50, 100, 10 ];
+      const options = {
+        includeNaN: 0.3,
+        includeNegativeInfinity: 0.3,
+        includePositiveInfinity: 0.3,
+      };
+
+      expect(utils.idempotentNumber(max, min, count, 0, options)).toBe(NaN);
+      expect(utils.idempotentNumber(max, min, count, 1, options)).toBe(NaN);
+      expect(utils.idempotentNumber(max, min, count, 2, options)).toBe(NaN);
+      expect(utils.idempotentNumber(max, min, count, 3, options)).toBe(NaN);
+      expect(utils.idempotentNumber(max, min, count, 4, options)).toBe(-Infinity);
+      expect(utils.idempotentNumber(max, min, count, 5, options)).toBe(-Infinity);
+      expect(utils.idempotentNumber(max, min, count, 6, options)).toBe(-Infinity);
+      expect(utils.idempotentNumber(max, min, count, 7, options)).toBe(Infinity);
+      expect(utils.idempotentNumber(max, min, count, 8, options)).toBe(Infinity);
+      expect(utils.idempotentNumber(max, min, count, 9, options)).toBe(100);
     });
   });
 

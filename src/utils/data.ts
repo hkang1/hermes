@@ -5,8 +5,8 @@ import {
   EDimensionType,
   InternalDataInfo,
   NestedObject,
+  NumberOptions,
   Primitive,
-  RandomNumberOptions,
   Range,
 } from '../types';
 
@@ -89,12 +89,13 @@ export const idempotentLogNumber = (
   min: number,
   count: number,
   index: number,
+  options: NumberOptions = {},
 ): number => {
   const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
   const denominator = log === Math.log ? Math.log(base) : 1;
   const maxExp = log(max) / denominator;
   const minExp = log(min) / denominator;
-  return base ** idempotentNumber(maxExp, minExp, count, index);
+  return base ** idempotentNumber(maxExp, minExp, count, index, options);
 };
 
 export const idempotentNumber = (
@@ -102,9 +103,19 @@ export const idempotentNumber = (
   min: number,
   count: number,
   index: number,
+  options: NumberOptions = {},
 ): number => {
   const adjustedCount = count > 1 ? count - 1 : 1;
   const inc = (max - min) / adjustedCount;
+  if (Object.keys(options).length !== 0) {
+    const percentNaN = options.includeNaN ?? 0;
+    const percentNegInfinity = (options.includeNegativeInfinity ?? 0) + percentNaN;
+    const percentPosInfinity = (options.includePositiveInfinity ?? 0) + percentNegInfinity;
+    const percent = index / count;
+    if (percent <= percentNaN) return Number.NaN;
+    else if (percent <= percentNegInfinity) return Number.NEGATIVE_INFINITY;
+    else if (percent <= percentPosInfinity) return Number.POSITIVE_INFINITY;
+  }
   return (index % (adjustedCount + 1)) * inc + min;
 };
 
@@ -148,7 +159,7 @@ export const randomLogNumber = (
   base: number,
   max: number,
   min: number,
-  options: RandomNumberOptions = {},
+  options: NumberOptions = {},
 ): number => {
   const log = base === 10 ? Math.log10 : base === 2 ? Math.log2 : Math.log;
   const denominator = log === Math.log ? Math.log(base) : 1;
@@ -162,7 +173,7 @@ export const randomLogNumber = (
 export const randomNumber = (
   max: number,
   min: number,
-  options: RandomNumberOptions = {},
+  options: NumberOptions = {},
 ): number => {
   if (options.includeNaN != null) {
     const probabilityNan = capDataRange(options.includeNaN, [ 0, 1 ]);
