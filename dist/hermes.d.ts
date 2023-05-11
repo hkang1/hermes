@@ -170,6 +170,7 @@ declare namespace Hermes {
     overrideNegativeInfinity?: StyleLine;
     overridePositiveInfinity?: StyleLine;
     path: PathOptions;
+    series?: StyleLine[];
     targetColorScale?: string[];
     targetDimensionKey?: DimensionKey;
   }

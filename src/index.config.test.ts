@@ -170,7 +170,7 @@ describe('Hermes Config', () => {
         });
       });
 
-      describe('NaN, -Inf, and +Inf', () => {
+      describe('override NaN, -Inf, and +Inf styles', () => {
         it('should render unique colors for NaN, -Inf, and +Inf', () => {
           testSetConfig(setup, {
             direction: t.Direction.Horizontal,
@@ -179,6 +179,27 @@ describe('Hermes Config', () => {
                 overrideNaN: { lineWidth: 2, strokeStyle: 'rgba(255, 0, 0, 0.3)' },
                 overrideNegativeInfinity: { lineWidth: 2, strokeStyle: 'rgba(0, 255, 0, 0.3)' },
                 overridePositiveInfinity: { lineWidth: 2, strokeStyle: 'rgba(0, 0, 255, 0.3)' },
+              },
+            },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+      });
+
+      describe('override series style', () => {
+        it('should render unique colors defined by a series array of styles', () => {
+          testSetConfig(setup, {
+            direction: t.Direction.Horizontal,
+            style: {
+              data: {
+                series: [
+                  undefined,
+                  { lineWidth: 2, strokeStyle: 'rgba(255, 0, 0, 0.3)' },
+                  undefined,
+                  { lineWidth: 2, strokeStyle: 'rgba(0, 255, 0, 0.3)' },
+                  undefined,
+                  { lineWidth: 2, strokeStyle: 'rgba(0, 0, 255, 0.3)' },
+                ],
               },
             },
           });
