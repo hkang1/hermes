@@ -161,8 +161,24 @@ describe('Hermes Config', () => {
             direction: t.Direction.Horizontal,
             style: {
               data: {
-                colorScale: [ '#cc0000', '#cc9900', '#0000cc' ],
-                colorScaleDimensionKey: 'accuracy',
+                targetColorScale: [ '#cc0000', '#cc9900', '#0000cc' ],
+                targetDimensionKey: 'accuracy',
+              },
+            },
+          });
+          expect(setup.hermes.getCtx().__getDrawCalls()).toMatchSnapshot();
+        });
+      });
+
+      describe('NaN, -Inf, and +Inf', () => {
+        it('should render unique colors for NaN, -Inf, and +Inf', () => {
+          testSetConfig(setup, {
+            direction: t.Direction.Horizontal,
+            style: {
+              data: {
+                overrideNaN: { lineWidth: 2, strokeStyle: 'rgba(255, 0, 0, 0.3)' },
+                overrideNegativeInfinity: { lineWidth: 2, strokeStyle: 'rgba(0, 255, 0, 0.3)' },
+                overridePositiveInfinity: { lineWidth: 2, strokeStyle: 'rgba(0, 0, 255, 0.3)' },
               },
             },
           });

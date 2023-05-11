@@ -1139,6 +1139,9 @@ class Hermes {
     for (let k = 0; k < this.dataInfo.seriesCount; k++) {
       let dataDefaultStyle: t.StyleLine = dataStyle.default;
       let hasFilters = false;
+      let hasNaN = false;
+      let hasNegativeInfinity = false;
+      let hasPositiveInfinity = false;
       let isFilteredOut = false;
 
       const series = this.dimensions.map((dimension, i) => {
@@ -1149,6 +1152,8 @@ class Hermes {
         const valueIsNumber = d.isNumber(value);
         const valueIsNaN = valueIsNumber && isNaN(value);
         const valueIsInfinity = valueIsNumber && !valueIsNaN && !isFinite(value);
+        const valueIsNegativeInfinity = valueIsInfinity && value === -Infinity;
+        const valueIsPositiveInfinity = valueIsInfinity && value === Infinity;
         const percent = valueIsNaN || valueIsInfinity
           ? 0 : dimension.scale?.valueToPercent(value) ?? 0;
         let x = bound.x;
@@ -1158,8 +1163,10 @@ class Hermes {
           x += isHorizontal ? layout.axisDataStart.x : layout.axisBoundaryStart.x;
           y += isHorizontal ? layout.axisBoundaryStop.y : layout.axisDataStart.y;
         } else if (valueIsInfinity) {
-          const dx = value === -Infinity ? layout.axisInfinityStart.x : layout.axisInfinityStop.x;
-          const dy = value === -Infinity ? layout.axisInfinityStop.y : layout.axisInfinityStart.y;
+          const dx = valueIsNegativeInfinity
+            ? layout.axisInfinityStart.x : layout.axisInfinityStop.x;
+          const dy = valueIsPositiveInfinity
+            ? layout.axisInfinityStop.y : layout.axisInfinityStart.y;
           x += isHorizontal ? layout.axisDataStart.x : dx;
           y += isHorizontal ? dy : layout.axisDataStart.y;
         } else {
@@ -1168,19 +1175,11 @@ class Hermes {
           y += layout.axisDataStart.y + (isHorizontal ? pos : 0);
         }
 
-        if (key === dataStyle.colorScaleDimensionKey) {
+        if (key === dataStyle.targetDimensionKey) {
           const reverse = dimension.scale?.reverse ?? false;
-          const colors = dataStyle.colorScale || [];
+          const colors = dataStyle.targetColorScale || [];
           const scaleColor = scale2rgba(reverse ? colors.slice().reverse() : colors, percent);
           dataDefaultStyle.strokeStyle = scaleColor;
-
-          if (valueIsNaN) {
-            dataDefaultStyle = dataStyle.nan;
-          } else if (valueIsInfinity && value === -Infinity) {
-            dataDefaultStyle = dataStyle.negativeInfinity;
-          } else if (valueIsInfinity && value === Infinity) {
-            dataDefaultStyle = dataStyle.positiveInfinity;
-          }
         }
 
         /**
@@ -1195,28 +1194,44 @@ class Hermes {
             const filter = _filters[key][f];
             if (valueIsNaN && filter.hasNaN) {
               hasMatchedFilter = true;
-              break;
-            } else if (
-              (value === -Infinity && filter.hasNegativeInfinity) ||
-              (value === Infinity && filter.hasPositiveInfinity)
-            ) {
+              hasNaN = true;
+            } else if (valueIsNegativeInfinity && filter.hasNegativeInfinity) {
               hasMatchedFilter = true;
-              break;
-            } else if (!valueIsNaN && !valueIsInfinity &&
+              hasNegativeInfinity = true;
+            } else if (valueIsPositiveInfinity && filter.hasPositiveInfinity) {
+              hasMatchedFilter = true;
+              hasPositiveInfinity = true;
+            }
+            if (!valueIsNaN && !valueIsInfinity &&
                 !isNaN(filter.percent0) && !isNaN(filter.percent1) &&
                 percent >= filter.percent0 && percent <= filter.percent1) {
               hasMatchedFilter = true;
-              break;
             }
           }
 
           if (!hasMatchedFilter) isFilteredOut = true;
+        } else {
+          if (valueIsNaN) {
+            hasNaN = true;
+          } else if (valueIsNegativeInfinity) {
+            hasNegativeInfinity = true;
+          } else if (valueIsPositiveInfinity) {
+            hasPositiveInfinity = true;
+          }
         }
 
         return { x, y };
       });
 
-      if (hasFilters && isFilteredOut) dataDefaultStyle = dataStyle.filtered;
+      if (hasFilters && isFilteredOut) {
+        dataDefaultStyle = dataStyle.filtered;
+      } else if (hasNaN && dataStyle.overrideNaN) {
+        dataDefaultStyle = dataStyle.overrideNaN;
+      } else if (hasNegativeInfinity && dataStyle.overrideNegativeInfinity) {
+        dataDefaultStyle = dataStyle.overrideNegativeInfinity;
+      } else if (hasPositiveInfinity && dataStyle.overridePositiveInfinity) {
+        dataDefaultStyle = dataStyle.overridePositiveInfinity;
+      }
 
       canvas.drawData(this.ctx, series, isHorizontal, dataStyle.path, dataDefaultStyle);
     }

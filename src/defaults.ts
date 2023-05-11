@@ -109,21 +109,21 @@ export const HERMES_CONFIG: t.Config = {
         lineWidth: 1,
         strokeStyle: 'rgba(0, 0, 0, 0.05)',
       },
-      nan: {
+      overrideNaN: {
         lineWidth: 1,
         strokeStyle: 'rgba(255, 0, 0, 0.2)',
       },
-      negativeInfinity: {
+      overrideNegativeInfinity: {
+        lineWidth: 1,
+        strokeStyle: 'rgba(255, 0, 0, 0.2)',
+      },
+      overridePositiveInfinity: {
         lineWidth: 1,
         strokeStyle: 'rgba(255, 0, 0, 0.2)',
       },
       path: {
         options: {},
         type: t.PathType.Straight,
-      },
-      positiveInfinity: {
-        lineWidth: 1,
-        strokeStyle: 'rgba(255, 0, 0, 0.2)',
       },
     },
     dimension: {

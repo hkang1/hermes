@@ -119,14 +119,14 @@ export interface AxisOptions extends StyleLine {
 }
 
 export interface DataOptions {
-  colorScale?: string[];
-  colorScaleDimensionKey?: DimensionKey;
   default: StyleLine;
   filtered: StyleLine;
-  nan: StyleLine;
-  negativeInfinity: StyleLine;
+  overrideNaN?: StyleLine;
+  overrideNegativeInfinity?: StyleLine;
+  overridePositiveInfinity?: StyleLine;
   path: PathOptions;
-  positiveInfinity: StyleLine;
+  targetColorScale?: string[];
+  targetDimensionKey?: DimensionKey;
 }
 
 export interface Dimension {
