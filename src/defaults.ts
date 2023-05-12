@@ -146,7 +146,7 @@ export const HERMES_CONFIG: t.Config = {
   },
 };
 
-export const FILTER: t.InternalFilter = {
+export const FILTER: t.Filter = {
   hasNaN: false,
   hasNegativeInfinity: false,
   hasPositiveInfinity: false,
@@ -157,6 +157,8 @@ export const FILTER: t.InternalFilter = {
   value0: Number.NaN,
   value1: Number.NaN,
 };
+
+export const FILTER_EPSILON = 0.01;
 
 export const IX: t.IX = {
   dimension: {

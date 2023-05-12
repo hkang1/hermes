@@ -77,11 +77,49 @@ describe('Hermes Config', () => {
   });
 
   describe('filters', () => {
-    it('should draw chart with filters initialized from config', () => {
+    it('should draw chart with filters initialized from config horizontally', () => {
       const config: t.RecursivePartial<t.Config> = {
+        direction: t.Direction.Horizontal,
         filters: {
-          'accuracy': [ [ 0.1, 0.3 ] ],
-          'learning-rate': [ [ 0.4, 0.6 ], [ 0.8, 0.9 ] ],
+          'accuracy': [
+            { value0: 0.93, value1: 0.86 },
+            { hasNaN: true, hasNegativeInfinity: true },
+          ],
+          'dropout': [
+            { p0: 0.4, p1: 0.5 },
+          ],
+          'learning-rate': [
+            { value0: 0.003, value1: 0.004 },
+            { value0: 0.0, value1: 0.001 },
+            { hasPositiveInfinity: true },
+          ],
+        },
+        interactions: { throttleDelayResize: 0 },
+      };
+      const setup = utils.hermesSetup(idempotentDimensions, config, idempotentData);
+      const ctx = setup.hermes?.getCtx();
+
+      expect(ctx.__getDrawCalls()).toMatchSnapshot();
+
+      utils.hermesTeardown(setup);
+    });
+
+    it('should draw chart with filters initialized from config vertically', () => {
+      const config: t.RecursivePartial<t.Config> = {
+        direction: t.Direction.Vertical,
+        filters: {
+          'accuracy': [
+            { value0: 0.93, value1: 0.86 },
+            { hasNaN: true, hasPositiveInfinity: true },
+          ],
+          'dropout': [
+            { p0: 0.4, p1: 0.5 },
+          ],
+          'learning-rate': [
+            { value0: 0.003, value1: 0.004 },
+            { value0: 0.0, value1: 0.001 },
+            { hasNegativeInfinity: true },
+          ],
         },
         interactions: { throttleDelayResize: 0 },
       };

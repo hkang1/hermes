@@ -30,7 +30,7 @@ class Hermes {
   };
   protected dimensions: t.InternalDimension[] = [];
   protected dimensionsOriginal: t.Dimension[] = [];
-  protected filters: t.InternalFilters = {};
+  protected filters: t.Filters = {};
   protected resizeObserver: ResizeObserver | undefined;
   protected size: t.Size = { h: 0, w: 0 };
   protected ix: t.IX = d.clone(DEFAULT.IX);
@@ -41,7 +41,7 @@ class Hermes {
     target: HTMLElement | string,
     dimensions?: t.Dimension[],
     config?: t.RecursivePartial<t.Config>,
-    data?: t.RawData,
+    data?: t.DataRaw,
   ) {
     const element = getElement(target);
     if (!element) throw new HermesError('Target element selector did not match anything.');
@@ -96,7 +96,7 @@ class Hermes {
     return tester;
   }
 
-  static validateData(data: t.RawData, dimensions: t.Dimension[]): t.ValidationData {
+  static validateData(data: t.DataRaw, dimensions: t.Dimension[]): t.ValidationData {
     const validation = { count: 0, message: '', valid: true };
     const keys = Object.keys(data);
     const values = Object.values(data);
@@ -174,7 +174,7 @@ class Hermes {
     if (redraw) this.redraw();
   }
 
-  public setData(data: t.RawData, redraw = true): void {
+  public setData(data: t.DataRaw, redraw = true): void {
     const dataValidation = Hermes.validateData(data, this.dimensionsOriginal);
     if (!dataValidation.valid) throw new HermesError(dataValidation.message);
 
@@ -822,24 +822,9 @@ class Hermes {
 
     // Read `filters` and convert it to internal filters.
     Object.keys(filters).forEach((dimensionKey) => {
-      this.filters[dimensionKey] = this.config.filters[dimensionKey].map((filter) => {
-        const internalFilter: t.InternalFilter = {
-          hasNaN: false,
-          hasNegativeInfinity: false,
-          hasPositiveInfinity: false,
-          p0: filter[0],
-          p1: filter[1],
-          percent0: Number.NaN,
-          percent1: Number.NaN,
-          value0: Number.NaN,
-          value1: Number.NaN,
-        };
-
-        // `internalFilter` gets modified.
-        this.processFilter(internalFilter, dimensionIndexMap[dimensionKey]);
-
-        return internalFilter;
-      });
+      this.filters[dimensionKey] = this.config.filters[dimensionKey]
+        .map((filter) => this.processConfigFilter(filter, dimensionIndexMap[dimensionKey]))
+        .filter((filter) => filter != null) as t.Filter[];
     });
 
     // Redraw the chart with the newly initialized filters.
@@ -962,7 +947,7 @@ class Hermes {
       const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
       if (removeIndex !== -1) {
         // Make hook callback.
-        const filter = ix.internalToFilter(filters[removeIndex]);
+        const filter = filters[removeIndex];
         this.config.hooks.onFilterRemove?.({ [dimensionKey]: [ filter ] });
 
         // Remove filter.
@@ -978,7 +963,7 @@ class Hermes {
         this.processFilter(_ixf.active, index);
       }
 
-      const filters = { [dimensionKey]: [ ix.internalToFilter(_ixf.active) ] };
+      const filters = { [dimensionKey]: [ _ixf.active ] };
 
       // Make corresponding filter hook callback.
       switch (_ixsa.type) {
@@ -1002,16 +987,14 @@ class Hermes {
     this.cleanUpFilters();
 
     // Make hook call back with all of the filter changes.
-    this.config.hooks?.onFilterChange?.(ix.internalToFilters(this.filters));
+    this.config.hooks?.onFilterChange?.(this.filters);
   }
 
-  protected processFilter(filter: t.InternalFilter, dimIndex: number): void {
-    if (!this._) return;
+  protected getDimensionLayoutInfo(dimIndex: number): t.InternalDimensionLayoutInfo | undefined {
+    if (!this._ || !this.dataInfo) return;
 
     const layout = this._.dims.list[dimIndex].layout;
     const isHorizontal = this.config.direction === t.Direction.Horizontal;
-    const p0 = Math.min(filter.p0, filter.p1);
-    const p1 = Math.max(filter.p0, filter.p1);
     const xLength = layout.axisBoundaryStop.x - layout.axisBoundaryStart.x;
     const yLength = layout.axisBoundaryStop.y - layout.axisBoundaryStart.y;
     const pStart = isHorizontal
@@ -1020,32 +1003,52 @@ class Hermes {
     const pStop = isHorizontal
       ? (layout.axisDataStop.y - layout.axisBoundaryStart.y) / yLength
       : (layout.axisDataStop.x - layout.axisBoundaryStart.x) / xLength;
+    const pLength = pStop - pStart;
 
-    if (this.dataInfo.hasInfinity) {
-      if (isHorizontal) {
-        const pi = (layout.axisInfinityStop.y - layout.axisBoundaryStart.y) / yLength;
+    return {
+      hasInfinity: this.dataInfo.hasInfinity,
+      hasNaN: this.dataInfo.hasNaN,
+      isHorizontal,
+      layout,
+      pLength,
+      pStart,
+      pStop,
+      xLength,
+      yLength,
+    };
+  }
+
+  protected processFilter(filter: t.Filter, dimIndex: number): void {
+    const i = this.getDimensionLayoutInfo(dimIndex);
+    if (!i) return;
+
+    const p0 = Math.min(filter.p0, filter.p1);
+    const p1 = Math.max(filter.p0, filter.p1);
+
+    if (i.hasInfinity) {
+      if (i.isHorizontal) {
+        const pi = (i.layout.axisInfinityStop.y - i.layout.axisBoundaryStart.y) / i.yLength;
         filter.hasPositiveInfinity = p0 === 0.0;
         filter.hasNegativeInfinity = p0 <= pi && p1 >= pi;
       } else {
-        const pi = (layout.axisInfinityStart.x - layout.axisBoundaryStart.x) / xLength;
+        const pi = (i.layout.axisInfinityStart.x - i.layout.axisBoundaryStart.x) / i.xLength;
         filter.hasNegativeInfinity = p0 <= pi && p1 >= pi;
         filter.hasPositiveInfinity = p1 === 1.0;
       }
     }
-    if (this.dataInfo.hasNaN) {
-      filter.hasNaN = (isHorizontal && p1 === 1.0) || (!isHorizontal && p0 === 0.0);
+    if (i.hasNaN) {
+      filter.hasNaN = (i.isHorizontal && p1 === 1.0) || (!i.isHorizontal && p0 === 0.0);
     }
 
-    const pLength = pStop - pStart;
-    if (p0 <= pStart) {
+    if (p0 <= i.pStart) {
       filter.percent0 = 0.0;
-    } else if (p0 > pStart && p0 <= pStop) {
-      filter.percent0 = (p0 - pStart) / pLength;
+    } else if (p0 > i.pStart && p0 <= i.pStop) {
+      filter.percent0 = (p0 - i.pStart) / i.pLength;
     }
-    if (p1 >= pStop) {
+    if (p1 >= i.pStop) {
       filter.percent1 = 1.0;
-    } else if (p1 >= pStart && p1 < pStop) {
-      filter.percent1 = (p1 - pStart) / pLength;
+    } else if (p1 >= i.pStart && p1 < i.pStop) {
+      filter.percent1 = (p1 - i.pStart) / i.pLength;
     }
 
     if (!isNaN(filter.percent0)) {
@@ -1054,6 +1057,63 @@ class Hermes {
     if (!isNaN(filter.percent1)) {
       filter.value1 = this.dimensions[dimIndex].scale.percentToValue(filter.percent1);
     }
+  }
+
+  protected processConfigFilter(filter: t.ConfigFilter, dimIndex: number): t.Filter | undefined {
+    const i = this.getDimensionLayoutInfo(dimIndex);
+    if (!i) return;
+
+    const newFilter = { ...DEFAULT.FILTER, ...filter };
+
+    if (filter.p0 != null && filter.p1 != null) {
+      this.processFilter(newFilter, dimIndex);
+    } else {
+      const possibleP0 = [];
+      const possibleP1 = [];
+
+      if (filter.value0 != null && filter.value1 != null) {
+        newFilter.percent0 = this.dimensions[dimIndex].scale.valueToPercent(filter.value0);
+        newFilter.percent1 = this.dimensions[dimIndex].scale.valueToPercent(filter.value1);
+        possibleP0.push(newFilter.percent0 * i.pLength + i.pStart);
+        possibleP1.push(newFilter.percent1 * i.pLength + i.pStart);
+      }
+
+      if (i.hasInfinity) {
+        if (i.isHorizontal) {
+          if (filter.hasPositiveInfinity) {
+            possibleP0.push(0.0);
+            possibleP1.push(0.0 + DEFAULT.FILTER_EPSILON);
+          } else if (filter.hasNegativeInfinity) {
+            const pi = (i.layout.axisInfinityStop.y - i.layout.axisBoundaryStart.y) / i.yLength;
+            possibleP0.push(pi - DEFAULT.FILTER_EPSILON);
+            possibleP1.push(pi + DEFAULT.FILTER_EPSILON);
+          }
+        } else {
+          if (filter.hasPositiveInfinity) {
+            possibleP0.push(1.0 - DEFAULT.FILTER_EPSILON);
+            possibleP1.push(1.0);
+          } else if (filter.hasNegativeInfinity) {
+            const pi = (i.layout.axisInfinityStart.x - i.layout.axisBoundaryStart.x) / i.xLength;
+            possibleP0.push(pi - DEFAULT.FILTER_EPSILON);
+            possibleP1.push(pi + DEFAULT.FILTER_EPSILON);
+          }
+        }
+      }
+      if (i.hasNaN && filter.hasNaN) {
+        if (i.isHorizontal) {
+          possibleP0.push(1.0 - DEFAULT.FILTER_EPSILON);
+          possibleP1.push(1.0);
+        } else {
+          possibleP0.push(0.0);
+          possibleP1.push(0.0 + DEFAULT.FILTER_EPSILON);
+        }
+      }
+
+      newFilter.p0 = Math.min(...possibleP0);
+      newFilter.p1 = Math.max(...possibleP1);
+    }
+
+    return newFilter;
   }
 
   protected cleanUpFilters(): void {
