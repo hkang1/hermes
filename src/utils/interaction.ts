@@ -16,42 +16,27 @@ export const getDragBound = (index: number, ix: t.IX, bound: t.Rect): t.Rect => 
   return isLabelDrag ? shiftRect(dragBound, offset) : bound;
 };
 
-export const internalToFilter = (filter: t.InternalFilter): t.Filter => {
-  return comparePrimitive(filter.p0, filter.p1) === 1
-    ? [ filter.p1, filter.p0 ]
-    : [ filter.p0, filter.p1 ];
-};
-
-export const internalToFilters = (filters: t.InternalFilters): t.Filters => {
-  return Object.keys(filters).reduce((acc, key) => {
-    acc[key] = filters[key]
-      .map(filter => internalToFilter(filter))
-      .sort((a: t.Filter, b: t.Filter) => comparePrimitive(a[0], b[0]));
-    return acc;
-  }, {} as t.Filters);
-};
-
-export const isFilterEmpty = (filter: t.InternalFilter): boolean => {
+export const isFilterEmpty = (filter: t.Filter): boolean => {
   return isNaN(filter.p0) && isNaN(filter.p1);
 };
 
 // TODO: possibly invalid logic
-export const isFilterInvalid = (filter: t.InternalFilter): boolean => {
+export const isFilterInvalid = (filter: t.Filter): boolean => {
   return filter.p0 >= filter.p1;
 };
 
 export const isIntersectingFilters = (
-  filter0: t.InternalFilter,
-  filter1: t.InternalFilter,
+  filter0: t.Filter,
+  filter1: t.Filter,
 ): boolean => {
   return filter0.p0 <= filter1.p1 && filter1.p0 <= filter0.p1;
 };
 
 export const mergeFilters = (
-  filter0: t.InternalFilter,
-  filter1: t.InternalFilter,
-): t.InternalFilter => {
-  const newFilter: t.InternalFilter = clone(FILTER);
+  filter0: t.Filter,
+  filter1: t.Filter,
+): t.Filter => {
+  const newFilter: t.Filter = clone(FILTER);
 
   if (filter0.p0 < filter1.p0) {
     newFilter.p0 = filter0.p0;

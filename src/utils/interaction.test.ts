@@ -29,40 +29,6 @@ describe('interaction utilities', () => {
     });
   });
 
-  describe('translate internal filters for filter hook calls', () => {
-    const tests: { input: t.InternalFilter, output: t.Filter }[] = [
-      {
-        input: { ...DEFAULT.FILTER, p0: 0.5, p1: 0.2, value0: 5, value1: 2 },
-        output: [ 0.2, 0.5 ],
-      },
-      {
-        input: { ...DEFAULT.FILTER, p0: 0.1, p1: 0.2, value0: 1, value1: 2 },
-        output: [ 0.1, 0.2 ],
-      },
-      {
-        input: { ...DEFAULT.FILTER, p0: 0.8, p1: 0.1, value0: 8, value1: 1 },
-        output: [ 0.1, 0.8 ],
-      },
-    ];
-
-    describe('internalToFilter', () => {
-      it('should translate internal filter to external filter', () => {
-        tests.forEach(test => {
-          expect(utils.internalToFilter(test.input)).toStrictEqual(test.output);
-        });
-      });
-    });
-
-    describe('internalToFilters', () => {
-      it('should translate internal filters to external filters', () => {
-        const filterKey = 'key';
-        const filters = { [filterKey]: tests.map(test => test.input) };
-        const output = { [filterKey]: [ [ 0.1, 0.2 ], [ 0.1, 0.8 ], [ 0.2, 0.5 ] ] };
-        expect(utils.internalToFilters(filters)).toStrictEqual(output);
-      });
-    });
-  });
-
   describe('isFilterEmpty', () => {
     it('should determine if a fiter is empty', () => {
       const filter = { ...DEFAULT.FILTER, p0: NaN, p1: NaN, value0: NaN, value1: NaN };
