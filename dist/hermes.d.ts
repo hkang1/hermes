@@ -244,10 +244,10 @@ declare namespace Hermes {
     hooks: {
       onDimensionMove?: (dimension: Dimension, newIndex: number, oldIndex: number) => void;
       onFilterChange?: (filters: Filters) => void;
-      onFilterCreate?: (filter: Filter) => void,
-      onFilterMove?: (filter: Filter) => void,
-      onFilterRemove?: (filter: Filter) => void,
-      onFilterResize?: (filter: Filter) => void,
+      onFilterCreate?: (filters: Filters) => void,
+      onFilterMove?: (filters: Filters) => void,
+      onFilterRemove?: (filters: Filters) => void,
+      onFilterResize?: (filters: Filters) => void,
       onReset?: () => void;
       onResize?: (newSize: Size, oldSize: Size) => void;
     };
@@ -258,7 +258,7 @@ declare namespace Hermes {
     style: {
       axes: {
         axis: AxisOptions,
-        axisActve: StyleLine;
+        axisActive: StyleLine;
         axisHover: StyleLine;
         filter: FilterOptions;
         filterActive: FilterOptions;
