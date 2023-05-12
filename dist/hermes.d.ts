@@ -220,25 +220,6 @@ declare namespace Hermes {
    * PRIMARY INTERFACES AND TYPES
    */
 
-  export type Data = Record<DimensionKey, Primitive[]>;
-
-  export interface Dimension {
-    categories?: Primitive[];
-    dataOnEdge?: boolean;
-    disableDrag?: boolean;
-    key: string;
-    label: string;
-    logBase?: number;
-    reverse?: boolean;
-    type: EDimensionType;
-  }
-
-  export type Filter = Range<Primitive>;
-
-  export interface Filters {
-    [key: DimensionKey]: Filter[];
-  }
-
   export interface Config {
     direction: EDirection;
     hooks: {
@@ -280,6 +261,42 @@ declare namespace Hermes {
       padding: Padding;
     };
   }
+
+  export type ConfigFilter = Partial<Filter>;
+
+  export type ConfigFilters = Record<DimensionKey, ConfigFilter[]>;
+
+  export type Data = Record<DimensionKey, Primitive[]>;
+
+  export interface Dimension {
+    categories?: Primitive[];
+    dataOnEdge?: boolean;
+    disableDrag?: boolean;
+    key: string;
+    label: string;
+    logBase?: number;
+    reverse?: boolean;
+    type: EDimensionType;
+  }
+
+  export interface Filter {
+    hasNaN: boolean;
+    hasNegativeInfinity: boolean;
+    hasPositiveInfinity: boolean;
+    p0: number;           // Starting axis % position relative to axisBoundaryStart|Stop.(x|y).
+    p1: number;           // Ending axis % position relative to axisBoundaryStart|Stop.(x|y).
+    percent0: number;     // Starting percent accommodating NaN and +/-Infinity markers.
+    percent1: number;     // Ending percent accommodating NaN and +/-Infinity markers.
+    value0: Primitive;    // Starting axis value adjusted for NaN and +/-Infinity markers.
+    value1: Primitive;    // Ending axis value adjusted for NaN and +/-Infinity markers.
+  }
+
+  export interface FilterActive extends Filter {
+    startP0?: number;   // Initial p0 value before an existing filter is shifted via dragging.
+    startP1?: number;   // Initial p1 value before an existing filter is shifted via dragging.
+  }
+
+  export type Filters = Record<DimensionKey, Filter[]>
 }
 
 export as namespace Hermes;
