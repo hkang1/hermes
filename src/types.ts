@@ -231,7 +231,7 @@ export interface Config {
   style: {
     axes: {
       axis: AxisOptions,
-      axisActve: StyleLine;
+      axisActive: StyleLine;
       axisHover: StyleLine;
       filter: FilterOptions;
       filterActive: FilterOptions;

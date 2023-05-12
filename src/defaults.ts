@@ -53,7 +53,7 @@ export const HERMES_CONFIG: t.Config = {
         nanGap: 24.0,
         strokeStyle: 'rgba(147, 147, 147, 1.0)',
       },
-      axisActve: {
+      axisActive: {
         lineWidth: 3,
         strokeStyle: 'rgba(99, 200, 255, 1.0)',
       },

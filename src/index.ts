@@ -676,7 +676,7 @@ class Hermes {
       _s[i].axis = {
         ..._osa.axis,
         ...(!isAxisActive && isAxisFocused && !isActive ? _osa.axisHover : {}),
-        ...(isAxisActive ? _osa.axisActve : {}),
+        ...(isAxisActive ? _osa.axisActive : {}),
       };
 
       _s[i].tick = {
