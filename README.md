@@ -56,7 +56,7 @@ The `container` can be an HTML element passed in directly or a query selector th
 
 ## Hermes Data Format
 
-The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L223), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
+The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L269), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
 
 ```
 type Data = Record<DimensionKey, Primitive[]>;
@@ -78,7 +78,7 @@ The `target` can be an HTML element passed in directly or a query selector that 
 
 ## Hermes Dimension
 
-The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L225-L234). A sample dimension definition might look like...
+The dimensions definition is a list of [Hermes.Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L271-L280). A sample dimension definition might look like...
 
 ```
 const dimensions = [
@@ -104,7 +104,7 @@ const dimensions = [
 
 ## Hermes Data Format
 
-The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L223), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
+The data format is of type [Hermes.Data](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L269), which is an object with the dimension unique keys as the object key and a list of values for that dimension as the value. The expected data is defined as:
 
 ```
 type Data = Record<DimensionKey, Primitive[]>;
@@ -163,7 +163,7 @@ The dimension axes are drawn vertically, the axis tick values increase from the 
 
 ## Hermes Config and Styles
 
-The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L242-L283) provides a more up-to-date definition of the config.
+The config provides control over the chart behavior, rendering, style and the ability to hook into key events. [Hermes.Config](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L223-L263) provides a more up-to-date definition of the config.
 
 ### General Config
 
@@ -173,27 +173,27 @@ The direction the dimensions should be laid out. The direction can be set to `ho
 
 ### Hooks
 
-#### onDimensionMove: (dimension: [Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L225-L234), newIndex: number, oldIndex: number) => void
+#### onDimensionMove: (dimension: [Dimension](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L271-L280), newIndex: number, oldIndex: number) => void
 
 Optional hook for when the order of dimensions changes via drag and drop. The callback is called during the drag and whenever dimensions required a swap, even before when the mouse is released. The data for the dimension that is dragged, the new index and the original index are returned.
 
-#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L238-L240)) => void
+#### onFilterChange: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L299)) => void
 
 Optional hook for when any filter changes. The callback is specifically called on the `mouseup` event. The entire updated filters object is returned.
 
-#### onFilterCreate: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L238-L240)) => void
+#### onFilterCreate: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L299)) => void
 
 Optional hook for when a filter is created. The newly create filter is returned.
 
-#### onFilterMove: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L238-L240)) => void
+#### onFilterMove: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L299)) => void
 
 Optional hook for when a filter is moved. The modified filter is returned.
 
-#### onFilterRemove: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L238-L240)) => void
+#### onFilterRemove: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L299)) => void
 
 Optional hook for when a filter is removed via single click. Info for the removed filter is returned.
 
-#### onFilterResize: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L238-L240)) => void
+#### onFilterResize: (filters: [Filters](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L299)) => void
 
 Optional hook for when a filter is resized. The modified filter is returned.
 
@@ -215,7 +215,7 @@ The time interval in millisconds in which the mouse move event is allowed to pro
 
 The time interval in milliseconds in which the resize event is allowed to propagate. For example, with the default 50ms, as the user is changing the browser window that contains the chart, the resize event, the associated calculations and the rerenders are allowed to happen only every 50ms.
 
-### [Style Options](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L258-L282)
+### [Style Options](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L239-L262)
 
 #### axes
 
@@ -468,7 +468,7 @@ series: [
 
 The `targetColorScale` is a list of colors (minimum of two) that determines the gradient that is used to draw the chart series, based on the target dimension (`targetDimensionKey`).
 
-##### targetDimensionKey: [EDimensionKey](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L110) (optional)
+##### targetDimensionKey: [DimensionKey](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L102) (optional)
 
 The `targetDimensionKey` is used in conjunction with `targetColorScale`. This tells the chart which dimension to use to determine the color of the series based on that dimension value along the color scale range.
 
@@ -509,13 +509,13 @@ The `labelHover` style is in effect when the user hovers over the dimension labe
 labelHover: { fillStyle: 'rgba(79, 180, 246, 1.0)' },
 ```
 
-##### layout: [EDimensionLayout](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L109)
+##### layout: [DimensionLayout](https://github.com/hkang1/hermes/blob/main/dist/hermes.d.ts#L125)
 
 The `layout` option controls how the dimensions are spaced out.
 
-`EDimensionLayout.AxisEvenlySpaced` draws the dimension axes even distances from each other. The dimension labels do not impact the layout.
+`DimensionLayout.AxisEvenlySpaced` draws the dimension axes even distances from each other. The dimension labels do not impact the layout.
 
-`EDimensionLayout.Equidistant` draws the dimensions equidistant from each other. The overall width of the dimension counts towards calculations so dimension label and tick labels can impact the spacing.
+`DimensionLayout.Equidistant` draws the dimensions equidistant from each other. The overall width of the dimension counts towards calculations so dimension label and tick labels can impact the spacing.
 
 #### padding: number | [ number, number ] | [ number, number, number, number ]
 
