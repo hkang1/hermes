@@ -15,6 +15,8 @@ import { distance, isPointInTriangle } from './utils/math';
 import { truncate } from './utils/string';
 import * as tester from './utils/tester';
 
+export * from './types';
+
 class Hermes {
   protected element: HTMLElement;
   protected canvas: HTMLCanvasElement;
