@@ -1228,9 +1228,11 @@ class Hermes {
           y += isHorizontal ? layout.axisBoundaryStop.y : layout.axisDataStart.y;
         } else if (valueIsInfinity) {
           const dx = valueIsNegativeInfinity
-            ? layout.axisInfinityStart.x : layout.axisInfinityStop.x;
+            ? (isHorizontal ? layout.axisInfinityStop.x : layout.axisInfinityStart.x)
+            : (isHorizontal ? layout.axisInfinityStart.x : layout.axisInfinityStop.x);
           const dy = valueIsPositiveInfinity
-            ? layout.axisInfinityStop.y : layout.axisInfinityStart.y;
+            ? (isHorizontal ? layout.axisInfinityStart.y : layout.axisInfinityStop.y)
+            : (isHorizontal ? layout.axisInfinityStop.y : layout.axisInfinityStart.y);
           x += isHorizontal ? layout.axisDataStart.x : dx;
           y += isHorizontal ? dy : layout.axisDataStart.y;
         } else {
