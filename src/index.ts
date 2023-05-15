@@ -264,7 +264,7 @@ class Hermes {
     this.size = { h: height, w: width };
 
     // Make hook callback.
-    this.config.hooks.onResize?.(this.size, oldSize);
+    this.config.hooks.onResize?.(d.clone(this.size), oldSize);
 
     if (redraw) this.redraw();
   }
@@ -809,7 +809,7 @@ class Hermes {
       _ixsa.dimIndex = newIndex;
 
       // Make hook callback.
-      this.config.hooks.onDimensionMove?.(dragDimension[0], newIndex, oldIndex);
+      this.config.hooks.onDimensionMove?.(d.clone(dragDimension[0]), newIndex, oldIndex);
     }
   }
 
@@ -947,7 +947,7 @@ class Hermes {
       const removeIndex = filters.findIndex(filter => pos >= filter.p0 && pos <= filter.p1);
       if (removeIndex !== -1) {
         // Make hook callback.
-        const filter = filters[removeIndex];
+        const filter = d.clone(filters[removeIndex]);
         this.config.hooks.onFilterRemove?.({ [dimensionKey]: [ filter ] });
 
         // Remove filter.
@@ -963,7 +963,7 @@ class Hermes {
         this.processFilter(_ixf.active, index);
       }
 
-      const filters = { [dimensionKey]: [ _ixf.active ] };
+      const filters = { [dimensionKey]: [ d.clone(_ixf.active) ] };
 
       // Make corresponding filter hook callback.
       switch (_ixsa.type) {
@@ -987,7 +987,7 @@ class Hermes {
     this.cleanUpFilters();
 
     // Make hook call back with all of the filter changes.
-    this.config.hooks?.onFilterChange?.(this.filters);
+    this.config.hooks?.onFilterChange?.(d.clone(this.filters));
   }
 
   protected getDimensionLayoutInfo(dimIndex: number): t.InternalDimensionLayoutInfo | undefined {
