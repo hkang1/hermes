@@ -1,21 +1,15 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import routes from './routes';
 import './App.css';
-import GettingStarted from './pages/GettingStarted';
+import SideBar from './SideBar';
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <GettingStarted />,
-  },
-]);
+const router = createBrowserRouter(routes);
 
 function App() {
   return (
     <>
       <aside>
-        Links
-        <a href="/">Getting Started</a>
-        ABC
+        <SideBar />
       </aside>
       <main>
         <RouterProvider router={router} />
