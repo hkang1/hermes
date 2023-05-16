@@ -1,0 +1,10 @@
+.base {
+  background-color: grey;
+  border-radius: 2px;
+  display: inline;
+  padding: 2px 4px;
+}
+
+.block {
+  display: block;
+}
