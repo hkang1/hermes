@@ -126,6 +126,8 @@ export const HERMES_CONFIG: t.Config = {
         type: t.PathType.Straight,
       },
       series: [],
+      targetColorScale: [],
+      targetDimensionKey: undefined,
     },
     dimension: {
       label: {
