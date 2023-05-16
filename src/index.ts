@@ -1206,8 +1206,6 @@ class Hermes {
       let hasPositiveInfinity = false;
       let isFilteredOut = false;
 
-      if (dataStyle.series?.[k]) dataDefaultStyle = dataStyle.series?.[k];
-
       const series = this.dimensions.map((dimension, i) => {
         const key = dimension.key;
         const layout = _dl[i].layout;
@@ -1288,6 +1286,8 @@ class Hermes {
 
         return { x, y };
       });
+
+      if (dataStyle.series?.[k]) dataDefaultStyle = dataStyle.series?.[k];
 
       if (hasFilters && isFilteredOut) {
         dataDefaultStyle = dataStyle.filtered;
