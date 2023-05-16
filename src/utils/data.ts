@@ -139,8 +139,10 @@ export const processData = (data: Data): InternalDataInfo => {
     info.seriesCount = info.seriesCount || data[key].length;
 
     for (const value of data[key]) {
-      if (isNaN(value as number)) info.hasNaN = true;
-      if (!isNaN(value as number) && !isFinite(value as number)) info.hasInfinity = true;
+      if (isNumber(value) && isNaN(value)) info.hasNaN = true;
+      if (isNumber(value) && !isNaN(value as number) && !isFinite(value as number)) {
+        info.hasInfinity = true;
+      }
     }
   }
 
