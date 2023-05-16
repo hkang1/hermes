@@ -1,13 +1,13 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import './App.css'
-import GettingStarted from './pages/GettingStarted'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import './App.css';
+import GettingStarted from './pages/GettingStarted';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <GettingStarted/>
-  }
-])
+    element: <GettingStarted />,
+  },
+]);
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
         <RouterProvider router={router} />
       </main>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
