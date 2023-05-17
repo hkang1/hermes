@@ -3,14 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://hkang1.github.io/hermes/",
+  "homepage": "https://deploy-preview-146--bejewelled-lamington-f97ebd.netlify.app/",
   "scripts": {
     "start": "vite",
-    "build": "tsc && vite build",
+    "build": "rm -rf dist && tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
-    "preview": "vite preview",
-    "deploy": "gh-pages -d build"
+    "preview": "vite preview"
   },
   "dependencies": {
     "hermes-parallel-coordinates": "^0.6.7",
@@ -29,6 +28,7 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
+    "gh-pages": "^5.0.0",
     "prettier": "^2.8.8",
     "typescript": "^5.0.2",
     "vite": "^4.3.2"

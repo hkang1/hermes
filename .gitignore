@@ -1,6 +1,7 @@
 .DS_STORE
 .idea/
 .vscode/
+docs/dist/
 node_modules/
 test-results/
 tsc-out/
