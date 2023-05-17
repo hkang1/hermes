@@ -1,6 +1,57 @@
+import { useEffect, useRef } from 'react';
 import { c } from '@/components/Code';
+import Figure from '@/components/Figure';
+
+import Hermes, { DimensionType } from 'hermes-parallel-coordinates';
+
+const PETS_DIMENSIONS = [
+  {
+    key: 'name',
+    label: 'Name',
+    type: DimensionType.Categorical,
+    categories: ['Amari', 'Helix', 'Kals', 'Timber', 'Qubbie'],
+  },
+  {
+    key: 'type',
+    label: 'Type',
+    type: DimensionType.Categorical,
+    categories: ['cat', 'dog', 'hamster', 'rabbit'],
+  },
+  { key: 'age', label: 'Age (yr)', type: DimensionType.Linear },
+  { key: 'height', label: 'Height (cm)', type: DimensionType.Linear },
+  { key: 'weight', label: 'Height (kg)', type: DimensionType.Linear },
+];
+
+const PETS_DATA = {
+  name: ['Amari', 'Helix', 'Kals', 'Timber', 'Qubbie'],
+  age: [1, 14, 12, 4, 3],
+  height: [48, 85, 39, 12, 26],
+  type: ['dog', 'dog', 'cat', 'hamster', 'rabbit'],
+  weight: [23, 38, 8, 1, 2],
+};
+
+const PETS_CONFIG = {
+  style: {
+    data: {
+      series: [
+        { strokeStyle: 'rgb(200, 0, 0)' },
+        { strokeStyle: 'rgb(200, 150, 0)' },
+        { strokeStyle: 'rgb(0, 200, 0)' },
+        { strokeStyle: 'rgb(0, 100, 150)' },
+        { strokeStyle: 'rgb(0, 0, 200)' },
+      ],
+    },
+  },
+};
 
 export default function GettingStarted() {
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+    new Hermes(chartRef.current, PETS_DIMENSIONS, PETS_CONFIG, PETS_DATA);
+  }, []);
+
   return (
     <>
       <h1>Hermes Parallel Coordinates</h1>
@@ -19,7 +70,36 @@ export default function GettingStarted() {
         etc.
       </p>
 
+      <p>Here</p>
+
+      <Figure caption="Pets Chart" whiteBackground>
+        <div id="pets" ref={chartRef} style={{ width: '100%', height: 320 }} />
+      </Figure>
+
       <h1>Screenshots</h1>
+
+      <p>Showcase of commonly used variations of hermes.</p>
+
+      <Figure
+        caption="Default chart rendering"
+        imageSrc="https://raw.githubusercontent.com/hkang1/hermes/main/screenshots/standard.png"
+      />
+
+      <Figure
+        caption="Bezier curve rendering"
+        imageSrc="https://raw.githubusercontent.com/hkang1/hermes/main/screenshots/path-type-bezier-curve.png"
+      />
+
+      <Figure
+        caption="Chart with filtering"
+        imageSrc="https://raw.githubusercontent.com/hkang1/hermes/main/screenshots/filtered.png"
+      />
+
+      <Figure
+        caption="Vertical orientation"
+        imageSrc="https://raw.githubusercontent.com/hkang1/hermes/main/screenshots/layout-vertical.png"
+        whiteBackground
+      />
     </>
   );
 }

@@ -1,11 +1,23 @@
+import { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import routes from './routes';
-import './App.css';
 import SideBar from './SideBar';
+import themeStore from '@/stores/theme';
+import { setThemeCssVars } from '@/utils/theme';
+import { useObservable } from 'micro-observables';
+
+import './App.css';
 
 const router = createBrowserRouter(routes);
 
 function App() {
+  const theme = useObservable(themeStore.theme);
+
+  useEffect(() => {
+    setThemeCssVars(theme);
+    return themeStore.theme.subscribe((theme) => setThemeCssVars(theme));
+  }, []);
+
   return (
     <>
       <aside>

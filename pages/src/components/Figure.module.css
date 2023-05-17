@@ -1,0 +1,15 @@
+.content {
+  background-color: var(--theme-surface);
+  border-radius: var(--theme-border-radius);
+  display: flex;
+  flex-direction: column;
+  line-height: 0;
+  overflow: hidden;
+}
+.caption {
+  font-size: 14px;
+  font-style: italic;
+  line-height: normal;
+  padding: 8px;
+  text-align: center;
+}
