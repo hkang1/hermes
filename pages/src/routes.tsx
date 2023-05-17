@@ -5,16 +5,12 @@ export default [
   {
     element: <Overview />,
     label: 'Overview',
-    path: 'overview',
+    path: '/',
+    index: true,
   },
   {
     element: <GettingStarted />,
     label: 'Getting Started',
     path: 'getting-started',
-  },
-  {
-    element: <Overview />,
-    label: 'Overview',
-    path: '*',
   },
 ];
