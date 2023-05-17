@@ -12,6 +12,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@codemirror/lang-html": "^6.4.3",
+    "@codemirror/lang-javascript": "^6.1.8",
+    "@codemirror/language": "^6.6.0",
+    "codemirror": "^6.0.1",
     "hermes-parallel-coordinates": "^0.6.7",
     "micro-observables": "^1.7.2",
     "react": "^18.2.0",
