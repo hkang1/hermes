@@ -10,7 +10,7 @@ import './App.css';
 
 const router = createHashRouter(
   [{ path: '/', element: <Layout />, children: routes }],
-  import.meta.env.PROD ? { basename: '/hermes/' } : undefined
+  { basename: import.meta.env.PROD ? '/hermes' : undefined }
 );
 
 function App() {
