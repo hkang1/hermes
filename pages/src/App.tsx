@@ -1,11 +1,5 @@
 import { useEffect } from 'react';
-import {
-  createHashRouter,
-  createRoutesFromElements,
-  Outlet,
-  Route,
-  RouterProvider,
-} from 'react-router-dom';
+import { createHashRouter, Outlet, RouterProvider } from 'react-router-dom';
 import SideBar from './SideBar';
 import themeStore from '@/stores/theme';
 import { setThemeCssVars } from '@/utils/theme';
@@ -15,19 +9,8 @@ import routes from './routes';
 import './App.css';
 
 const router = createHashRouter(
-  createRoutesFromElements(
-    <Route element={<Layout />}>
-      {routes.map((route) => (
-        <Route
-          key={route.path}
-          index={route.index}
-          path={route.path}
-          element={route.element}
-        />
-      ))}
-    </Route>
-  ),
-  import.meta.env.PROD ? { basename: '/hermes' } : undefined
+  [{ path: '/', element: <Layout />, children: routes }],
+  import.meta.env.PROD ? { basename: '/hermes/' } : undefined
 );
 
 function App() {
