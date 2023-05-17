@@ -8,7 +8,8 @@ import { useObservable } from 'micro-observables';
 
 import './App.css';
 
-const router = createBrowserRouter(routes);
+const options = import.meta.env.PROD ? { basename: '/hermes' } : undefined;
+const router = createBrowserRouter(routes, options);
 
 function App() {
   const theme = useObservable(themeStore.theme);
