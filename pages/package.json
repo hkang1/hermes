@@ -10,7 +10,7 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
     "preview": "vite preview",
-    "deploy": "gh-pages -d build"
+    "deploy": "npm run build && npx gh-pages -d ../docs"
   },
   "dependencies": {
     "hermes-parallel-coordinates": "^0.6.7",

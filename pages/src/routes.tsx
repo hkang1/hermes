@@ -5,7 +5,7 @@ export default [
   {
     element: <Overview />,
     label: 'Overview',
-    path: '/',
+    path: '',
   },
   {
     element: <GettingStarted />,
