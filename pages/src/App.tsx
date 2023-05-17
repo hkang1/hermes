@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import {
-  createBrowserRouter,
+  createHashRouter,
   createRoutesFromElements,
   Outlet,
   Route,
@@ -14,7 +14,7 @@ import routes from './routes';
 
 import './App.css';
 
-const router = createBrowserRouter(
+const router = createHashRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
       {routes.map((route) => (
