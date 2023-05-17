@@ -3,14 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://hkang1.github.io/hermes",
+  "homepage": "https://deploy-preview-146--bejewelled-lamington-f97ebd.netlify.app/",
   "scripts": {
     "start": "vite",
     "build": "rm -rf dist && tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
-    "preview": "vite preview",
-    "deploy": "npm run build && npx gh-pages -d dist"
+    "preview": "vite preview"
   },
   "dependencies": {
     "hermes-parallel-coordinates": "^0.6.7",

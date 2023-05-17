@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import {
-  createHashRouter,
+  createBrowserRouter,
   Navigate,
   Outlet,
   RouterProvider,
@@ -32,21 +32,18 @@ export const ROUTES = [
   },
 ];
 
-const ROUTER = createHashRouter(
-  [
-    {
-      children: ROUTES,
-      element: <Layout />,
-      loader: () => {
-        console.log('showing loader');
-        return <div>Loading</div>;
-      },
-      errorElement: <div>Error!</div>,
-      path: '/',
+const ROUTER = createBrowserRouter([
+  {
+    children: ROUTES,
+    element: <Layout />,
+    loader: () => {
+      console.log('showing loader');
+      return <div>Loading</div>;
     },
-  ],
-  { basename: import.meta.env.BASE_URL }
-);
+    errorElement: <div>Error!</div>,
+    path: '/',
+  },
+]);
 
 function App() {
   const theme = useObservable(themeStore.theme);
