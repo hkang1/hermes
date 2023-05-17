@@ -6,7 +6,6 @@ export default [
     element: <Overview />,
     label: 'Overview',
     path: '/',
-    index: true,
   },
   {
     element: <GettingStarted />,
