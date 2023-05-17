@@ -18,7 +18,12 @@ const router = createHashRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
       {routes.map((route) => (
-        <Route index={route.index} path={route.path} element={route.element} />
+        <Route
+          key={route.path}
+          index={route.index}
+          path={route.path}
+          element={route.element}
+        />
       ))}
     </Route>
   ),

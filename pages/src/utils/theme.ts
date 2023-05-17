@@ -58,7 +58,6 @@ export function getSystemMode(): Mode {
 
 export function setThemeCssVars(theme: Theme) {
   Object.keys(theme).forEach((key) => {
-    console.log(key);
     document.documentElement.style.setProperty(
       `--theme-${camelCaseToKebab(key)}`,
       (theme as Record<RecordKey, string>)[key]
