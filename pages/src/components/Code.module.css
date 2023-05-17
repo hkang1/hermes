@@ -1,0 +1,14 @@
+.base {
+  background-color: var(--theme-stage);
+  border-radius: var(--theme-border-radius-weak);
+  color: var(--theme-stage-on);
+  display: inline;
+  padding: 2px 4px;
+}
+
+.block {
+  display: block;
+  font-size: 16px;
+  padding: calc(8px + var(--theme-density) * 4px);
+  white-space: pre-wrap;
+}

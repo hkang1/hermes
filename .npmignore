@@ -1,7 +1,10 @@
 .circleci
+.eslintrc
 .eslintrc.js
+.prettierrc
 codecov
 demos/
+docs/
 hermes.code-workspace
 jest.config.js
 package-lock.json
