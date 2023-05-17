@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import routes from './routes';
 import css from './SideBar.module.css';
 
@@ -7,7 +8,9 @@ export default function SideBar() {
       {routes
         .filter((route) => route.path !== '*')
         .map((route) => (
-          <a href={route.path}>{route.label}</a>
+          <Link key={route.path} to={route.path}>
+            {route.label}
+          </Link>
         ))}
     </menu>
   );
