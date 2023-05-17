@@ -1,5 +1,4 @@
 .DS_STORE
-.docs/
 .idea/
 .vscode/
 node_modules/
