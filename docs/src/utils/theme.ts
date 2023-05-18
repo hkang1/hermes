@@ -1,7 +1,8 @@
 import { DarkLight, Mode, Theme } from '@/stores/theme';
-import { isColor, rgba2str, rgbaMix, str2rgba } from '@/utils/color';
-import { camelCaseToKebab } from './string';
 import { RecordKey } from '@/types';
+import { isColor, rgba2str, rgbaMix, str2rgba } from '@/utils/color';
+
+import { camelCaseToKebab } from './string';
 
 const STRONG_WEAK_DELTA = 45;
 
@@ -12,7 +13,7 @@ export function generateStrongWeak(theme: Theme): Theme {
   const rgbaStrong = str2rgba(theme.strong);
   const rgbaWeak = str2rgba(theme.weak);
 
-  for (const [key, value] of Object.entries(theme)) {
+  for (const [ key, value ] of Object.entries(theme)) {
     const matches = key.match(/^(.+)(Strong|Weak)$/);
     if (matches?.length === 3 && value === undefined) {
       const isStrong = matches[2] === 'Strong';
@@ -22,7 +23,7 @@ export function generateStrongWeak(theme: Theme): Theme {
         const rgba = str2rgba(baseValue);
         const mixer = isStrong ? rgbaStrong : rgbaWeak;
         theme[key as keyof Theme] = rgba2str(
-          rgbaMix(rgba, mixer, STRONG_WEAK_DELTA)
+          rgbaMix(rgba, mixer, STRONG_WEAK_DELTA),
         );
       }
     }
@@ -60,7 +61,7 @@ export function setThemeCssVars(theme: Theme) {
   Object.keys(theme).forEach((key) => {
     document.documentElement.style.setProperty(
       `--theme-${camelCaseToKebab(key)}`,
-      (theme as Record<RecordKey, string>)[key]
+      (theme as Record<RecordKey, string>)[key],
     );
   });
 }

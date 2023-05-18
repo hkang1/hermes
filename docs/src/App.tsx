@@ -1,3 +1,4 @@
+import { useObservable } from 'micro-observables';
 import { useEffect } from 'react';
 import {
   createBrowserRouter,
@@ -5,15 +6,14 @@ import {
   Outlet,
   RouterProvider,
 } from 'react-router-dom';
+
 import GettingStarted from '@/pages/GettingStarted';
 import Overview from '@/pages/Overview';
 import themeStore from '@/stores/theme';
 import { setThemeCssVars } from '@/utils/theme';
-import { useObservable } from 'micro-observables';
-
-import SideBar from './SideBar';
 
 import './App.css';
+import SideBar from './SideBar';
 
 export const ROUTES = [
   {
@@ -36,21 +36,16 @@ const ROUTER = createBrowserRouter([
   {
     children: ROUTES,
     element: <Layout />,
+    errorElement: <div>Error!</div>,
     loader: () => {
-      console.log('showing loader');
       return <div>Loading</div>;
     },
-    errorElement: <div>Error!</div>,
     path: '/',
   },
 ]);
 
 function App() {
   const theme = useObservable(themeStore.theme);
-
-  console.log('vite base_url', import.meta.env.BASE_URL);
-  console.log('vite prod', import.meta.env.PROD);
-  console.log('ROUTER', ROUTER);
 
   useEffect(() => {
     setThemeCssVars(theme);
@@ -61,7 +56,6 @@ function App() {
 }
 
 function Layout() {
-  console.log('layout called!');
   return (
     <>
       <aside>

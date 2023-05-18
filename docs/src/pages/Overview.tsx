@@ -1,21 +1,21 @@
+import Hermes, { DimensionType } from 'hermes-parallel-coordinates';
 import { useEffect, useRef } from 'react';
+
 import { c } from '@/components/Code';
 import Figure from '@/components/Figure';
 
-import Hermes, { DimensionType } from 'hermes-parallel-coordinates';
-
 const PETS_DIMENSIONS = [
   {
+    categories: [ 'Amari', 'Helix', 'Kals', 'Timber', 'Qubbie' ],
     key: 'name',
     label: 'Name',
     type: DimensionType.Categorical,
-    categories: ['Amari', 'Helix', 'Kals', 'Timber', 'Qubbie'],
   },
   {
+    categories: [ 'cat', 'dog', 'hamster', 'rabbit' ],
     key: 'type',
     label: 'Type',
     type: DimensionType.Categorical,
-    categories: ['cat', 'dog', 'hamster', 'rabbit'],
   },
   { key: 'age', label: 'Age (yr)', type: DimensionType.Linear },
   { key: 'height', label: 'Height (cm)', type: DimensionType.Linear },
@@ -23,11 +23,11 @@ const PETS_DIMENSIONS = [
 ];
 
 const PETS_DATA = {
-  name: ['Amari', 'Helix', 'Kals', 'Timber', 'Qubbie'],
-  age: [1, 14, 12, 4, 3],
-  height: [48, 85, 39, 12, 26],
-  type: ['dog', 'dog', 'cat', 'hamster', 'rabbit'],
-  weight: [23, 38, 8, 1, 2],
+  age: [ 1, 14, 12, 4, 3 ],
+  height: [ 48, 85, 39, 12, 26 ],
+  name: [ 'Amari', 'Helix', 'Kals', 'Timber', 'Qubbie' ],
+  type: [ 'dog', 'dog', 'cat', 'hamster', 'rabbit' ],
+  weight: [ 23, 38, 8, 1, 2 ],
 };
 
 const PETS_CONFIG = {
@@ -73,7 +73,7 @@ export default function GettingStarted() {
       <p>Here</p>
 
       <Figure caption="Pets Chart" whiteBackground>
-        <div id="pets" ref={chartRef} style={{ width: '100%', height: 320 }} />
+        <div id="pets" ref={chartRef} style={{ height: 320, width: '100%' }} />
       </Figure>
 
       <h1>Screenshots</h1>

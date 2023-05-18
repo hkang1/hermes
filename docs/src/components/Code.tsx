@@ -14,11 +14,10 @@ export function cblock(code: TemplateStringsArray) {
 }
 
 function Code({ block, children }: Props) {
-  const classes = [css.base];
+  const classes = [ css.base ];
 
   const content = (children?.raw ?? []).map((line) =>
-    line.replace(/^(\s*\n+)/, '').replace(/(\n+\s*)$/, '')
-  );
+    line.replace(/^(\s*\n+)/, '').replace(/(\n+\s*)$/, ''));
 
   if (block) classes.push(css.block);
 
