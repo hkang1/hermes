@@ -33,6 +33,9 @@ jobs:
           name: Update browserlist
           command: npx browserslist@latest --update-db
       - run:
+          name: Run lint
+          command: npm run lint
+      - run:
           name: Run tests
           command: |
             npm run test:coverage -- --ci --maxWorkers=1

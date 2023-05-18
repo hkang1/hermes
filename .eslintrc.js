@@ -16,16 +16,12 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: { jsx: true },
-    ecmaVersion: 2018,
+    ecmaVersion: 'latest',
     sourceType: 'module',
   },
   plugins: [ 'import', 'sort-keys-fix' ],
   root: true,
   rules: {
-    '@typescript-eslint/explicit-module-boundary-types': [
-      'warn',
-      { allowArgumentsExplicitlyTypedAsAny: true },
-    ],
     '@typescript-eslint/indent': [
       'error',
       2,
@@ -35,6 +31,15 @@ module.exports = {
       },
     ],
     '@typescript-eslint/member-ordering': [ 'error', {
+      classes: [
+        'private-field',
+        'protected-field',
+        'public-field',
+
+        'private-method',
+        'protected-method',
+        'public-field',
+      ],
       interfaces: { order: 'alphabetically' },
       typeLiterals: { order: 'alphabetically' },
     } ],
@@ -71,7 +76,7 @@ module.exports = {
         beforeColon: false,
       },
     } ],
-    'max-len': [ 'error', 100, { tabWidth: 2 } ],
+    'max-len': [ 'error', 120, { tabWidth: 2 } ],
     'no-console': [ 'error', { allow: [ 'warn' ] } ],
     'no-empty': [ 'error', { allowEmptyCatch: true } ],
     'no-multi-spaces': [ 'error', { ignoreEOLComments: true } ],

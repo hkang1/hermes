@@ -16,7 +16,7 @@ export default function Figure({
   whiteBackground,
 }: PropsWithChildren<Props>) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [contentStyle, setContentStyle] = useState<React.CSSProperties>({});
+  const [ contentStyle, setContentStyle ] = useState<React.CSSProperties>({});
 
   useEffect(() => {
     if (!imageSrc) return;
@@ -40,7 +40,7 @@ export default function Figure({
       }
     };
     image.src = imageSrc;
-  }, [imageSrc]);
+  }, [ imageSrc ]);
 
   return (
     <div>

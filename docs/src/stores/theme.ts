@@ -1,13 +1,14 @@
+import { observable, Observable, WritableObservable } from 'micro-observables';
+
 import { THEME_BASE, THEME_DARK, THEME_LIGHT } from '@/constants/theme';
 import { ValueOf } from '@/types';
 import {
-  MATCH_MEDIA_SCHEME_DARK,
-  MATCH_MEDIA_SCHEME_LIGHT,
   generateStrongWeak,
   getDarkLight,
   getSystemMode,
+  MATCH_MEDIA_SCHEME_DARK,
+  MATCH_MEDIA_SCHEME_LIGHT,
 } from '@/utils/theme';
-import { observable, Observable, WritableObservable } from 'micro-observables';
 
 export const Mode = {
   Dark: 'dark',
@@ -31,11 +32,11 @@ export type DarkLight = ValueOf<typeof DarkLight>;
 export type Theme = Record<keyof typeof THEME_BASE, string>;
 
 const themeDark: Theme = generateStrongWeak(
-  Object.assign({}, THEME_BASE, THEME_DARK)
+  Object.assign({}, THEME_BASE, THEME_DARK),
 );
 
 const themeLight: Theme = generateStrongWeak(
-  Object.assign({}, THEME_BASE, THEME_LIGHT)
+  Object.assign({}, THEME_BASE, THEME_LIGHT),
 );
 
 class ThemeStore {
@@ -43,8 +44,8 @@ class ThemeStore {
   #userMode: WritableObservable<Mode> = observable(Mode.System);
 
   public readonly darkLight = Observable.select(
-    [this.#userMode, this.#systemMode],
-    (userMode, systemMode) => getDarkLight(userMode, systemMode)
+    [ this.#userMode, this.#systemMode ],
+    (userMode, systemMode) => getDarkLight(userMode, systemMode),
   );
 
   public readonly theme = this.darkLight.select((darkLight) => {
@@ -54,11 +55,11 @@ class ThemeStore {
   constructor() {
     matchMedia?.(MATCH_MEDIA_SCHEME_DARK).addEventListener(
       'change',
-      this.handleSchemeChange.bind(this)
+      this.handleSchemeChange.bind(this),
     );
     matchMedia?.(MATCH_MEDIA_SCHEME_LIGHT).addEventListener(
       'change',
-      this.handleSchemeChange.bind(this)
+      this.handleSchemeChange.bind(this),
     );
   }
 

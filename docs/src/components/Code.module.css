@@ -1,8 +1,8 @@
 .base {
   background-color: var(--theme-stage);
   border-radius: var(--theme-border-radius-weak);
-  color: var(--theme-stage-on);
   display: inline;
+  color: var(--theme-stage-on);
   padding: 2px 4px;
 }
 
