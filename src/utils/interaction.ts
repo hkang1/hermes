@@ -1,7 +1,7 @@
 import { FILTER, INVALID_RECT } from '../defaults';
 import * as t from '../types';
 
-import { clone, comparePrimitive } from './data';
+import { clone } from './data';
 import { shiftRect } from './math';
 
 export const DIMENSION_SWAP_THRESHOLD = 30;

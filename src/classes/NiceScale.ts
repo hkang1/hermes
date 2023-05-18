@@ -13,6 +13,9 @@ export const DEFAULT_REVERSE = false;
 export const MIN_TICK_DISTANCE = 50;
 
 abstract class NiceScale {
+  protected axisLength = 1;
+  protected maxTicks = 1;
+  protected dataOnEdge = DEFAULT_DATA_ON_EDGE;
   public max: number;
   public min: number;
   public range = 0;
@@ -22,9 +25,6 @@ abstract class NiceScale {
   public ticks: number[] = [];
   public tickPadding = 0;
   public tickSpacing = 0;
-  protected axisLength = 1;
-  protected maxTicks = 1;
-  protected dataOnEdge = DEFAULT_DATA_ON_EDGE;
 
   /**
    * Instantiates a new instance of the NiceScale class.
