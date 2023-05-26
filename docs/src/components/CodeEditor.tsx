@@ -1,9 +1,10 @@
 import { langs } from '@uiw/codemirror-extensions-langs';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import CodeMirror from '@uiw/react-codemirror';
-import { CSSProperties } from 'react';
 
 import { ValueOf } from '@/types';
+
+import css from './CodeEditor.module.css';
 
 export const Language = {
   JavaScript: langs.javascript(),
@@ -18,16 +19,15 @@ interface Props {
   language?: Language;
 }
 
-const STYLE: CSSProperties = { fontSize: 12 };
-
 export default function CodeEditor({
   code,
   language = Language.JSON,
 }: Props) {
+  const classes = [ css.base ];
   return (
     <CodeMirror
+      className={classes.join(' ')}
       extensions={[ language ]}
-      style={STYLE}
       theme={vscodeDark}
       value={code}
     />

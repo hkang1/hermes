@@ -1,57 +1,62 @@
-import Hermes, { DimensionType } from 'hermes-parallel-coordinates';
+import Hermes from 'hermes-parallel-coordinates';
 import { useEffect, useRef } from 'react';
 
 import { c } from '@/components/Code';
 import CodeEditor from '@/components/CodeEditor';
 import Figure from '@/components/Figure';
-import Frame from '@/components/Frame';
+import FrameSet, { Frame } from '@/components/FrameSet';
 
-const PETS_DIMENSIONS = [
+const PETS_DIMENSIONS = `[
   {
-    categories: [ 'Amari', 'Helix', 'Kals', 'Timber', 'Qubbie' ],
-    key: 'name',
-    label: 'Name',
-    type: DimensionType.Categorical,
+    "categories": [ "Amari", "Helix", "Kals", "Timber", "Qubbie" ],
+    "key": "name",
+    "label": "Name",
+    "type": "categorical"
   },
   {
-    categories: [ 'cat', 'dog', 'hamster', 'rabbit' ],
-    key: 'type',
-    label: 'Type',
-    type: DimensionType.Categorical,
+    "categories": [ "cat", "dog", "hamster", "rabbit" ],
+    "key": "type",
+    "label": "Type",
+    "type": "categorical"
   },
-  { key: 'age', label: 'Age (yr)', type: DimensionType.Linear },
-  { key: 'height', label: 'Height (cm)', type: DimensionType.Linear },
-  { key: 'weight', label: 'Height (kg)', type: DimensionType.Linear },
-];
+  { "key": "age", "label": "Age (yr)", "type": "linear" },
+  { "key": "height", "label": "Height (cm)", "type": "linear" },
+  { "key": "weight", "label": "Height (kg)", "type": "linear" }
+]`;
 
-const PETS_DATA = {
-  age: [ 1, 14, 12, 4, 3 ],
-  height: [ 48, 85, 39, 12, 26 ],
-  name: [ 'Amari', 'Helix', 'Kals', 'Timber', 'Qubbie' ],
-  type: [ 'dog', 'dog', 'cat', 'hamster', 'rabbit' ],
-  weight: [ 23, 38, 8, 1, 2 ],
-};
+const PETS_DATA = `{
+  "age": [ 1, 14, 12, 4, 3 ],
+  "height": [ 48, 85, 39, 12, 26 ],
+  "name": [ "Amari", "Helix", "Kals", "Timber", "Qubbie" ],
+  "type": [ "dog", "dog", "cat", "hamster", "rabbit" ],
+  "weight": [ 23, 38, 8, 1, 2 ]
+}`;
 
-const PETS_CONFIG = {
-  style: {
-    data: {
-      series: [
-        { strokeStyle: 'rgb(200, 0, 0)' },
-        { strokeStyle: 'rgb(200, 150, 0)' },
-        { strokeStyle: 'rgb(0, 200, 0)' },
-        { strokeStyle: 'rgb(0, 100, 150)' },
-        { strokeStyle: 'rgb(0, 0, 200)' },
-      ],
-    },
-  },
-};
+const PETS_CONFIG = `{
+  "style": {
+    "data": {
+      "series": [
+        { "strokeStyle": "rgb(200, 0, 0)" },
+        { "strokeStyle": "rgb(200, 150, 0)" },
+        { "strokeStyle": "rgb(0, 200, 0)" },
+        { "strokeStyle": "rgb(0, 100, 150)" },
+        { "strokeStyle": "rgb(0, 0, 200)" }
+      ]
+    }
+  }
+}`;
 
 export default function GettingStarted() {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartRef.current) return;
-    new Hermes(chartRef.current, PETS_DIMENSIONS, PETS_CONFIG, PETS_DATA);
+    new Hermes(
+      chartRef.current,
+      JSON.parse(PETS_DIMENSIONS),
+      JSON.parse(PETS_CONFIG),
+      JSON.parse(PETS_DATA),
+    );
   }, []);
 
   return (
@@ -72,13 +77,21 @@ export default function GettingStarted() {
         etc.
       </p>
 
-      <h2>Here</h2>
+      <p>
+        Here is a working demo of such a parallel coordinates chart.
+      </p>
 
-      <Frame>
-        <CodeEditor code={JSON.stringify(PETS_DIMENSIONS, null, 2)} />
-        <CodeEditor code={JSON.stringify(PETS_DATA, null, 2)} />
-        <CodeEditor code={JSON.stringify(PETS_CONFIG, null, 2)} />
-      </Frame>
+      <FrameSet>
+        <Frame title="Dimensions">
+          <CodeEditor code={PETS_DIMENSIONS} />
+        </Frame>
+        <Frame title="Data">
+          <CodeEditor code={PETS_DATA} />
+        </Frame>
+        <Frame title="Config">
+          <CodeEditor code={PETS_CONFIG} />
+        </Frame>
+      </FrameSet>
 
       <Figure caption="Pets Chart" whiteBackground>
         <div id="pets" ref={chartRef} style={{ height: 320, width: '100%' }} />

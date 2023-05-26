@@ -1,0 +1,28 @@
+.base {
+  background-color: var(--theme-stage);
+  display: flex;
+
+  .frame {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+
+    .title {
+      font-weight: bold;
+      padding: 8px 8px 8px 16px;
+    }
+    & > *:nth-child(2) {
+      flex: 1 1 0;
+      overflow: auto;
+    }
+  }
+  .divider {
+    background-color: var(--theme-stage-strong);
+    cursor: pointer;
+    flex-grow: 0;
+    flex-shrink: 0;
+  }
+}
+.base.vertical {
+  flex-direction: column;
+}
