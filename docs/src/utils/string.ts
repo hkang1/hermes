@@ -16,7 +16,7 @@ export function camelCaseToKebab(text: string): string {
 
 export function generateAlphaNumeric(
   length = DEFAULT_ALPHA_NUMERIC_LENGTH,
-  chars = CHARACTERS
+  chars = CHARACTERS,
 ): string {
   let result = '';
   for (let i = length; i > 0; --i) {
