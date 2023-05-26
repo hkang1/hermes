@@ -2,7 +2,9 @@ import Hermes, { DimensionType } from 'hermes-parallel-coordinates';
 import { useEffect, useRef } from 'react';
 
 import { c } from '@/components/Code';
+import CodeEditor from '@/components/CodeEditor';
 import Figure from '@/components/Figure';
+import Frame from '@/components/Frame';
 
 const PETS_DIMENSIONS = [
   {
@@ -70,7 +72,13 @@ export default function GettingStarted() {
         etc.
       </p>
 
-      <p>Here</p>
+      <h2>Here</h2>
+
+      <Frame>
+        <CodeEditor code={JSON.stringify(PETS_DIMENSIONS, null, 2)} />
+        <CodeEditor code={JSON.stringify(PETS_DATA, null, 2)} />
+        <CodeEditor code={JSON.stringify(PETS_CONFIG, null, 2)} />
+      </Frame>
 
       <Figure caption="Pets Chart" whiteBackground>
         <div id="pets" ref={chartRef} style={{ height: 320, width: '100%' }} />
