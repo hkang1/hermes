@@ -18,11 +18,15 @@
   }
   .divider {
     background-color: var(--theme-stage-strong);
-    cursor: pointer;
+    cursor: col-resize;
     flex-grow: 0;
     flex-shrink: 0;
   }
 }
 .base.vertical {
   flex-direction: column;
+
+  .divider {
+    cursor: row-resize;
+  }
 }
