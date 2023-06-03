@@ -73,7 +73,7 @@ export default function HermesEditor({ config, data, dimensions }: Props) {
 
   return (
     <div className={css.base}>
-      <FrameSet direction="vertical">
+      <FrameSet>
         <Frame title="Dimensions">
           <CodeEditor code={dimensions} />
         </Frame>

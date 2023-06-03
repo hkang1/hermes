@@ -78,7 +78,7 @@ export default function GettingStarted() {
         dimensions={PETS_DIMENSIONS}
       />
 
-      <h1>Screenshots</h1>
+      {/* <h1>Screenshots</h1>
 
       <p>Showcase of commonly used variations of hermes.</p>
 
@@ -101,7 +101,7 @@ export default function GettingStarted() {
         caption="Vertical orientation"
         imageSrc="https://raw.githubusercontent.com/hkang1/hermes/main/screenshots/layout-vertical.png"
         whiteBackground
-      />
+      /> */}
     </>
   );
 }
