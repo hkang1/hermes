@@ -119,7 +119,7 @@ export const idempotentNumber = (
   return (index % (adjustedCount + 1)) * inc + min;
 };
 
-export const obj2str = <T extends NestedObject>(obj: T): string => {
+export const obj2str = <T extends NestedObject | Array<unknown>>(obj: T): string => {
   function replacer(key: string, value: unknown) {
     if (isNumber(value)) {
       if (isNaN(value)) return 'Number.NaN';
@@ -206,7 +206,7 @@ export const randomNumber = (
   return Math.random() * (max - min) + min;
 };
 
-export const str2obj = <T extends NestedObject>(str: string): T => {
+export const str2obj = <T extends NestedObject | Array<unknown>>(str: string): T => {
   function reviver(key: string, value: unknown) {
     if (isString(value)) {
       if (value === 'Number.NaN') return NaN;

@@ -336,7 +336,7 @@ describe('data utilities', () => {
 
   describe('object and string conversions', () => {
     const obj = { abc: { a: 5, b: NaN, c: [ true, Infinity, -Infinity ] } };
-    const str = `{
+    const objStr = `{
   "abc": {
     "a": 5,
     "b": "Number.NaN",
@@ -347,12 +347,27 @@ describe('data utilities', () => {
     ]
   }
 }`;
+    const arr = [ NaN, Infinity, -Infinity ];
+    const arrStr = `[
+  "Number.NaN",
+  "Number.Infinity",
+  "-Number.Infinity"
+]`;
+
     it('should convert object to strings', () => {
-      expect(utils.obj2str(obj)).toBe(str);
+      expect(utils.obj2str(obj)).toBe(objStr);
     });
 
     it('should convert string to object', () => {
-      expect(utils.str2obj(str)).toMatchObject(obj);
+      expect(utils.str2obj(objStr)).toMatchObject(obj);
+    });
+
+    it('should convert array to strings', () => {
+      expect(utils.obj2str(arr)).toBe(arrStr);
+    });
+
+    it('should convert string to array', () => {
+      expect(utils.str2obj(arrStr)).toMatchObject(arr);
     });
   });
 

@@ -40,8 +40,8 @@ declare class Hermes {
   );
 
   static deepMerge<T extends Hermes.NestedObject>(...objects: T[]): T;
-  static obj2str<T extends Hermes.NestedObject>(obj: T): string;
-  static str2obj<T extends Hermes.NestedObject>(str: string): T;
+  static obj2str<T extends Hermes.NestedObject | Array<unknown>>(obj: T): string;
+  static str2obj<T extends Hermes.NestedObject | Array<unknown>>(str: string): T;
   static getTester(): Hermes.Tester;
   static validateData(data: Hermes.Data): { count: number, valid: boolean };
   static validateDimension(dimension: Hermes.Dimension): { message: string, valid: boolean };
