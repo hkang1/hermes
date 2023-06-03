@@ -173,6 +173,41 @@ describe('Hermes Core', () => {
     });
   });
 
+  describe('obj2str and str2obj', () => {
+    const obj = { abc: { a: 5, b: NaN, c: [ true, Infinity, -Infinity ] } };
+    const str = `{
+  "abc": {
+    "a": 5,
+    "b": "Number.NaN",
+    "c": [
+      true,
+      "Number.Infinity",
+      "-Number.Infinity"
+    ]
+  }
+}`;
+
+    describe('obj2str', () => {
+      it('should have `obj2str` defined statically', () => {
+        expect(utils.HermesTester.obj2str).not.toBeUndefined();
+      });
+
+      it('should convert object to string', () => {
+        expect(utils.HermesTester.obj2str(obj)).toBe(str);
+      });
+    });
+
+    describe('str2obj', () => {
+      it('should have `str2obj` defined statically', () => {
+        expect(utils.HermesTester.str2obj).not.toBeUndefined();
+      });
+
+      it('should convert string to object', () => {
+        expect(utils.HermesTester.str2obj(str)).toMatchObject(obj);
+      });
+    });
+  });
+
   describe('getTester', () => {
     it('should have `generateData` defined in tester', () => {
       const tester = utils.HermesTester.getTester();

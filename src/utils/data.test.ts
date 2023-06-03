@@ -334,6 +334,28 @@ describe('data utilities', () => {
     });
   });
 
+  describe('object and string conversions', () => {
+    const obj = { abc: { a: 5, b: NaN, c: [ true, Infinity, -Infinity ] } };
+    const str = `{
+  "abc": {
+    "a": 5,
+    "b": "Number.NaN",
+    "c": [
+      true,
+      "Number.Infinity",
+      "-Number.Infinity"
+    ]
+  }
+}`;
+    it('should convert object to strings', () => {
+      expect(utils.obj2str(obj)).toBe(str);
+    });
+
+    it('should convert string to object', () => {
+      expect(utils.str2obj(str)).toMatchObject(obj);
+    });
+  });
+
   describe('processData', () => {
     const a = utils.processData({
       accuracy: [ NaN, 0.97, 0.98, 0.99 ],
