@@ -37,7 +37,7 @@ function isChildrenValid(children: ReactNode): children is ReactElement[] {
 export default function FrameSet({
   children,
   direction = 'horizontal',
-  height = 300,
+  height,
   resizable = true,
 }: PropsWithChildren<Props>) {
   if (!isChildrenValid(children)) throw new Error('Frame\'s children must be an array of ReactElement!');
@@ -65,14 +65,19 @@ export default function FrameSet({
     return spacers;
   }, [ dividers ]);
 
+  const style = useMemo(() => {
+    const frameHeight = height ?? (isHorizontal ? 300 : 900);
+    return { height: frameHeight, maxHeight: frameHeight };
+  }, [ height, isHorizontal ]);
+
   const generateDividerDragHandler = (index: number) => (point: Point) => {
     setDividers((dividers) => dividers.map((divider, i) => {
-      return i === index ? point.x : divider;
+      return i === index ? (isHorizontal ? point.x : point.y) : divider;
     }));
   };
 
   return (
-    <div className={classes.join(' ')} ref={refFrameSet} style={{ height, maxHeight: height }}>
+    <div className={classes.join(' ')} ref={refFrameSet} style={style}>
       {children.map((child, index, list) => {
         if (child.type !== Frame) throw new Error('FrameSet children must be of type Frame!');
 
