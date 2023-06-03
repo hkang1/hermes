@@ -1,21 +1,24 @@
 import HermesEditor from '@/components/HermesEditor';
-import { DEFAULT_DATA_STRING, DEFAULT_DIMENSIONS_STRING } from '@/constants/defaults';
 
 export default function Direction() {
-  console.log(DEFAULT_DIMENSIONS_STRING);
   return (
     <>
       <h1>Direction</h1>
 
       <p>
-        Here is a working demo of such a parallel coordinates chart.
+        Hermes parallel coordinates chart can be drawn horizontally or vertically.
+        The charts are drawn horizontally by default.
       </p>
 
-      <HermesEditor
-        config={'{}'}
-        data={DEFAULT_DATA_STRING}
-        dimensions={DEFAULT_DIMENSIONS_STRING}
-      />
+      <h2>direction: "horizontal"</h2>
+
+      Set the `config.direction` option to the string `horizontal` (or leave it `undefined`).
+
+      <HermesEditor config={{ direction: 'horizontal' }} />
+
+      <h2>direction: "vertical"</h2>
+
+      <HermesEditor chartHeight={1000} config={{ direction: 'vertical' }} />
     </>
   );
 }

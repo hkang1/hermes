@@ -1,31 +1,36 @@
-import Hermes, { RecursivePartial } from 'hermes-parallel-coordinates';
+import Hermes, { NestedObject, RecursivePartial } from 'hermes-parallel-coordinates';
 import { useObservable } from 'micro-observables';
 import { useEffect, useMemo, useRef } from 'react';
 
+import { DEFAULT_DATA_STRING, DEFAULT_DIMENSIONS_STRING } from '@/constants/defaults';
 import themeStore from '@/stores/theme';
+import { isString } from '@/utils/data';
 
 import CodeEditor from './CodeEditor';
 import FrameSet, { Frame } from './FrameSet';
 import css from './HermesEditor.module.css';
 
 interface Props {
-  config: string;
-  data: string;
-  dimensions: string;
+  chartHeight?: number | string;
+  config?: string | RecursivePartial<Hermes.Config>;
+  data?: string | Hermes.Data;
+  dimensions?: string | Hermes.Dimension[];
 }
 
-const BASE_CONFIG: RecursivePartial<Hermes.Config> = {
-  style: {
-    axes: {
-      label: {
-        fillStyle: 'var(--theme-surface-on)',
-        // strokeStyle: 'var(--theme-stage-strong)',
-      },
-    },
-  },
-};
+function forceObject<T extends NestedObject | Array<unknown>>(input: string | T): T {
+  return isString(input) ? Hermes.str2obj<T>(input) : input;
+}
 
-export default function HermesEditor({ config, data, dimensions }: Props) {
+function forceString<T extends NestedObject | Array<unknown>>(input: string | T): string {
+  return isString(input) ? input : Hermes.obj2str<T>(input);
+}
+
+export default function HermesEditor({
+  chartHeight = 320,
+  config = {},
+  data = DEFAULT_DATA_STRING,
+  dimensions = DEFAULT_DIMENSIONS_STRING,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const hermesRef = useRef<Hermes>();
   const theme = useObservable(themeStore.theme);
@@ -55,7 +60,7 @@ export default function HermesEditor({ config, data, dimensions }: Props) {
         },
       },
     };
-    return Hermes.deepMerge(baseConfig, JSON.parse(config));
+    return Hermes.deepMerge(baseConfig, forceObject(config));
   }, [ theme ]);
 
   useEffect(() => {
@@ -63,9 +68,9 @@ export default function HermesEditor({ config, data, dimensions }: Props) {
 
     hermesRef.current = new Hermes(
       containerRef.current,
-      JSON.parse(dimensions),
+      forceObject(dimensions),
       resolvedConfig,
-      JSON.parse(data),
+      forceObject(data),
     );
 
     return () => hermesRef.current?.destroy();
@@ -75,16 +80,16 @@ export default function HermesEditor({ config, data, dimensions }: Props) {
     <div className={css.base}>
       <FrameSet>
         <Frame title="Dimensions">
-          <CodeEditor code={dimensions} />
+          <CodeEditor code={forceString(dimensions)} />
         </Frame>
         <Frame title="Data">
-          <CodeEditor code={data} />
+          <CodeEditor code={forceString(data)} />
         </Frame>
         <Frame title="Config">
-          <CodeEditor code={config} />
+          <CodeEditor code={forceString(config)} />
         </Frame>
       </FrameSet>
-      <div className={css.chart} ref={containerRef} style={{ height: 320, width: '100%' }} />
+      <div className={css.chart} ref={containerRef} style={{ height: chartHeight }} />
     </div>
   );
 }
