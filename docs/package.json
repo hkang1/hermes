@@ -17,7 +17,7 @@
     "@uiw/codemirror-theme-vscode": "^4.20.2",
     "@uiw/codemirror-themes": "^4.20.2",
     "@uiw/react-codemirror": "^4.20.2",
-    "hermes-parallel-coordinates": "^0.6.7",
+    "hermes-parallel-coordinates": "^0.6.13",
     "micro-observables": "^1.7.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
