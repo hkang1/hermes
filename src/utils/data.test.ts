@@ -347,27 +347,58 @@ describe('data utilities', () => {
     ]
   }
 }`;
+    const objStrSpecial = `{
+  "abc": {
+    "a": 5,
+    "b": Number.NaN,
+    "c": [
+      true,
+      Number.Infinity,
+      -Number.Infinity
+    ]
+  }
+}`;
     const arr = [ NaN, Infinity, -Infinity ];
     const arrStr = `[
   "Number.NaN",
   "Number.Infinity",
   "-Number.Infinity"
 ]`;
-
+    const arrStrSpecial = `[
+  Number.NaN,
+  Number.Infinity,
+  -Number.Infinity
+]`;
     it('should convert object to strings', () => {
-      expect(utils.obj2str(obj)).toBe(objStr);
+      expect(utils.obj2str(obj, false)).toBe(objStr);
     });
 
     it('should convert string to object', () => {
-      expect(utils.str2obj(objStr)).toMatchObject(obj);
+      expect(utils.str2obj(objStr, false)).toMatchObject(obj);
+    });
+
+    it('should convert object to string and handle special +/-Inf and NaN', () => {
+      expect(utils.obj2str(obj)).toBe(objStrSpecial);
+    });
+
+    it('should convert string to object and handle special +/-Inf and NaN', () => {
+      expect(utils.str2obj(objStrSpecial)).toMatchObject(obj);
     });
 
     it('should convert array to strings', () => {
-      expect(utils.obj2str(arr)).toBe(arrStr);
+      expect(utils.obj2str(arr, false)).toBe(arrStr);
     });
 
     it('should convert string to array', () => {
-      expect(utils.str2obj(arrStr)).toMatchObject(arr);
+      expect(utils.str2obj(arrStr, false)).toMatchObject(arr);
+    });
+
+    it('should convert array to strings and handle special +/-Inf and NaN', () => {
+      expect(utils.obj2str(arr)).toBe(arrStrSpecial);
+    });
+
+    it('should convert string to array and handle special +/-Inf and NaN', () => {
+      expect(utils.str2obj(arrStrSpecial)).toMatchObject(arr);
     });
   });
 

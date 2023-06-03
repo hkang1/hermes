@@ -178,11 +178,11 @@ describe('Hermes Core', () => {
     const str = `{
   "abc": {
     "a": 5,
-    "b": "Number.NaN",
+    "b": Number.NaN,
     "c": [
       true,
-      "Number.Infinity",
-      "-Number.Infinity"
+      Number.Infinity,
+      -Number.Infinity
     ]
   }
 }`;

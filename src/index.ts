@@ -92,12 +92,12 @@ class Hermes {
     return d.deepMerge(...objects);
   }
 
-  static obj2str<T extends t.NestedObject>(obj: T): string {
-    return d.obj2str(obj);
+  static obj2str<T extends t.NestedObject>(obj: T, infNaN?: boolean): string {
+    return d.obj2str(obj, infNaN);
   }
 
-  static str2obj<T extends t.NestedObject>(str: string): T {
-    return d.str2obj(str);
+  static str2obj<T extends t.NestedObject>(str: string, infNaN?: boolean): T {
+    return d.str2obj(str, infNaN);
   }
 
   static getTester(): tester.Tester {

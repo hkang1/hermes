@@ -119,20 +119,6 @@ export const idempotentNumber = (
   return (index % (adjustedCount + 1)) * inc + min;
 };
 
-export const obj2str = <T extends NestedObject | Array<unknown>>(obj: T): string => {
-  function replacer(key: string, value: unknown) {
-    if (isNumber(value)) {
-      if (isNaN(value)) return 'Number.NaN';
-      if (!isFinite(value)) {
-        if (value === Infinity) return 'Number.Infinity';
-        if (value === -Infinity) return '-Number.Infinity';
-      }
-    }
-    return value;
-  }
-  return JSON.stringify(obj, replacer, 2);
-};
-
 /**
  * NOTE: The data being fed in has already been validated,
  * so the series should all have equal data lengths.
@@ -206,14 +192,30 @@ export const randomNumber = (
   return Math.random() * (max - min) + min;
 };
 
-export const str2obj = <T extends NestedObject | Array<unknown>>(str: string): T => {
-  function reviver(key: string, value: unknown) {
-    if (isString(value)) {
-      if (value === 'Number.NaN') return NaN;
-      if (value === 'Number.Infinity') return Infinity;
-      if (value === '-Number.Infinity') return -Infinity;
+export const obj2str = <T extends NestedObject | Array<unknown>>(obj: T, infNaN = true): string => {
+  function replacer(key: string, value: unknown) {
+    if (isNumber(value)) {
+      if (isNaN(value)) return 'Number.NaN';
+      if (!isFinite(value)) {
+        if (value === Infinity) return 'Number.Infinity';
+        if (value === -Infinity) return '-Number.Infinity';
+      }
     }
     return value;
   }
-  return JSON.parse(str, reviver);
+  const str = JSON.stringify(obj, replacer, 2);
+  return infNaN ? str.replace(/"(-?(Number\.)?(NaN|Infinity))"/g, '$1') : str;
+};
+
+export const str2obj = <T extends NestedObject | Array<unknown>>(str: string, infNaN = true): T => {
+  function reviver(key: string, value: unknown) {
+    if (isString(value)) {
+      if (/^-(Number\.)?Infinity$/.test(value)) return -Infinity;
+      if (/^(Number\.)?Infinity$/.test(value)) return Infinity;
+      if (/^(Number\.)?NaN$/.test(value)) return NaN;
+    }
+    return value;
+  }
+  const string = infNaN ? str.replace(/(-?(Number\.)?(NaN|Infinity))/g, '"$1"') : str;
+  return JSON.parse(string, reviver);
 };
