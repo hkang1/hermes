@@ -1,10 +1,10 @@
-# Hermes Parallel Coordinates [![CircleCI](https://circleci.com/gh/hkang1/hermes.svg?style=shield)](https://deploy-preview-146--bejewelled-lamington-f97ebd.netlify.app/) [![codecov](https://codecov.io/gh/hkang1/hermes/branch/main/graph/badge.svg?token=JNS0KB6VXX)](https://codecov.io/gh/hkang1/hermes)
+# Hermes Parallel Coordinates [![CircleCI](https://circleci.com/gh/hkang1/hermes.svg?style=shield)]([https://deploy-preview-146--bejewelled-lamington-f97ebd.netlify.app/](https://app.circleci.com/pipelines/github/hkang1/hermes?branch=main)) [![codecov](https://codecov.io/gh/hkang1/hermes/branch/main/graph/badge.svg?token=JNS0KB6VXX)](https://codecov.io/gh/hkang1/hermes)
 
 A lightweight canvas-based parallel coordinates chart library.
 
 > [Parallel coordinates](https://en.wikipedia.org/wiki/Parallel_coordinates#:~:text=Parallel%20coordinates%20are%20a%20common,typically%20vertical%20and%20equally%20spaced.) are a common way of visualizing and analyzing high-dimensional datasets.
 
-Check out the list of [Demos](https://bejewelled-lamington-f97ebd.netlify.app/) to get an idea of the various capabilities and config options.
+Check out the list of [Demos]([https://bejewelled-lamington-f97ebd.netlify.app/](https://deploy-preview-146--bejewelled-lamington-f97ebd.netlify.app/)) to get an idea of the various capabilities and config options.
 
 Or try out the [Live Demo](https://codepen.io/hoyoul/pen/yLPzoMe) in a sandbox.
 
