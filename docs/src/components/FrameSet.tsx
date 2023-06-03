@@ -37,12 +37,13 @@ function isChildrenValid(children: ReactNode): children is ReactElement[] {
 export default function FrameSet({
   children,
   direction = 'horizontal',
-  height = 400,
+  height = 300,
   resizable = true,
 }: PropsWithChildren<Props>) {
   if (!isChildrenValid(children)) throw new Error('Frame\'s children must be an array of ReactElement!');
 
   const refFrameSet = useRef<HTMLDivElement>(null);
+  const isHorizontal = direction === 'horizontal';
   const frames = children.length;
   const [ dividers, setDividers ] = useState(new Array(frames - 1).fill(null).map((_, i) => (i + 1) / frames));
   const classes = [ css.base, css[direction] ];
@@ -76,11 +77,11 @@ export default function FrameSet({
         if (child.type !== Frame) throw new Error('FrameSet children must be of type Frame!');
 
         const count = list.length;
-        const dividerWidth = resizable ? 5 : 1;
-        const dividerStyle = { flexBasis: dividerWidth };
+        const dividerSize = resizable ? 5 : 1;
+        const dividerStyle = { flexBasis: dividerSize };
         const factor = spacers[index];
-        const maxWidth = `calc((100% - ${count - 1} * ${dividerWidth}px) * ${factor})`;
-        const frameStyle = { maxWidth };
+        const maxSize = `calc((100% - ${count - 1} * ${dividerSize}px) * ${factor})`;
+        const frameStyle = isHorizontal ? { maxWidth: maxSize } : { maxHeight: maxSize };
 
         return (
           <Fragment key={index}>

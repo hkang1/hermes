@@ -1,0 +1,5 @@
+.base {
+  .chart {
+    background-color: var(--theme-stage-strong);
+  }
+}

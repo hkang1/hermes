@@ -9,6 +9,7 @@
 
     .title {
       font-weight: bold;
+      overflow: auto;
       padding: 8px 8px 8px 16px;
     }
     & > *:nth-child(2) {

@@ -1,10 +1,6 @@
-import Hermes from 'hermes-parallel-coordinates';
-import { useEffect, useRef } from 'react';
-
 import { c } from '@/components/Code';
-import CodeEditor from '@/components/CodeEditor';
 import Figure from '@/components/Figure';
-import FrameSet, { Frame } from '@/components/FrameSet';
+import HermesEditor from '@/components/HermesEditor';
 
 const PETS_DIMENSIONS = `[
   {
@@ -21,7 +17,7 @@ const PETS_DIMENSIONS = `[
   },
   { "key": "age", "label": "Age (yr)", "type": "linear" },
   { "key": "height", "label": "Height (cm)", "type": "linear" },
-  { "key": "weight", "label": "Height (kg)", "type": "linear" }
+  { "key": "weight", "label": "Weight (kg)", "type": "linear" }
 ]`;
 
 const PETS_DATA = `{
@@ -34,6 +30,9 @@ const PETS_DATA = `{
 
 const PETS_CONFIG = `{
   "style": {
+    "axes": {
+      "label": { "font": "bold 14px sans-serif" }
+    },
     "data": {
       "series": [
         { "strokeStyle": "rgb(200, 0, 0)" },
@@ -42,22 +41,14 @@ const PETS_CONFIG = `{
         { "strokeStyle": "rgb(0, 100, 150)" },
         { "strokeStyle": "rgb(0, 0, 200)" }
       ]
+    },
+    "dimension": {
+      "label": { "font": "bold 14px sans-serif" }
     }
   }
 }`;
 
 export default function GettingStarted() {
-  const chartRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!chartRef.current) return;
-    new Hermes(
-      chartRef.current,
-      JSON.parse(PETS_DIMENSIONS),
-      JSON.parse(PETS_CONFIG),
-      JSON.parse(PETS_DATA),
-    );
-  }, []);
 
   return (
     <>
@@ -81,21 +72,11 @@ export default function GettingStarted() {
         Here is a working demo of such a parallel coordinates chart.
       </p>
 
-      <FrameSet>
-        <Frame title="Dimensions">
-          <CodeEditor code={PETS_DIMENSIONS} />
-        </Frame>
-        <Frame title="Data">
-          <CodeEditor code={PETS_DATA} />
-        </Frame>
-        <Frame title="Config">
-          <CodeEditor code={PETS_CONFIG} />
-        </Frame>
-      </FrameSet>
-
-      <Figure caption="Pets Chart" whiteBackground>
-        <div id="pets" ref={chartRef} style={{ height: 320, width: '100%' }} />
-      </Figure>
+      <HermesEditor
+        config={PETS_CONFIG}
+        data={PETS_DATA}
+        dimensions={PETS_DIMENSIONS}
+      />
 
       <h1>Screenshots</h1>
 
