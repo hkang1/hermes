@@ -1,5 +1,4 @@
 import { c } from '@/components/Code';
-import Figure from '@/components/Figure';
 import HermesEditor from '@/components/HermesEditor';
 
 const PETS_DIMENSIONS = `[

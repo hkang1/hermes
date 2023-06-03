@@ -7,34 +7,23 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
-import GettingStarted from '@/pages/GettingStarted';
-import Overview from '@/pages/Overview';
 import themeStore from '@/stores/theme';
 import { setThemeCssVars } from '@/utils/theme';
 
 import './App.css';
+import { NavRouteObject, ROUTES } from './constants/routes';
 import SideBar from './SideBar';
 
-export const ROUTES = [
-  {
-    element: <Navigate replace to="/overview" />,
-    path: '/',
-  },
-  {
-    element: <Overview />,
-    label: 'Overview',
-    path: '/overview',
-  },
-  {
-    element: <GettingStarted />,
-    label: 'Getting Started',
-    path: '/getting-started',
-  },
-];
-
+console.log('routes', Object.values<NavRouteObject>(ROUTES));
 const ROUTER = createBrowserRouter([
   {
-    children: ROUTES,
+    children: [
+      {
+        element: <Navigate replace to="/overview" />,
+        path: '/',
+      },
+      ...Object.values<NavRouteObject>(ROUTES),
+    ],
     element: <Layout />,
     errorElement: <div>Error!</div>,
     loader: () => {

@@ -32,12 +32,12 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 { line-height: 1.0; }
-h1 { font-size: 3.2em; }
-h2 { font-size: 2.8em; }
-h3 { font-size: 2.4em; }
-h4 { font-size: 2.2em; }
-h5 { font-size: 2.0em; }
-h6 { font-size: 1.8em; }
+h1 { font-size: 2.8em; }
+h2 { font-size: 2.4em; }
+h3 { font-size: 2.2em; }
+h4 { font-size: 2.0em; }
+h5 { font-size: 1.8em; }
+h6 { font-size: 1.6em; }
 
 button {
   border-radius: 8px;
