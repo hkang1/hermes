@@ -119,6 +119,20 @@ export const idempotentNumber = (
   return (index % (adjustedCount + 1)) * inc + min;
 };
 
+export const obj2str = <T extends NestedObject>(data: T): string => {
+  function replacer(key: string, value: unknown) {
+    if (isNumber(value)) {
+      if (isNaN(value)) return 'Number.NaN';
+      if (!isFinite(value)) {
+        if (value === Infinity) return 'Number.Infinity';
+        if (value === -Infinity) return '-Number.Infinity';
+      }
+    }
+    return value;
+  }
+  return JSON.stringify(data, replacer, 2);
+};
+
 /**
  * NOTE: The data being fed in has already been validated,
  * so the series should all have equal data lengths.
@@ -190,4 +204,16 @@ export const randomNumber = (
     if (Math.random() < probabilityPositiveInfinity) return Infinity;
   }
   return Math.random() * (max - min) + min;
+};
+
+export const str2obj = <T extends NestedObject>(string: string): T => {
+  function reviver(key: string, value: unknown) {
+    if (isString(value)) {
+      if (value === 'Number.NaN') return NaN;
+      if (value === 'Number.Infinity') return Infinity;
+      if (value === '-Number.Infinity') return -Infinity;
+    }
+    return value;
+  }
+  return JSON.parse(string, reviver);
 };
