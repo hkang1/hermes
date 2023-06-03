@@ -108,7 +108,7 @@ class Hermes {
       if (i === 0) {
         validation.count = value.length;
       } else if (value.length !== validation.count) {
-        validation.message = 'The dimension data are not uniform in size.';
+        validation.message = `Data length for "${keys[i]}" is not uniform with other dimension data length.`;
         validation.valid = false;
         return validation;
       }

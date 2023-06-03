@@ -154,7 +154,7 @@ describe('Hermes Core', () => {
       }
 
       const setup = utils.hermesSetupWithError(utils.DEFAULT_DIMENSIONS, {}, nonuniformData);
-      expect(setup.error?.message).toMatch(/data are not uniform in size/i);
+      expect(setup.error?.message).toMatch(/is not uniform with other dimension data length/i);
       expect(setup.hermes).toBeUndefined();
       utils.hermesTeardown(setup);
     });
@@ -332,7 +332,7 @@ describe('Hermes Core', () => {
       invalidData[dimensionKey].pop();
 
       const setData = () => setup.hermes?.setData(invalidData);
-      expect(setData).toThrowWithMessage(HermesError, /not uniform in size/i);
+      expect(setData).toThrowWithMessage(HermesError, /is not uniform with other dimension data length/i);
     });
 
     it('should throw an error if the data is missing data points for a dimension key', () => {
