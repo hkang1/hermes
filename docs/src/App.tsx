@@ -14,7 +14,6 @@ import './App.css';
 import { NavRouteObject, ROUTES } from './constants/routes';
 import SideBar from './SideBar';
 
-console.log('routes', Object.values<NavRouteObject>(ROUTES));
 const ROUTER = createBrowserRouter([
   {
     children: [

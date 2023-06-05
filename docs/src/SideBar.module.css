@@ -1,4 +1,22 @@
 .base {
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 32px 16px;
+
+  .section {
+    .title {
+      align-items: center;
+      cursor: pointer;
+      display: flex;
+      gap: 2px;
+      font-weight: bold;
+    }
+    .body {
+      padding-left: 8px;
+    }
+  }
+  .section.closed .body {
+    display: none;
+  }
 }

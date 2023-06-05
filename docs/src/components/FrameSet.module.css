@@ -8,6 +8,7 @@
     flex-direction: column;
 
     .title {
+      background-color: var(--theme-stage-weak);
       font-weight: bold;
       overflow: auto;
       padding: 4px 16px;

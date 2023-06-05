@@ -32,12 +32,12 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 { line-height: 1.0; }
-h1 { font-size: 2.8em; }
-h2 { font-size: 2.4em; }
-h3 { font-size: 2.2em; }
-h4 { font-size: 2.0em; }
-h5 { font-size: 1.8em; }
-h6 { font-size: 1.6em; }
+h1 { font-size: 2.4em; }
+h2 { font-size: 2.0em; }
+h3 { font-size: 1.8em; }
+h4 { font-size: 1.7em; }
+h5 { font-size: 1.6em; }
+h6 { font-size: 1.5em; }
 
 button {
   border-radius: 8px;
@@ -70,3 +70,32 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+@font-face {
+  font-family: 'hermes';
+  src:
+    url('/hermes.ttf?8qcsla') format('truetype'),
+    url('/hermes.woff?8qcsla') format('woff'),
+    url('/hermes.svg?8qcsla#hermes') format('svg');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'hermes' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-arrow-left:before { content: '\e900'; }
+.icon-arrow-down:before { content: '\e901'; }

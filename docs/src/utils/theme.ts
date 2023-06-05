@@ -4,7 +4,7 @@ import { isColor, rgba2str, rgbaMix, str2rgba } from '@/utils/color';
 
 import { camelCaseToKebab } from './string';
 
-const STRONG_WEAK_DELTA = 45;
+const STRONG_WEAK_DELTA = 25;
 
 export const MATCH_MEDIA_SCHEME_DARK = '(prefers-color-scheme: dark)';
 export const MATCH_MEDIA_SCHEME_LIGHT = '(prefers-color-scheme: light)';

@@ -1,8 +1,8 @@
 .base {
   margin-top: 1em;
   margin-bottom: 1em;
-  
+
   .chart {
-    background-color: var(--theme-stage-strong);
+    background-color: var(--theme-surface);
   }
 }
