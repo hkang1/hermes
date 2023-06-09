@@ -1,8 +1,0 @@
-.base {
-  background-color: var(--theme-surface-weak);
-  font-size: 12px;
-
-  :global(.cm-editor) {
-    background-color: var(--theme-surface-weak);
-  }
-}
