@@ -369,6 +369,17 @@ describe('data utilities', () => {
   Number.Infinity,
   -Number.Infinity
 ]`;
+    const objFn = {
+      arrow: ({ x, y }: { x: number, y: number }) => x + y,
+      normal: function add(x: number, y: number) {
+        return x + y;
+      },
+    };
+    const objFnString = `{
+  "arrow": "({ x, y }) => x + y",
+  "normal": "function add(x, y) {\\n                return x + y;\\n            }"
+}`;
+
     it('should convert object to strings', () => {
       expect(utils.obj2str(obj, false)).toBe(objStr);
     });
@@ -399,6 +410,19 @@ describe('data utilities', () => {
 
     it('should convert string to array and handle special +/-Inf and NaN', () => {
       expect(utils.str2obj(arrStrSpecial)).toMatchObject(arr);
+    });
+
+    it('should convert object of functions to strings', () => {
+      expect(utils.obj2str(objFn)).toBe(objFnString);
+    });
+
+    it('should convert string to object of functions', () => {
+      const obj = utils.str2obj<{
+        arrow: ({ x, y }: { x: number, y: number }) => number,
+        normal: (x: number, y: number) => number,
+      }>(objFnString);
+      expect(obj.arrow({ x: 1, y: 2 })).toBe(3);
+      expect(obj.normal(2, 3)).toBe(5);
     });
   });
 
