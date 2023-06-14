@@ -200,6 +200,8 @@ export const obj2str = <T extends NestedObject | Array<unknown>>(obj: T, infNaN 
         if (value === Infinity) return 'Number.Infinity';
         if (value === -Infinity) return '-Number.Infinity';
       }
+    } else if (typeof value === 'function') {
+      return `${value}`;
     }
     return value;
   }
@@ -213,6 +215,10 @@ export const str2obj = <T extends NestedObject | Array<unknown>>(str: string, in
       if (/^-(Number\.)?Infinity$/.test(value)) return -Infinity;
       if (/^(Number\.)?Infinity$/.test(value)) return Infinity;
       if (/^(Number\.)?NaN$/.test(value)) return NaN;
+      if (/^\s*function/gm.test(value) ||
+          /^\s*\(?\s*{?\s*[\w$]*\s*(,\s*[\w$]*\s*)*}?\s*\)?\s*=>/gm.test(value)) {
+        return eval('(' + value + ')');
+      }
     }
     return value;
   }
