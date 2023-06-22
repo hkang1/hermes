@@ -206,6 +206,22 @@ describe('data utilities', () => {
         finite: [ -123, 123 ],
       });
     });
+
+    it('should get a range when there is only one data point', () => {
+      const data = [ 1 ];
+      expect(utils.getDataRange(data, DimensionType.Linear)).toStrictEqual({
+        actual: [ 0.9, 1.1 ],
+        finite: [ 0.9, 1.1 ],
+      });
+    });
+
+    it('should get a range for logarithmic scale and avoid invalid 0 log value', () => {
+      const data = [ 1 ];
+      expect(utils.getDataRange(data, DimensionType.Logarithmic)).toStrictEqual({
+        actual: [ 0, 2 ],
+        finite: [ 0.000001, 2 ],
+      });
+    });
   });
 
   describe('idempotentItem', () => {

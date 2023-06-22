@@ -57,26 +57,43 @@ export const deepMerge = <T extends NestedObject>(...objects: T[]): T => {
   }, {} as T);
 };
 
+const EPSILON = 0.000001;
+
 export const getDataRange = (
   data: unknown[],
   dimensionType: EDimensionType,
 ): ActualAndFiniteRanges => {
-  const isFiniteOnScale = (x: number) => dimensionType === DimensionType.Logarithmic
-    ? isFinite(Math.log(x)) : isFinite(x);
-  return data.reduce(
-    (acc: ActualAndFiniteRanges, x: unknown) => {
-      if (isNumber(x) && !isNaN(x)) {
-        if (isFiniteOnScale(x)) {
-          if (x < acc.finite[0]) acc.finite[0] = x;
-          if (x > acc.finite[1]) acc.finite[1] = x;
-        }
-        if (x < acc.actual[0]) acc.actual[0] = x;
-        if (x > acc.actual[1]) acc.actual[1] = x;
+  const isFiniteOnScale = (x: number) => {
+    return dimensionType === DimensionType.Logarithmic ? isFinite(Math.log(x)) : isFinite(x);
+  };
+
+  const range = data.reduce((acc: ActualAndFiniteRanges, x: unknown) => {
+    if (isNumber(x) && !isNaN(x)) {
+      if (isFiniteOnScale(x)) {
+        if (x < acc.finite[0]) acc.finite[0] = x;
+        if (x > acc.finite[1]) acc.finite[1] = x;
       }
-      return acc;
-    },
-    { actual: [ Infinity, -Infinity ], finite: [ Number.MAX_VALUE, -Number.MAX_VALUE ] },
-  );
+      if (x < acc.actual[0]) acc.actual[0] = x;
+      if (x > acc.actual[1]) acc.actual[1] = x;
+    }
+    return acc;
+  }, { actual: [ Infinity, -Infinity ], finite: [ Number.MAX_VALUE, -Number.MAX_VALUE ] });
+
+  // Handle cases where there is only a single data point.
+  if (range.actual[0] === range.actual[1] &&
+      range.finite[0] === range.finite[1] &&
+      range.actual[0] === range.finite[0]) {
+    // Calculate appropriate data range epsilon.
+    const epsilon = dimensionType === DimensionType.Logarithmic ? 1.0 : Math.pow(10, Math.log10(range.actual[0]) - 1);
+    range.actual[0] -= epsilon;
+    range.actual[1] += epsilon;
+
+    // Avoid having a range of 0 when in logarithmic scale.
+    range.finite[0] = isFiniteOnScale(range.actual[0]) ? range.actual[0] : range.actual[0] + EPSILON;
+    range.finite[1] = isFiniteOnScale(range.actual[1]) ? range.actual[1] : range.actual[1] - EPSILON;
+  }
+
+  return range;
 };
 
 export const idempotentItem = <T = unknown>(list: T[], index: number): T => {
