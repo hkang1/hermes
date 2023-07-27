@@ -77,22 +77,21 @@ describe('Hermes Core', () => {
       const originalBoundingClientRect = Element.prototype.getBoundingClientRect;
       Element.prototype.getBoundingClientRect = getBoundingClientRect(boundingRect);
 
-      let hermes: utils.HermesTester | undefined;
-      let error: HermesError | undefined;
+      const consoleWarn = console.warn;
 
-      try {
-        hermes = new utils.HermesTester(`#${elementId}`, utils.DEFAULT_DIMENSIONS);
-      } catch (e) {
-        error = e as HermesError;
-      }
+      console.warn = jest.fn();
 
-      expect(error?.message).toMatch(/width and height must both be greater than 0/i);
-      expect(hermes).toBeUndefined();
+      const hermes = new utils.HermesTester(`#${elementId}`, utils.DEFAULT_DIMENSIONS);
+
+      expect(console.warn).toHaveBeenCalledWith('Target element width and height must both be greater than 0px.');
+      expect(hermes).toBeDefined();
 
       hermes?.destroy();
       document.body.removeChild(element);
 
       Element.prototype.getBoundingClientRect = originalBoundingClientRect;
+
+      console.warn = consoleWarn;
     });
 
     it('should use existing canvas in element', () => {
